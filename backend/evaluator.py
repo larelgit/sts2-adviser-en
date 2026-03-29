@@ -28,6 +28,7 @@ _LOGS_DIR.mkdir(exist_ok=True)
 log = logging.getLogger(__name__)
 
 from .archetypes import ArchetypeLibrary, archetype_library
+from .archetype_inference import infer_weight
 from .models import (
     Card, Archetype, CardRole, GamePhase,
     RunState, EvaluationResult, ScoreBreakdown,
@@ -58,13 +59,17 @@ class CardEvaluator:
         self,
         card_db: dict[str, Card],
         library: Optional[ArchetypeLibrary] = None,
+        raw_card_db: Optional[dict[str, dict]] = None,
     ) -> None:
         """
-        card_db: card_id -> Card 的字典（全卡库）
-        library: 套路库（默认使用模块级单例）
+        card_db:     card_id -> Card（全卡库）
+        library:     套路库（默认使用模块级单例）
+        raw_card_db: card_id -> 原始 JSON dict（含 powers_applied / keywords_key，
+                     用于推断层；可选，不传则推断层不生效）
         """
         self.card_db = card_db
         self.library = library or archetype_library
+        self.raw_card_db: dict[str, dict] = raw_card_db or {}
 
     # ------------------------------------------------------------------
     # 公开接口
@@ -132,14 +137,30 @@ class CardEvaluator:
         deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
 
         # 1. 收集该卡在各套路中的权重
+        # 精确层：手动 card_weights 定义（权重 0.40~0.98）
+        # 推断层：基于 powers_applied / keywords / desc 自动推断（上限 0.35）
         archetype_weights: list[float] = []
         matched_archetype_ids: list[str] = []
+        inferred_archetype_ids: list[str] = []   # 仅推断层命中（用于日志区分）
+
+        raw = self.raw_card_db.get(card.id)      # 原始 JSON dict（可能为 None）
 
         for archetype in detected_archetypes:
             weight_info = self.library.get_card_weight(archetype.id, card.id)
             if weight_info:
+                # 精确层命中
                 archetype_weights.append(weight_info.weight)
                 matched_archetype_ids.append(archetype.id)
+            elif raw is not None:
+                # 推断层兜底
+                inferred_w = infer_weight(raw, archetype.id)
+                if inferred_w > 0.0:
+                    archetype_weights.append(inferred_w)
+                    matched_archetype_ids.append(archetype.id)
+                    inferred_archetype_ids.append(archetype.id)
+                    log.debug(
+                        f"推断权重 {card.id} → {archetype.id}: {inferred_w:.2f}"
+                    )
 
         # 2. 确定卡牌角色
         role = self._determine_role(card, detected_archetypes, archetype_weights)
@@ -169,7 +190,8 @@ class CardEvaluator:
 
         # 5. 生成解释
         reasons_for, reasons_against = self._build_reasons(
-            card, role, breakdown, matched_archetype_ids, run_state
+            card, role, breakdown, matched_archetype_ids, run_state,
+            inferred_ids=inferred_archetype_ids,
         )
 
         recommendation = self._make_recommendation(total, role)
@@ -261,22 +283,33 @@ class CardEvaluator:
         breakdown: ScoreBreakdown,
         matched_archetypes: list[str],
         run_state: RunState,
+        inferred_ids: Optional[list[str]] = None,
     ) -> tuple[list[str], list[str]]:
         """
         生成中文可解释理由。
         返回 (reasons_for, reasons_against)。
+        inferred_ids: 仅由推断层命中的套路 id（非精确层），用于区分置信度
         """
+        inferred_ids = inferred_ids or []
         reasons_for: list[str] = []
         reasons_against: list[str] = []
 
-        # 套路契合
-        if matched_archetypes:
+        # 套路契合：区分精确层和推断层
+        exact_ids = [aid for aid in matched_archetypes if aid not in inferred_ids]
+        if exact_ids:
             archetype_names = [
                 a.name
-                for a in [self.library.get_archetype(aid) for aid in matched_archetypes]
+                for a in [self.library.get_archetype(aid) for aid in exact_ids]
                 if a is not None
             ]
             reasons_for.append(f"契合套路：{', '.join(archetype_names)}")
+        if inferred_ids:
+            inferred_names = [
+                a.name
+                for a in [self.library.get_archetype(aid) for aid in inferred_ids]
+                if a is not None
+            ]
+            reasons_for.append(f"推断与套路相关（关键词匹配）：{', '.join(inferred_names)}")
 
         # 稀有度
         if breakdown.rarity_score >= 0.7:
@@ -299,7 +332,11 @@ class CardEvaluator:
         if role == CardRole.POLLUTION:
             reasons_against.append("该卡与当前套路无协同，会稀释牌组")
 
-        # 无套路匹配
+        # 仅推断匹配时，补充置信度说明
+        if matched_archetypes and not exact_ids and inferred_ids:
+            reasons_against.append("仅关键词推断匹配，非手动定义的套路核心卡，实际价值以游戏判断为准")
+
+        # 无任何匹配
         if not matched_archetypes:
             reasons_against.append("未匹配任何已检测套路，当前 run 中价值不明")
 

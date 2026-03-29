@@ -208,7 +208,22 @@ def _load_card_db_from_json() -> dict[str, Card]:
         return {}
 
 
+def _load_raw_card_db() -> dict[str, dict]:
+    """加载 cards.json 原始字典（保留 powers_applied / keywords_key 等推断层所需字段）"""
+    json_path = Path(__file__).parent.parent / "data" / "cards.json"
+    if not json_path.exists():
+        return {}
+    try:
+        with open(json_path, "r", encoding="utf-8", errors="ignore") as f:
+            raw_cards = json.load(f)
+        return {r["id"].lower(): r for r in raw_cards if "id" in r}
+    except Exception as e:
+        print(f"Error loading raw card db: {e}")
+        return {}
+
+
 CARD_DB: dict[str, Card] = _load_card_db_from_json()
+RAW_CARD_DB: dict[str, dict] = _load_raw_card_db()
 
 # ---------------------------------------------------------------------------
 # 请求 / 响应模型
@@ -395,7 +410,7 @@ async def evaluate_cards(request: EvaluateRequest):
     if not run_state.card_choices:
         raise HTTPException(status_code=400, detail="card_choices 不能为空")
 
-    evaluator = CardEvaluator(CARD_DB, archetype_library)
+    evaluator = CardEvaluator(CARD_DB, archetype_library, raw_card_db=RAW_CARD_DB)
 
     try:
         detected = evaluator.detect_archetypes(run_state)
