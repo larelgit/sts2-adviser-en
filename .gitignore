@@ -3,7 +3,8 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-.Python
+*.so
+*.egg
 *.egg-info/
 dist/
 build/
@@ -14,24 +15,26 @@ build/
 venv/
 env/
 
+# 日志 & 运行时输出
+logs/
+*.log
+app.log
+
+# OCR 诊断输出
+diagnose_full.png
+diagnose_grid.png
+diagnose_r*.png
+
 # IDE
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
-
-# 测试 / 覆盖率
-.pytest_cache/
-.coverage
-htmlcov/
-
-# 日志
-*.log
+*.swp
+*.swo
 
 # 系统
 .DS_Store
 Thumbs.db
 
-# 敏感配置（如需要）
+# 配置（含敏感信息）
+config.local.json
 .env
-*.secret
