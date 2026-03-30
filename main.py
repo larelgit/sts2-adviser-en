@@ -29,8 +29,11 @@ import uvicorn
 from PyQt6.QtWidgets import QApplication
 
 # 设置 UTF-8 编码支持（Windows 终端）
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+# GUI 模式（EXE console=False）下 stdout/stderr 为 None，跳过封装
+if sys.stdout and hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+if sys.stderr and hasattr(sys.stderr, "buffer"):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # ---------------------------------------------------------------------------
 # 日志配置（每次运行覆盖写入根目录 app.log）
@@ -38,13 +41,14 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 _LOG_FILE = get_app_root() / "app.log"
 
+_log_handlers = [logging.FileHandler(_LOG_FILE, mode="w", encoding="utf-8")]
+if sys.stdout:  # None in GUI EXE mode (console=False)
+    _log_handlers.append(logging.StreamHandler(sys.stdout))
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.FileHandler(_LOG_FILE, mode="w", encoding="utf-8"),
-        logging.StreamHandler(sys.stdout),
-    ],
+    handlers=_log_handlers,
 )
 log = logging.getLogger("main")
 log.info("=" * 60)
