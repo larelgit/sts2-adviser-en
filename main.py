@@ -89,15 +89,18 @@ def _start_backend() -> None:
     在当前线程中启动 uvicorn。
     该函数应在 daemon 线程中调用，随主线程退出自动结束。
     """
-    config = uvicorn.Config(
-        _backend_app,
-        host=_BACKEND_HOST,
-        port=_BACKEND_PORT,
-        log_level="warning",   # 减少控制台噪音；改为 "info" 可调试
-        loop="asyncio",
-    )
-    server = uvicorn.Server(config)
-    server.run()
+    try:
+        config = uvicorn.Config(
+            _backend_app,
+            host=_BACKEND_HOST,
+            port=_BACKEND_PORT,
+            log_level="debug",
+            loop="asyncio",
+        )
+        server = uvicorn.Server(config)
+        server.run()
+    except Exception:
+        log.critical("后端启动失败", exc_info=True)
 
 
 def start_backend_thread() -> threading.Thread:
