@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM build_exe.bat — 一键打包 STS2 Adviser 为可分发 EXE
 REM 用法：双击运行，或在项目根目录执行 build_exe.bat
 
