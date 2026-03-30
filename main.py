@@ -23,8 +23,6 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-from utils.paths import get_app_root
-
 import uvicorn
 from PyQt6.QtWidgets import QApplication
 
@@ -39,7 +37,11 @@ if sys.stderr and hasattr(sys.stderr, "buffer"):
 # 日志配置（每次运行覆盖写入根目录 app.log）
 # ---------------------------------------------------------------------------
 
-_LOG_FILE = get_app_root() / "app.log"
+# 日志写在 EXE 旁边（frozen 模式下 exe 目录，开发模式下项目根目录）
+if getattr(sys, "frozen", False):
+    _LOG_FILE = Path(sys.executable).parent / "app.log"
+else:
+    _LOG_FILE = Path(__file__).parent / "app.log"
 
 _log_handlers = [logging.FileHandler(_LOG_FILE, mode="w", encoding="utf-8")]
 if sys.stdout:  # None in GUI EXE mode (console=False)
