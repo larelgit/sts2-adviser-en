@@ -173,6 +173,7 @@ class RunState(BaseModel):
     hp:          int = Field(ge=0)
     max_hp:      int = Field(ge=1)
     gold:        int = Field(ge=0)
+    ascension:   int = Field(ge=0, default=0)   # 当前进阶难度（0 = 普通模式）
 
     # 已有牌组（card.id 列表，含升级后缀，如 "shiv+"）
     deck:        list[str] = Field(default_factory=list)
@@ -233,3 +234,4 @@ class EvaluationResult(BaseModel):
 
     # 最终建议
     recommendation: str = ""   # e.g. "强烈推荐" / "可选" / "跳过"
+    grade: str = ""             # 字母等级 e.g. "S" / "A+" / "B-" / "D"

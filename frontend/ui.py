@@ -921,6 +921,19 @@ _REC_COLORS = {
     "跳过":     "#EF5350", "Skip":               "#EF5350",
 }
 
+_GRADE_COLORS = {
+    "S":  "#FFD700",  # 金色
+    "A+": "#A8D870",  # 亮绿
+    "A":  "#A8D870",
+    "A-": "#64B5F6",  # 蓝色
+    "B+": "#64B5F6",
+    "B":  "#FFD54F",  # 黄色
+    "B-": "#FFB74D",  # 橙色
+    "C+": "#FFB74D",
+    "C":  "#FF7043",  # 红橙
+    "D":  "#EF5350",  # 红色
+}
+
 
 class CardResultWidget(QFrame):
     """
@@ -973,10 +986,13 @@ class CardResultWidget(QFrame):
 
         meta_row.addStretch()
 
+        grade = result.get("grade", "")
         score = result.get("total_score", 0)
-        score_label = QLabel(f"{score:.0f} 分")
+        grade_text = grade if grade else f"{score:.0f}"
+        grade_color = _GRADE_COLORS.get(grade, "#C8A96E")
+        score_label = QLabel(grade_text)
         score_label.setObjectName("cardScore")
-        score_label.setStyleSheet("color:#C8A96E;font-size:14px;")
+        score_label.setStyleSheet(f"color:{grade_color};font-size:15px;font-weight:bold;")
         meta_row.addWidget(score_label)
 
         rec = result.get("recommendation", "")
@@ -1454,6 +1470,7 @@ class CardAdviserWindow(QWidget):
             "hp": state.get("hp", 0),
             "max_hp": state.get("max_hp", 70),
             "gold": state.get("gold", 0),
+            "ascension": state.get("ascension", 0),
             "deck": norm_deck,
             "relics": norm_relics,
         })
@@ -1843,6 +1860,7 @@ class CardAdviserWindow(QWidget):
         run_state.setdefault("hp", 70)
         run_state.setdefault("max_hp", 70)
         run_state.setdefault("gold", 0)
+        run_state.setdefault("ascension", 0)
         run_state.setdefault("deck", [])
         run_state.setdefault("relics", [])
         run_state["card_choices"] = card_ids
@@ -1898,6 +1916,8 @@ class CardAdviserWindow(QWidget):
             run_state["max_hp"] = 70
         if "gold" not in run_state:
             run_state["gold"] = 0
+        if "ascension" not in run_state:
+            run_state["ascension"] = 0
         if "deck" not in run_state:
             run_state["deck"] = []
         if "card_choices" not in run_state or not run_state["card_choices"]:

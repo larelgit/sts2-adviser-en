@@ -299,9 +299,35 @@ class STS2GameWatcher:
 
             player = save_data['players'][0]
 
+            # 调试：打印存档顶层字段，便于确认实际楼层字段名
+            log.debug(f"存档顶层字段: {list(save_data.keys())}")
+            log.debug(f"Player 字段: {list(player.keys())}")
+
+            # 楼层读取：STS2 存档不含绝对楼层字段，需从 visited_map_coords 推算
+            # row 0 = Neow/ancient（floor 1），row N = floor N+1
+            # 每幕偏移：幕1=0，幕2=17，幕3=34
+            _ACT_FLOOR_OFFSETS = {0: 0, 1: 17, 2: 34, 3: 51}
+            act_idx = save_data.get('current_act_index', 0)
+            visited_coords = save_data.get('visited_map_coords', [])
+            if visited_coords:
+                max_row = max(c['row'] for c in visited_coords)
+                floor = _ACT_FLOOR_OFFSETS.get(act_idx, 0) + max_row + 1
+                log.debug(f"楼层推算: act={act_idx}, max_row={max_row}, floor={floor}")
+            elif 'floor_num' in save_data:
+                floor = int(save_data['floor_num'])
+            elif 'floor' in save_data:
+                floor = int(save_data['floor'])
+            elif 'room_index' in save_data:
+                floor = _ACT_FLOOR_OFFSETS.get(act_idx, 0) + int(save_data['room_index']) + 1
+            elif 'room_index' in player:
+                floor = _ACT_FLOOR_OFFSETS.get(act_idx, 0) + int(player['room_index']) + 1
+            else:
+                floor = act_idx + 1
+                log.warning(f"未找到楼层字段，退回使用 current_act_index+1={floor}（可能不准确）")
+
             return {
                 'character': player.get('character_id', 'unknown'),
-                'floor': save_data.get('current_act_index', 0) + 1,
+                'floor': floor,
                 'ascension': save_data.get('ascension', 0),
                 'hp': player.get('current_hp', 0),
                 'max_hp': player.get('max_hp', 1),

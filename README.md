@@ -184,7 +184,20 @@ python -m uvicorn backend.main:app --port 8001
 
 ## 版本历史
 
-### v0.8（当前）
+### v0.95（当前）
+- **遗物协同系统完善**：新增 `relic_archetype_map.py` 遗物→套路适配度映射；补充 `data/relics.json` 遗物定义数据
+- **社区数据补全**：`data/card_library.json` 覆盖全部可用卡牌的胜率和选取率统计
+- **打包基础设施**：新增 `build_exe.bat` 和 `sts2_adviser.spec`，支持一键打包为无需安装 Python 的独立 EXE
+
+### v0.9
+- **代码质量清理**：全面替换 `print` 调试输出为结构化 `logging`，提升日志可读性
+- **vision_bridge.py 精简**：移除冗余的独立 OCR 方法，统一为 `_extract_card_names_combined` 双策略（全图聚类 + 区域补全）
+- **UI 修复**：
+  - 抽屉展开/收起时窗口宽度动态伸缩（不再截断卡名）
+  - 启动后自适应窗口高度（由 `_auto_fit_height` 在布局完成后调整）
+  - 卡片按钮改为 `Expanding` 策略，宽度均匀分布
+
+### v0.8
 - **OCR 稳定性大幅提升**：
   - 白名单过滤策略替代黑名单（fuzzy 匹配自动过滤所有乱码，无需手动维护规则）
   - 全图 OCR 候选区 Y 范围精确收窄，排除卡牌类型标签行（攻击/技能）

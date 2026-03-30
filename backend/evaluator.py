@@ -44,9 +44,24 @@ from .scoring import (
     deck_bloat_penalty,
     combine_scores,
     cross_validate,
+    ascension_modifier,
     Alignment,
     CrossValidationResult,
 )
+
+
+def score_to_grade(score: float) -> str:
+    """将 0~100 的数字分转换为字母等级（仅展示用，不参与计算）。"""
+    if score >= 90: return "S"
+    if score >= 80: return "A+"
+    if score >= 72: return "A"
+    if score >= 65: return "A-"
+    if score >= 58: return "B+"
+    if score >= 50: return "B"
+    if score >= 43: return "B-"
+    if score >= 35: return "C+"
+    if score >= 25: return "C"
+    return "D"
 
 
 class CardEvaluator:
@@ -88,6 +103,7 @@ class CardEvaluator:
         log.debug(f"card_choices: {run_state.card_choices}")
         detected = self.detect_archetypes(run_state)
         relic_tags = self._extract_relic_tags(run_state)
+        relic_boosts = self._build_relic_synergy(run_state, detected)
 
         results: list[EvaluationResult] = []
         for card_id in run_state.card_choices:
@@ -96,35 +112,65 @@ class CardEvaluator:
                 log.warning(f"Card not found in DB: {card_id}")
                 continue
             log.debug(f"Evaluating card: {card_id} -> {card.name}")
-            result = self.evaluate_card(card, run_state, detected, relic_tags)
+            result = self.evaluate_card(card, run_state, detected, relic_tags, relic_boosts)
             results.append(result)
 
         log.debug(f"Evaluation results: {[r.card_name for r in results]}")
         results.sort(key=lambda r: r.total_score, reverse=True)
-        self._save_score_log(results, run_state)
+        self._save_score_log(results, run_state, detected)
         return results
 
     def detect_archetypes(self, run_state: RunState) -> list[Archetype]:
         """
         根据当前牌组，检测玩家正在走的套路。
 
-        策略：
-          - 取与当前 character 匹配的所有套路
-          - 计算每个套路的"完成度"（已有卡 / 套路核心卡数）
-          - 返回完成度 > 阈值的套路列表（按完成度降序）
+        检测条件（同时满足）：
+          1. 必须持有至少 1 张该套路定义的 CORE 牌（精确层）
+          2. 整体完成度 >= _DETECT_THRESHOLD（防止只靠通用 filler 触发）
 
+        过滤逻辑：
+          - 按完成度降序排列
+          - 只返回不超过 _MAX_ARCHETYPES 个套路
+          - 第 2 个以后的套路，其完成度必须 >= 领先套路的 _SECONDARY_RATIO 倍
+            （避免只有 1 张 filler 牌就并列检测出多个套路）
         """
+        _DETECT_THRESHOLD   = 0.04   # 整体完成度最低门槛（主要靠 CORE 门槛过滤，此值仅排除极低噪音）
+        _MAX_ARCHETYPES     = 2      # 最多同时检测几个套路
+        _SECONDARY_RATIO    = 0.55   # 次选套路至少是领先套路完成度的 55%
+
         candidate_archetypes = self.library.get_by_character(run_state.character)
         deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
 
         scored: list[tuple[float, Archetype]] = []
         for archetype in candidate_archetypes:
+            # 门槛1：整体完成度
             completion = self._calc_completion(archetype, deck_set)
-            if completion > 0.0:
-                scored.append((completion, archetype))
+            if completion < _DETECT_THRESHOLD:
+                continue
+
+            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌
+            has_core = any(
+                w.role.value == "core" and w.card_id.lower() in deck_set
+                for w in archetype.card_weights
+            )
+            if not has_core:
+                continue
+
+            scored.append((completion, archetype))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        return [a for _, a in scored]
+
+        # 过滤：次选套路完成度不能太低于领先套路
+        if not scored:
+            return []
+
+        top_score = scored[0][0]
+        result: list[Archetype] = []
+        for completion, archetype in scored[:_MAX_ARCHETYPES]:
+            if completion >= top_score * _SECONDARY_RATIO:
+                result.append(archetype)
+
+        return result
 
     def evaluate_card(
         self,
@@ -132,6 +178,7 @@ class CardEvaluator:
         run_state: RunState,
         detected_archetypes: list[Archetype],
         relic_synergy_tags: list[str],
+        relic_boosts: dict[str, float] | None = None,
     ) -> EvaluationResult:
         """
         对单张卡进行全维度评估，返回 EvaluationResult。
@@ -195,13 +242,21 @@ class CardEvaluator:
             rarity_score=community_norm if community_norm is not None else 0.0,  # community_score
             archetype_score=score_archetype_dimension(card, archetype_weights),
             completion_score=score_completion_dimension(comp_before, comp_after),
-            phase_score=score_phase_dimension(card, run_state.phase, role),
-            synergy_bonus=score_synergy_bonus(card, run_state, relic_synergy_tags),
+            phase_score=score_phase_dimension(card, run_state.phase, role, hp_ratio=run_state.hp_ratio),
+            synergy_bonus=score_synergy_bonus(
+                card, run_state, relic_synergy_tags,
+                relic_boosts=relic_boosts or {},
+                matched_archetype_ids=matched_archetype_ids,
+            ),
             pollution_penalty=pollution_penalty(card, len(run_state.deck), role),
         )
 
         # algo_score（原有流程）
         algo_score_100 = combine_scores(breakdown, bloat_penalty=bloat_pen)
+
+        # Ascension 修正（在社区交叉验证之前，基于算法分施加）
+        asc_delta = ascension_modifier(role, run_state.ascension, breakdown.archetype_score)
+        algo_score_100 = round(max(0.0, min(100.0, algo_score_100 + asc_delta)), 1)
 
         # 社区交叉验证（post-processing）
         algo_norm = algo_score_100 / 100.0
@@ -230,6 +285,7 @@ class CardEvaluator:
             reasons_for=reasons_for,
             reasons_against=reasons_against,
             recommendation=recommendation,
+            grade=score_to_grade(total),
         )
 
     # ------------------------------------------------------------------
@@ -420,18 +476,39 @@ class CardEvaluator:
             return "跳过"
 
     @staticmethod
+    def _build_relic_synergy(
+        run_state: RunState,
+        detected_archetypes: list,
+    ) -> dict[str, float]:
+        """
+        根据当前持有遗物和已检测套路，构建遗物→套路 boost 映射。
+        返回 {archetype_id: max_boost_score}。
+        只返回已检测到的套路的 boost，避免未走的套路被误激活。
+        """
+        from .relic_archetype_map import RELIC_ARCHETYPE_MAP
+        detected_ids = {a.id for a in detected_archetypes}
+        boosts: dict[str, float] = {}
+        for relic in run_state.relics:
+            relic_key = relic.id.upper()
+            for archetype_id, score in RELIC_ARCHETYPE_MAP.get(relic_key, []):
+                if archetype_id in detected_ids:
+                    boosts[archetype_id] = max(boosts.get(archetype_id, 0.0), score)
+        return boosts
+
+    @staticmethod
     def _extract_relic_tags(run_state: RunState) -> list[str]:
-        """
-        从当前遗物中提取协同标签（用于 synergy 计算）。
-        当前直接使用遗物自带的 tags 字段；未来可扩展为遗物→标签映射表。
-        """
+        """旧接口保留：返回 tags 字段（当前始终为空列表）。"""
         tags: list[str] = []
         for relic in run_state.relics:
             tags.extend(relic.tags)
         return tags
 
     @staticmethod
-    def _save_score_log(results: list[EvaluationResult], run_state: RunState) -> None:
+    def _save_score_log(
+        results: list[EvaluationResult],
+        run_state: RunState,
+        detected_archetypes: list | None = None,
+    ) -> None:
         """
         将评分细节写入 logs/score_YYYYMMDD_HHMMSS.json。
         每次调用 rank_cards 时生成一份。保留最近 30 份。
@@ -444,7 +521,11 @@ class CardEvaluator:
                 "timestamp": ts,
                 "character": run_state.character.value if hasattr(run_state.character, "value") else str(run_state.character),
                 "phase": run_state.phase.value if hasattr(run_state.phase, "value") else str(run_state.phase),
+                "ascension": run_state.ascension,
+                "floor": run_state.floor,
                 "deck_size": len(run_state.deck),
+                "deck": run_state.deck,
+                "detected_archetypes": [a.id for a in (detected_archetypes or [])],
                 "relics": [r.id for r in run_state.relics],
                 "results": [
                     {
@@ -452,6 +533,7 @@ class CardEvaluator:
                         "card_name": r.card_name,
                         "rarity": r.rarity,
                         "total_score": r.total_score,
+                        "grade": r.grade,
                         "recommendation": r.recommendation,
                         "role": r.role.value if hasattr(r.role, "value") else str(r.role),
                         "matched_archetypes": r.matched_archetypes,

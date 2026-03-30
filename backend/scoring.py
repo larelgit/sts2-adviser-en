@@ -252,6 +252,7 @@ def score_phase_dimension(
     card: Card,
     phase: GamePhase,
     card_role: CardRole,
+    hp_ratio: float = 1.0,
 ) -> float:
     """
     当前阶段对该卡的适配度。
@@ -259,24 +260,45 @@ def score_phase_dimension(
       - TRANSITION 早期强，后期弱
       - POLLUTION 所有阶段 0 分
       - FILLER/UNKNOWN 中性 0.55
+
+    hp_ratio: 当前 HP / 最大 HP（来自 RunState.hp_ratio）。
+      hp_ratio < 0.30 时，对有格挡价值的技能/能力牌加 +0.06，
+      对纯进攻攻击牌（无格挡、无摸牌）减 -0.08。
+      最终影响上限约 ±1.2 分（权重 0.15），不会翻转推荐等级。
     """
     if card_role == CardRole.POLLUTION:
         return 0.0
     if card_role == CardRole.TRANSITION:
-        return {
+        base = {
             GamePhase.EARLY: 0.85,
             GamePhase.MID:   0.45,
             GamePhase.LATE:  0.15,
         }[phase]
-    if card_role in (CardRole.CORE, CardRole.ENABLER):
-        # 核心/使能卡后期更有价值（已积累协同）
-        return {
+    elif card_role in (CardRole.CORE, CardRole.ENABLER):
+        base = {
             GamePhase.EARLY: 0.75,
             GamePhase.MID:   0.82,
             GamePhase.LATE:  0.88,
         }[phase]
-    # FILLER / UNKNOWN
-    return 0.55
+    else:
+        base = 0.55
+
+    # HP 低血量修正（仅在 < 30% 时生效）
+    if hp_ratio < 0.30:
+        from .models import CardType
+        has_block = (card.base_block or 0) > 0
+        is_skill_or_power = card.card_type in (CardType.SKILL, CardType.POWER)
+        is_pure_attack = (
+            card.card_type == CardType.ATTACK
+            and not has_block
+            and (card.base_draw or 0) == 0
+        )
+        if has_block or is_skill_or_power:
+            base = min(1.0, base + 0.06)
+        elif is_pure_attack:
+            base = max(0.0, base - 0.08)
+
+    return base
 
 
 # ---------------------------------------------------------------------------
@@ -305,13 +327,24 @@ def score_synergy_bonus(
     card: Card,
     run_state: RunState,
     relic_synergy_tags: list[str],
+    relic_boosts: dict[str, float] | None = None,
+    matched_archetype_ids: list[str] | None = None,
 ) -> float:
     """
     遗物/已有卡协同加成。
-    每个匹配标签贡献 0.2，上限 1.0。
+    - tag 路径：每个匹配标签贡献 0.2，上限 1.0（旧逻辑，tags 当前为空）
+    - boost 路径：遗物→套路显式映射（relic_archetype_map），取该卡已匹配套路中的最高 boost
+    取两条路径的最大值，避免重复累加。
     """
-    overlap = set(card.tags) & set(relic_synergy_tags)
-    return min(1.0, len(overlap) * 0.20)
+    tag_score = min(1.0, len(set(card.tags) & set(relic_synergy_tags)) * 0.20)
+
+    boost_score = 0.0
+    if relic_boosts and matched_archetype_ids:
+        for aid in matched_archetype_ids:
+            if aid in relic_boosts:
+                boost_score = max(boost_score, relic_boosts[aid])
+
+    return min(1.0, max(tag_score, boost_score))
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +385,57 @@ def deck_bloat_penalty(
         return 0.0
     extra = deck_size - 20
     return min(0.15, extra * 0.01)
+
+
+# ---------------------------------------------------------------------------
+# Ascension 修正
+# ---------------------------------------------------------------------------
+
+def ascension_modifier(
+    card_role: CardRole,
+    ascension: int,
+    archetype_score: float,
+) -> float:
+    """
+    根据 Ascension 难度层级，对最终分数施加小幅修正（加减分）。
+    修正范围：-5 ~ +5 分（不影响等级档次的主要判断）。
+
+    设计依据（来自 STS2 Ascension 文档）：
+      A5+（抽牌污染）：不稳定/高依赖套路成型率下降，CORE 更珍贵
+      A7+（卡池质量）：稀有卡更难获取，遇到 CORE 卡更应该拿
+      A10（双 Boss）：需要持续输出，一波流 / FILLER 价值更低
+
+    修正逻辑：
+      - 无套路命中时（archetype_score ≈ 0）：不施加修正，避免对通用牌误判
+      - CORE/ENABLER + 高 Ascension：轻微加分（套路已难成型，此牌更关键）
+      - FILLER/UNKNOWN + A7+：轻微减分（卡池质量下降，FILLER 价值更低）
+      - POLLUTION：不额外修正（已有 pollution_penalty 处理）
+    """
+    if ascension <= 0 or archetype_score < 0.3:
+        # 普通模式或无套路命中时不修正
+        return 0.0
+
+    if card_role in (CardRole.CORE, CardRole.ENABLER):
+        # A5+: +1, A7+: +2, A10: +3（最高 +5，保持 A10 上限）
+        if ascension >= 10:
+            return min(5.0, 3.0 + (ascension - 10) * 0.5)
+        elif ascension >= 7:
+            return 2.0
+        elif ascension >= 5:
+            return 1.0
+        else:
+            return 0.5
+
+    elif card_role in (CardRole.FILLER, CardRole.UNKNOWN):
+        # A7+: -1, A10: -2
+        if ascension >= 10:
+            return -2.0
+        elif ascension >= 7:
+            return -1.0
+        else:
+            return 0.0
+
+    return 0.0
 
 
 # ---------------------------------------------------------------------------
