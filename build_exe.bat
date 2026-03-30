@@ -5,42 +5,38 @@ echo ======================================================
 echo  STS2 Adviser - PyInstaller Build Script
 echo ======================================================
 
-REM -- 1. Find Python 3.10+
-echo [1/4] Locating Python ...
+REM -- 1. Find Python 3.10-3.12 (pydantic-core requires pre-built wheels)
+echo [1/4] Locating Python 3.10-3.12 ...
 set PYTHON=
 
-REM Try 'python' from PATH first
-python --version >nul 2>&1
-if not errorlevel 1 (
-    set PYTHON=python
-    goto :found_python
-)
-
-REM Try 'py' launcher (Windows Python Launcher)
-py -3 --version >nul 2>&1
-if not errorlevel 1 (
-    set PYTHON=py -3
-    goto :found_python
-)
-
-REM Search common per-user install locations
-for %%V in (313 312 311 310) do (
+REM Search per-user installs (preferred versions first: 3.12, 3.11, 3.10)
+for %%V in (312 311 310) do (
     if exist "%LOCALAPPDATA%\Programs\Python\Python%%V\python.exe" (
         set PYTHON="%LOCALAPPDATA%\Programs\Python\Python%%V\python.exe"
         goto :found_python
     )
 )
 
-REM Search common system-wide install locations
-for %%V in (313 312 311 310) do (
+REM Search system-wide installs
+for %%V in (312 311 310) do (
     if exist "C:\Python%%V\python.exe" (
         set PYTHON="C:\Python%%V\python.exe"
         goto :found_python
     )
 )
 
-echo [!] Python 3.10+ not found. Please install Python and re-run this script.
-echo     Download: https://www.python.org/downloads/
+REM Try 'py' launcher with specific version
+for %%V in (3.12 3.11 3.10) do (
+    py -%%V --version >nul 2>&1
+    if not errorlevel 1 (
+        set PYTHON=py -%%V
+        goto :found_python
+    )
+)
+
+echo [!] Python 3.10-3.12 not found.
+echo     Python 3.13+ is not yet supported (pydantic-core has no pre-built wheels).
+echo     Download Python 3.12: https://www.python.org/downloads/release/python-3129/
 pause
 exit /b 1
 
