@@ -1475,6 +1475,7 @@ class CardAdviserWindow(QWidget):
             "ascension": state.get("ascension", 0),
             "deck": norm_deck,
             "relics": norm_relics,
+            "mode": state.get("mode", "single"),
         })
 
         # 更新游戏存档指示器
@@ -1502,6 +1503,11 @@ class CardAdviserWindow(QWidget):
                 hp_color = "#F44336"   # 红
 
             asc_text = f" <span style='color:#9C27B0'>A{ascension}</span>" if ascension > 0 else ""
+            game_mode = state.get("mode", "single")
+            if game_mode == "coop":
+                mode_text = "  <span style='color:#26C6DA;font-size:10pt'>👥 协作</span>"
+            else:
+                mode_text = "  <span style='color:#81C784;font-size:10pt'>🧍 单人</span>"
             info_html = (
                 f"<span style='color:#64B5F6;font-weight:bold'>{character}</span>"
                 f"{asc_text}"
@@ -1509,6 +1515,7 @@ class CardAdviserWindow(QWidget):
                 f"  <span style='color:{hp_color}'>❤ {hp}/{max_hp}</span>"
                 f"  <span style='color:#FFD54F'>💰 {gold}</span>"
                 f"  <span style='color:#90CAF9'>🃏 {deck_size}</span>"
+                f"{mode_text}"
             )
             self._game_info_label.setText(info_html)
             self._game_info_label.setStyleSheet("font-size: 12pt;")

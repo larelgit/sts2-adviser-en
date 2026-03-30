@@ -269,23 +269,39 @@ class STS2GameWatcher:
             return None
 
         try:
-            # self.save_path 是文件夹，需要找到其中的 current_run.save 文件
+            # self.save_path 是文件夹，需要找到其中的存档文件
             save_file = None
+            game_mode = "single"  # 默认单人
 
-            # 方案 1: 直接查找 current_run.save
-            if (self.save_path / 'current_run.save').exists():
-                save_file = self.save_path / 'current_run.save'
+            sp = (self.save_path / 'current_run.save')
+            mp = (self.save_path / 'current_run_mp.save')
+
+            if sp.exists() and mp.exists():
+                # 两个都存在：取修改时间更新的（正在进行的局）
+                if mp.stat().st_mtime > sp.stat().st_mtime:
+                    save_file = mp
+                    game_mode = "coop"
+                else:
+                    save_file = sp
+                    game_mode = "single"
+            elif mp.exists():
+                save_file = mp
+                game_mode = "coop"
+            elif sp.exists():
+                save_file = sp
+                game_mode = "single"
             else:
-                # 方案 2: 在文件夹中查找任何 .save 文件
+                # 兜底：取文件夹中任意 .save 文件
                 save_files = list(self.save_path.glob('*.save'))
                 if save_files:
-                    save_file = save_files[0]  # 取第一个 .save 文件
+                    save_file = max(save_files, key=lambda p: p.stat().st_mtime)
+                    game_mode = "coop" if "mp" in save_file.name.lower() else "single"
 
             if not save_file:
                 log.warning(f"存档文件夹中没有找到 .save 文件: {self.save_path}")
                 return None
 
-            log.debug(f"读取存档文件: {save_file}")
+            log.debug(f"读取存档文件: {save_file} (模式: {game_mode})")
             with open(save_file, 'r', encoding='utf-8') as f:
                 save_data = json.load(f)
         except Exception as e:
@@ -334,6 +350,7 @@ class STS2GameWatcher:
                 'gold': player.get('gold', 0),
                 'deck': [card.get('id', str(card)) for card in player.get('deck', [])],
                 'relics': [relic.get('id', str(relic)) for relic in player.get('relics', [])],
+                'mode': game_mode,
                 'timestamp': datetime.now().isoformat(),
             }
         except Exception as e:
