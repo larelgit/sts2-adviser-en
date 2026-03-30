@@ -379,7 +379,7 @@ class ConnectionManager:
 
         try:
             try:
-                from config_manager import get_save_path, get_log_path
+                from scripts.config_manager import get_save_path, get_log_path
                 custom_save_path = get_save_path()
                 custom_log_path = get_log_path()
             except Exception:
@@ -539,7 +539,7 @@ async def update_config(request: ConfigRequest):
     }
     """
     try:
-        from config_manager import set_save_path, set_log_path
+        from scripts.config_manager import set_save_path, set_log_path
 
         # 更新配置
         if request.save_path:
