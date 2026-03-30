@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from utils.paths import get_app_root
+
 log = logging.getLogger(__name__)
 
 # 置信度阈值（低于此值的匹配视为失败）
@@ -70,7 +72,7 @@ class CardNameIndex:
     """
 
     def __init__(self, data_dir: Optional[Path] = None) -> None:
-        self._data_dir = data_dir or (Path(__file__).parent.parent / "data")
+        self._data_dir = data_dir or (get_app_root() / "data")
         # card_id -> (英文名, 中文名)
         self._index: dict[str, tuple[str, str]] = {}
         # 搜索列表：[(标准化文本, card_id, language)]

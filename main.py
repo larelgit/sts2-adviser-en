@@ -23,6 +23,8 @@ import time
 from pathlib import Path
 from datetime import datetime
 
+from utils.paths import get_app_root
+
 import uvicorn
 from PyQt6.QtWidgets import QApplication
 
@@ -34,7 +36,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 # 日志配置（每次运行覆盖写入根目录 app.log）
 # ---------------------------------------------------------------------------
 
-_LOG_FILE = Path(__file__).parent / "app.log"
+_LOG_FILE = get_app_root() / "app.log"
 
 logging.basicConfig(
     level=logging.DEBUG,

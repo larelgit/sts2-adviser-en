@@ -19,10 +19,11 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
-_LOGS_DIR = Path(__file__).parent.parent / "logs"
+from utils.paths import get_app_root
+
+_LOGS_DIR = get_app_root() / "logs"
 _LOGS_DIR.mkdir(exist_ok=True)
 
 log = logging.getLogger(__name__)

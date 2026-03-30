@@ -35,6 +35,7 @@ qt_datas = collect_data_files("PyQt6", includes=["Qt6/plugins/**/*"])
 project_datas = [
     ("data",         "data"),         # cards.json, relics.json, card_library.json 等
     ("frontend",     "frontend"),     # styles.qss
+    ("utils",        "utils"),        # paths.py
 ]
 
 a = Analysis(
@@ -54,11 +55,13 @@ a = Analysis(
         "uvicorn.protocols.websockets",
         "uvicorn.protocols.websockets.auto",
         "uvicorn.protocols.websockets.websockets_impl",
+        "uvicorn.protocols.websockets.wsproto_impl",
         "uvicorn.lifespan",
         "uvicorn.lifespan.on",
         # FastAPI / starlette 依赖
         "anyio",
         "anyio._backends._asyncio",
+        "anyio._backends._trio",
         "starlette.routing",
         # pydantic
         "pydantic.v1",
@@ -73,6 +76,18 @@ a = Analysis(
         "PyQt6.QtCore",
         "PyQt6.QtGui",
         "PyQt6.QtWidgets",
+        # 图像/视觉
+        "PIL",
+        "PIL.Image",
+        "numpy",
+        "mss",
+        "rapidfuzz",
+        "rapidfuzz.fuzz",
+        "rapidfuzz.process",
+        # 系统监控
+        "psutil",
+        # asyncio 子进程支持（Windows）
+        "multiprocessing.popen_spawn_win32",
         # winrt 全量
         *winrt_hiddenimports,
     ],

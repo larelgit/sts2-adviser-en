@@ -1,44 +1,13 @@
-# sts2-adviser dependencies
-# Backend
-fastapi==0.115.0
-uvicorn[standard]==0.30.0
-pydantic==2.9.0
-requests==2.32.3
+# STS2 Adviser — 开发 + 测试依赖
+# 包含所有生产依赖（通过 -r 引用）及额外的开发工具
 
-# Frontend
-PyQt6==6.7.1
+-r requirements-prod.txt
 
-# WebSocket support
-websocket-client==1.6.4
-
-# Game monitoring
-psutil==5.9.6
-
-# Image processing (vision module)
-Pillow
-numpy
-
-# Screen capture (vision module)
-mss
-
-# Windows support
-pywin32
-
-# Windows OCR bindings (vision module)
-winrt-Windows.Media.Ocr
-winrt-Windows.Globalization
-winrt-Windows.Graphics.Imaging
-winrt-Windows.Storage.Streams
-winrt-Windows.Foundation
-winrt-Windows.Foundation.Collections
-
-# Fuzzy card name matching (vision module)
-rapidfuzz
-
-# Testing
+# 测试
 pytest==8.3.0
 pytest-asyncio==0.23.0
-httpx==0.27.0  # for FastAPI test client
+httpx==0.27.0
 
-# Dev utilities
+# 开发工具
 python-dotenv==1.0.1
+pyinstaller

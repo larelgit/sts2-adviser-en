@@ -32,7 +32,6 @@ import logging
 import os
 import socket
 import uvicorn
-from pathlib import Path
 from typing import Optional, Set
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -42,9 +41,10 @@ from pydantic import BaseModel
 from .archetypes import archetype_library
 from .evaluator import CardEvaluator
 from .models import Card, RunState, EvaluationResult, Character, Rarity, CardType, CardKeywords
+from utils.paths import get_app_root
 
 # 导入游戏监视器和配置管理器
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+sys.path.insert(0, str(get_app_root() / "scripts"))
 try:
     from game_watcher import STS2GameWatcher
     from config_manager import get_save_path, get_log_path
@@ -117,7 +117,7 @@ def _load_card_db_from_json() -> dict[str, Card]:
     从 data/cards.json 加载卡牌库。
     如果文件不存在或解析失败，返回空字典。
     """
-    json_path = Path(__file__).parent.parent / "data" / "cards.json"
+    json_path = get_app_root() / "data" / "cards.json"
     if not json_path.exists():
         print(f"Warning: Card database not found at {json_path}")
         return {}
@@ -218,7 +218,7 @@ def _load_card_db_from_json() -> dict[str, Card]:
 
 def _load_raw_card_db() -> dict[str, dict]:
     """加载 cards.json 原始字典（保留 powers_applied / keywords_key 等推断层所需字段）"""
-    json_path = Path(__file__).parent.parent / "data" / "cards.json"
+    json_path = get_app_root() / "data" / "cards.json"
     if not json_path.exists():
         return {}
     try:
@@ -255,7 +255,7 @@ def _load_community_db() -> "dict[str, CommunityStats]":
     win_rate/pick_rate 任一为 null 的卡不加入 db（保持缺失语义）。
     """
     from .scoring import community_score_from_raw
-    json_path = Path(__file__).parent.parent / "data" / "card_library.json"
+    json_path = get_app_root() / "data" / "card_library.json"
     if not json_path.exists():
         print(f"[CommunityDB] card_library.json not found at {json_path}")
         return {}

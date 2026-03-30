@@ -27,13 +27,13 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
 
-# logs 目录（与项目根目录同级）
-_LOGS_DIR = Path(__file__).parent.parent / "logs"
+from utils.paths import get_app_root
+
+_LOGS_DIR = get_app_root() / "logs"
 _LOGS_DIR.mkdir(exist_ok=True)
 
 from .window_capture import WindowCapture, WindowInfo

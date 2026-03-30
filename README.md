@@ -184,7 +184,13 @@ python -m uvicorn backend.main:app --port 8001
 
 ## 版本历史
 
-### v0.95（当前）
+### v0.99（当前）
+- **EXE 打包路径兼容**：新增 `utils/paths.py`，统一所有模块的根目录解析（开发模式 vs PyInstaller frozen 模式），修复 EXE 运行时 `data/`、`logs/`、`styles.qss` 路径错位问题
+- **依赖拆分**：`requirements-prod.txt`（仅生产依赖）与 `requirements.txt`（开发+测试）分离，用户安装更简洁
+- **build_exe.bat 升级**：自动创建/复用 `.venv` 虚拟环境，仅安装生产依赖，打包后显示目录大小并检测 UPX
+- **spec 补全**：补充 `rapidfuzz`、`psutil`、`mss`、`PIL`、`numpy`、`anyio._backends._trio`、`uvicorn.protocols.websockets.wsproto_impl` 等 hidden imports，打包覆盖率更完整
+
+### v0.95
 - **遗物协同系统完善**：新增 `relic_archetype_map.py` 遗物→套路适配度映射；补充 `data/relics.json` 遗物定义数据
 - **社区数据补全**：`data/card_library.json` 覆盖全部可用卡牌的胜率和选取率统计
 - **打包基础设施**：新增 `build_exe.bat` 和 `sts2_adviser.spec`，支持一键打包为无需安装 Python 的独立 EXE

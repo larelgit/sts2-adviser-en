@@ -33,6 +33,8 @@ import websocket
 import threading
 import time
 
+from utils.paths import get_app_root
+
 log = logging.getLogger(__name__)
 
 from PyQt6.QtCore import (
@@ -1339,7 +1341,7 @@ class CardAdviserWindow(QWidget):
         self._status_label.setText("调试中，请查看日志...")
 
     def _open_log_directory(self) -> None:
-        log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        log_dir = str(get_app_root())
         subprocess.Popen(f'explorer "{log_dir}"')
         log.info("打开日志目录窗口。")
 
@@ -1985,9 +1987,8 @@ class CardAdviserWindow(QWidget):
     # ------------------------------------------------------------------
 
     def _load_stylesheet(self) -> None:
-        import os
-        qss_path = os.path.join(os.path.dirname(__file__), "styles.qss")
-        if os.path.exists(qss_path):
+        qss_path = get_app_root() / "frontend" / "styles.qss"
+        if qss_path.exists():
             with open(qss_path, encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
 

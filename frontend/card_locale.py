@@ -5,8 +5,9 @@
 
 import json
 import logging
-from pathlib import Path
 from typing import Dict, Optional
+
+from utils.paths import get_app_root
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class CardLocale:
 
     def _load_locale(self) -> None:
         """加载本地化文件"""
-        locale_file = Path(__file__).parent.parent / "data" / "card_locale_zh.json"
+        locale_file = get_app_root() / "data" / "card_locale_zh.json"
 
         if not locale_file.exists():
             log.warning(f"本地化文件不存在: {locale_file}")
