@@ -12,71 +12,107 @@ python main.py
 
 ## 使用说明
 
-1. 启动 STS2 Adviser，浮窗置顶显示在游戏上方
-2. 进入游戏选卡界面，助手自动识别三张候选卡并给出评分
-3. 如需手动选牌评估，点击右侧 **◀** 按钮展开选牌面板
+### 自动模式（OCR）
+
+启动后浮窗置顶显示在游戏上方。进入选卡界面时，助手自动截图识别三张候选卡并给出评分，无需任何操作。
+
+**调整窗口大小**：拖拽浮窗右下角的缩放手柄可以自由调整大小，字体会随窗口等比缩放。
+
+### 手动选牌模式
+
+点击浮窗右侧的 **◀** 按钮展开选牌抽屉，窗口向右扩展，不占用主面板空间。
+
+1. 抽屉顶部按攻击 / 技能 / 能力分组列出当前角色所有卡牌
+2. 点击卡片选中（高亮），最多选 4 张候选卡
+3. 点击底部 **⟳ 评估** 按钮，主面板显示评分结果
+4. 再次点击 **▶** 收起抽屉
+
+### 配置游戏日志路径
+
+GameWatcher 读取游戏日志来获取角色、楼层、当前牌组信息，让评分更准确（尤其是阶段适配和完成度维度）。不配置时仅凭 OCR 结果评分。
+
+**自动搜索**：启动时会自动尝试以下路径：
+```
+%AppData%\Roaming\SlayTheSpire2\
+%AppData%\Local\SlayTheSpire2\saves\
+C:\Program Files (x86)\Steam\steamapps\common\SlayTheSpire2\
+```
+
+**手动配置**：若自动搜索失败，在设置界面（齿轮图标）填入游戏日志路径，或运行诊断工具：
+```bash
+python diagnose_save_path.py
+```
+配置保存在 `~/.sts2-adviser/config.json`，重启后生效。
 
 ### OCR 识别效果不佳？
 
 **首先尝试：将游戏窗口最大化。**
-OCR 依赖游戏窗口截图的分辨率，窗口越大识别越准确。
-小窗口或分辨率过低时，卡名文字太小容易误读。
+OCR 依赖游戏窗口截图的分辨率，窗口越大识别越准确。小窗口下卡名文字太小容易误读。
 
 其他措施：
-- 确认游戏语言设置（中文界面）
+- 确认游戏语言设置为中文界面
 - 确认游戏窗口标题包含 `Slay the Spire 2`
-- 在选卡界面运行诊断工具，查看截图效果：
+- 在选卡界面运行诊断工具，查看截图和 OCR 分段效果：
   ```bash
   python diagnose_ocr.py
   ```
 
-## 项目结构
+## 模块说明
 
 ```
 sts2-adviser/
-├── backend/              # FastAPI + WebSocket 后端
-│   ├── main.py           # 服务器入口，管理 GameWatcher / VisionBridge
-│   ├── evaluator.py      # 卡牌评估引擎
-│   ├── archetypes.py     # 套路库定义
-│   ├── archetype_inference.py  # 套路推断层（关键词匹配）
-│   ├── models.py         # 数据模型
-│   └── scoring.py        # 评分引擎（含社区数据交叉验证）
+├── main.py                     # 集成启动入口：同时启动后端服务和前端浮窗
 │
-├── frontend/             # PyQt6 浮窗 UI
-│   ├── ui.py             # 主界面（置顶、可拖拽、侧边选牌抽屉）
-│   ├── card_locale.py    # 中文卡名本地化
-│   └── styles.qss        # 深色主题样式表
+├── backend/                    # FastAPI 后端，处理评估逻辑
+│   ├── main.py                 # HTTP/WebSocket 服务器，协调 GameWatcher 和 VisionBridge
+│   ├── evaluator.py            # 评估引擎：调用各维度评分，汇总结果和推荐理由
+│   ├── scoring.py              # 五维度评分算法 + 社区数据交叉验证
+│   ├── archetypes.py           # 套路库：每个角色的套路定义和核心卡列表
+│   ├── archetype_inference.py  # 套路推断：对未在套路列表中的卡用关键词推断权重
+│   └── models.py               # 数据模型：Card / RunState / ScoreBreakdown 等
 │
-├── vision/               # OCR 视觉识别
-│   ├── window_capture.py # PrintWindow 截图（不受遮挡影响）
-│   ├── ocr_engine.py     # Windows 内置 OCR（含 OpenCV 预处理）
-│   ├── screen_detector.py# 界面类型检测（选卡 / 商店 / 其他）
-│   ├── card_normalizer.py# 卡名模糊匹配（fuzzy 白名单过滤）
-│   └── vision_bridge.py  # 整合模块，状态机驱动轮询
+├── frontend/                   # PyQt6 浮窗界面
+│   ├── ui.py                   # 主窗口：置顶浮窗、拖拽、评分展示、侧边选牌抽屉
+│   ├── card_locale.py          # 英文卡 ID → 中文名映射
+│   └── styles.qss              # 深色主题样式（杀戮尖塔风格）
+│
+├── vision/                     # 视觉识别模块
+│   ├── vision_bridge.py        # 总调度：定时轮询截图，驱动状态机，推送识别结果
+│   ├── window_capture.py       # 用 PrintWindow API 截图（窗口被遮挡时仍有效）
+│   ├── ocr_engine.py           # Windows WinRT OCR 封装，含 OpenCV/PIL 预处理
+│   ├── screen_detector.py      # 判断当前界面类型（选卡 / 商店 / 其他）
+│   └── card_normalizer.py      # OCR 结果后处理：误读修正 + fuzzy 白名单匹配
 │
 ├── scripts/
-│   ├── game_watcher.py   # 日志文件监视器（备用数据源）
-│   └── config_manager.py # 路径配置管理
+│   ├── game_watcher.py         # 监视游戏日志文件，解析角色 / 楼层 / 牌组 / 遗物
+│   └── config_manager.py       # 读写 ~/.sts2-adviser/config.json（日志路径、语言等）
 │
 ├── data/
-│   ├── cards.json            # 卡牌库（英文元数据）
-│   ├── card_library.json     # 社区统计数据（胜率 / 选取率）
-│   ├── card_locale_zh.json   # 中文本地化
-│   └── card_names_zh.json    # 中文卡名索引
+│   ├── cards.json              # 卡牌库：费用、稀有度、类型等元数据
+│   ├── card_library.json       # 社区统计：每张卡的胜率和选取率
+│   ├── card_locale_zh.json     # 中文本地化：英文 ID → 中文卡名
+│   └── card_names_zh.json      # 中文卡名索引（OCR 匹配用）
 │
-├── diagnose_ocr.py       # 诊断工具：截图 + 分段 OCR 输出
-├── diagnose_save_path.py # 诊断工具：游戏存档路径查找
-└── main.py               # 集成启动脚本
+├── diagnose_ocr.py             # 诊断工具：截图并输出 OCR 分段结果，排查识别问题
+└── diagnose_save_path.py       # 诊断工具：自动搜索游戏存档和日志路径
 ```
 
-## 数据来源
+### 数据流
 
-系统有两个并行数据源：
-
-| 来源 | 原理 | 说明 |
-|------|------|------|
-| VisionBridge | PrintWindow 截图 + Windows OCR | 主数据源，自动检测选卡界面 |
-| GameWatcher | 解析游戏日志文件 | 备用数据源，提供角色 / 楼层 / 牌组信息 |
+```
+游戏窗口
+  │
+  ├─ PrintWindow 截图 ──→ OCR 引擎 ──→ card_normalizer ──→ 卡名列表
+  │                                                              │
+  └─ 游戏日志文件 ──→ GameWatcher ──→ RunState（角色/楼层/牌组）  │
+                                              │                  │
+                                              └──────────────────┤
+                                                                 ▼
+                                                          evaluator（五维度评分）
+                                                                 │
+                                                                 ▼
+                                                        前端浮窗展示结果
+```
 
 ## 评分算法
 
