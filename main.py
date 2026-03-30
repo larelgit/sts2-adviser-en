@@ -175,7 +175,8 @@ def main() -> None:
         exit_code = start_frontend()
 
         log.info("前端已关闭，程序退出")
-        sys.exit(exit_code)
+        # 强制终止整个进程（含 uvicorn daemon 线程）
+        os._exit(exit_code)
 
     except Exception:
         log.critical("程序崩溃", exc_info=True)
