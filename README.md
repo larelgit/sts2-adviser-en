@@ -258,3 +258,15 @@ python -m uvicorn backend.main:app --port 8001
 - Windows PrintWindow 截图模块
 - Windows OCR 引擎封装
 - 游戏日志文件监视器（GameWatcher）
+
+---
+
+## 开源协议
+
+本项目基于 [GNU GPL-3.0](LICENSE) 协议开源。
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+你可以自由使用、修改和分发本项目，但衍生作品必须以相同协议开源，不得闭源商用。
+
+Copyright (c) 2026 Skyerolic
