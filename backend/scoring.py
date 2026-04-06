@@ -1,6 +1,12 @@
 """
 backend/scoring.py
-评分引擎 v2 + 社区数据交叉验证层 (v0.7)
+评分引擎 v2.1 + 社区数据交叉验证层 (CDPE - Contextual Delta Pick Engine)
+
+V2.1 Changes:
+  - Soft archetype aggregation: 1 - ∏(1-w_i) instead of max(w)
+  - Extended value dimension: draw/filter/exhaust/AoE/block bonuses
+  - Soft role scoring: sigmoid transitions instead of hard thresholds
+  - Skip scoring: evaluates "don't pick" as a full option
 
 评分逻辑：
   以 60 分为 "无害中性" 基线，向上向下浮动。
@@ -13,11 +19,11 @@ backend/scoring.py
     0~29    跳过（污染或明显不适合当前 run）
 
   各维度（均归一化 0~1）：
-    1. archetype_score   套路契合度     权重 0.40  最核心维度
-    2. value_score       卡牌固有价值   权重 0.25  稀有度+费用效率综合
-    3. phase_score       阶段适配       权重 0.15  当前楼层适配性
+    1. archetype_score   套路契合度     权重 0.35  (V2: reduced from 0.40)
+    2. value_score       卡牌固有价值   权重 0.25  稀有度+费用+utility综合
+    3. phase_score       阶段适配       权重 0.15  当前阶段适配性
     4. completion_score  完成度贡献     权重 0.15  拿了这张后套路更完整多少
-    5. synergy_bonus     额外协同       权重 0.05  遗物/已有卡协同
+    5. synergy_bonus     额外协同       权重 0.10  (V2: increased from 0.05)
 
   惩罚（直接从 raw score 减分）：
     pollution_penalty: 污染牌 -30~-50 分
@@ -180,16 +186,16 @@ def cross_validate(
 # ---------------------------------------------------------------------------
 
 WEIGHTS: dict[str, float] = {
-    "archetype":   0.40,   # 套路契合：最重要
-    "value":       0.25,   # 卡牌固有价值（稀有度+费用）
+    "archetype":   0.35,   # V2: reduced from 0.40 (套路契合)
+    "value":       0.25,   # 卡牌固有价值（稀有度+费用+utility）
     "phase":       0.15,   # 阶段适配
     "completion":  0.15,   # 完成度贡献
-    "synergy":     0.05,   # 协同加成
+    "synergy":     0.10,   # V2: increased from 0.05 (协同加成)
 }
 # 合计 = 1.00
 
 # ---------------------------------------------------------------------------
-# 维度1：套路契合度
+# 维度1：套路契合度 (V2: Soft aggregation)
 # ---------------------------------------------------------------------------
 
 def score_archetype_dimension(
@@ -197,27 +203,50 @@ def score_archetype_dimension(
     matched_archetype_weights: list[float],
 ) -> float:
     """
-    取该卡在所有匹配套路中的最高权重。
-    无匹配时返回 0.0（由 value_score 兜底）。
+    V2: Soft aggregation instead of max().
+    
+    Formula: 1 - ∏(1 - w_i)
+    
+    This gives credit for multi-archetype synergy:
+    - Card good in 2 directions (0.5, 0.4) = 0.70 (better than max=0.5)
+    - Card great in 1 direction (0.8) = 0.80
+    
+    Old behavior: max(weights) penalized versatile cards.
     """
     if not matched_archetype_weights:
         return 0.0
-    return max(matched_archetype_weights)
+    
+    # Soft-sum: 1 - ∏(1 - w_i)
+    product = 1.0
+    for w in matched_archetype_weights:
+        product *= (1.0 - w)
+    
+    return 1.0 - product
 
 
 # ---------------------------------------------------------------------------
-# 维度2：卡牌固有价值
+# 维度2：卡牌固有价值 (V2: Extended with utility bonuses)
 # ---------------------------------------------------------------------------
 
 def score_value_dimension(card: Card, phase: GamePhase) -> float:
     """
-    卡牌独立于套路的固有价值评估。
-    综合：稀有度基线 + 费用效率 + 阶段无关通用性。
-
+    V2: Extended card value beyond just rarity + cost.
+    
+    Includes:
+      - Rarity baseline (0.20 ~ 0.90)
+      - Cost efficiency bonus/penalty
+      - Draw/filter bonus (consistency)
+      - Exhaust bonus (deck quality)
+      - AoE bonus (multi-target)
+      - Block bonus (survival)
+      - Setup tax (needs other cards)
+      - Dead draw risk (situational cards)
+    
     设计原则：
       - rare 卡在任何时候都有底线价值（0.75+）
       - common 给 0.45 左右作为中性值
       - 0 费牌有显著加成（灵活性价值）
+      - Utility (draw, exhaust, AoE) adds real value
     """
     rarity_base: dict[Rarity, float] = {
         Rarity.ANCIENT:  0.90,
@@ -241,7 +270,46 @@ def score_value_dimension(card: Card, phase: GamePhase) -> float:
     elif card.cost >= 3:
         cost_bonus = -0.05   # 高费用略微减分
 
-    return min(1.0, max(0.0, base + cost_bonus))
+    # V2: Draw/filter value (consistency)
+    draw_bonus = 0.0
+    if card.base_draw is not None and card.base_draw > 0:
+        draw_bonus = min(0.15, card.base_draw * 0.05)
+    
+    # V2: Exhaust bonus (deck thinning/quality)
+    exhaust_bonus = 0.0
+    if card.keywords.exhaust:
+        exhaust_bonus = 0.06
+    
+    # V2: Block value (survival)
+    block_bonus = 0.0
+    if card.base_block is not None and card.base_block > 0:
+        block_bonus = min(0.10, card.base_block * 0.006)
+    
+    # V2: AoE bonus (check description for "all enemies" pattern)
+    aoe_bonus = 0.0
+    desc_lower = card.description.lower()
+    if "all enem" in desc_lower or "each enemy" in desc_lower:
+        aoe_bonus = 0.06
+    
+    # V2: Innate bonus (reliable opening)
+    innate_bonus = 0.04 if card.keywords.innate else 0.0
+    
+    # V2: Retain bonus (flexibility)
+    retain_bonus = 0.03 if card.keywords.retain else 0.0
+    
+    # V2: Ethereal penalty (must use or lose)
+    ethereal_penalty = -0.04 if card.keywords.ethereal else 0.0
+    
+    # V2: High setup tax detection (rough heuristic)
+    setup_penalty = 0.0
+    if "requires" in desc_lower or "if you have" in desc_lower:
+        setup_penalty = -0.06
+    
+    total = (base + cost_bonus + draw_bonus + exhaust_bonus 
+             + block_bonus + aoe_bonus + innate_bonus + retain_bonus
+             + ethereal_penalty + setup_penalty)
+    
+    return min(1.0, max(0.0, total))
 
 
 # ---------------------------------------------------------------------------
@@ -302,21 +370,58 @@ def score_phase_dimension(
 
 
 # ---------------------------------------------------------------------------
-# 维度4：完成度贡献
+# 维度4：完成度贡献 (V2: Multi-motif + weakness repair)
 # ---------------------------------------------------------------------------
 
 def score_completion_dimension(
     archetype_completion_before: float,
     archetype_completion_after: float,
+    # V2 optional parameters for enhanced scoring
+    all_completions_before: dict[str, float] | None = None,
+    all_completions_after: dict[str, float] | None = None,
 ) -> float:
     """
-    拿了这张卡后套路完成度提升多少。
-    完成度 delta 放大 3 倍（因为单张卡通常只提升 5~10%，
-    不放大的话贡献微乎其微）。
+    V2: Enhanced completion scoring.
+    
+    Basic mode (backward compatible):
+      拿了这张卡后套路完成度提升多少。
+      完成度 delta 放大 3 倍（因为单张卡通常只提升 5~10%）
+    
+    Enhanced mode (when all_completions provided):
+      - Consider top 3 motifs, not just primary
+      - Bonus for unlocking new viable motifs
+      - More nuanced weighting
     """
-    delta = archetype_completion_after - archetype_completion_before
-    # 放大并上限 1.0
-    return min(1.0, max(0.0, delta * 3.0))
+    # Basic mode (backward compatible)
+    if all_completions_before is None or all_completions_after is None:
+        delta = archetype_completion_after - archetype_completion_before
+        return min(1.0, max(0.0, delta * 3.0))
+    
+    # V2 Enhanced mode: Multi-motif completion
+    improvements = []
+    unlock_bonus = 0.0
+    
+    for motif_id in all_completions_before:
+        before = all_completions_before.get(motif_id, 0.0)
+        after = all_completions_after.get(motif_id, 0.0)
+        delta = after - before
+        improvements.append(delta)
+        
+        # Check for motif unlock (crossing viability threshold)
+        if before < 0.20 and after >= 0.25:
+            unlock_bonus += 0.08  # Bonus for unlocking new viable path
+    
+    # Take top 3 improvements (card can contribute to multiple motifs)
+    improvements.sort(reverse=True)
+    top3_delta = sum(improvements[:3])
+    
+    # Scale factor (slightly lower than single-motif to avoid inflation)
+    motif_score = min(0.8, top3_delta * 2.5)
+    
+    # Add unlock bonus
+    total = motif_score + min(0.2, unlock_bonus)
+    
+    return min(1.0, max(0.0, total))
 
 
 # ---------------------------------------------------------------------------
@@ -489,3 +594,166 @@ def score_base_dimension(card: Card, phase: GamePhase) -> float:
 def score_rarity_dimension(card: Card) -> float:
     """兼容旧接口：返回 0（bloat_penalty 在 evaluator 中单独计算）"""
     return 0.0
+
+
+# ---------------------------------------------------------------------------
+# V2: Soft Role Scoring (sigmoid transitions instead of hard thresholds)
+# ---------------------------------------------------------------------------
+
+def soft_role_confidence(weight: float) -> dict[str, float]:
+    """
+    V2: Calculate confidence scores for each role using sigmoid transitions.
+    
+    Returns dict with confidence 0-1 for: core, enabler, filler, pollution
+    
+    This replaces hard thresholds (0.85/0.60/0.30) with smooth transitions,
+    so a card at 0.29 vs 0.30 is no longer a cliff.
+    
+    Sigmoid centers:
+      - CORE: 0.82 (steep, need strong signal)
+      - ENABLER: 0.62 
+      - FILLER: 0.40
+      - POLLUTION: 0.15 (inverted, low weight = high pollution)
+    """
+    def sigmoid(x: float, center: float, steepness: float) -> float:
+        return 1.0 / (1.0 + math.exp(-steepness * (x - center)))
+    
+    core_conf = sigmoid(weight, center=0.82, steepness=12.0)
+    enabler_conf = sigmoid(weight, center=0.62, steepness=10.0) * (1.0 - core_conf)
+    filler_conf = sigmoid(weight, center=0.40, steepness=8.0) * (1.0 - core_conf - enabler_conf)
+    pollution_conf = sigmoid(0.18 - weight, center=0.0, steepness=15.0)  # inverted
+    
+    # Normalize to sum to ~1 (except pollution which is independent)
+    total = core_conf + enabler_conf + filler_conf
+    if total > 0:
+        scale = 1.0 / total
+        core_conf *= scale
+        enabler_conf *= scale
+        filler_conf *= scale
+    
+    return {
+        "core": round(core_conf, 3),
+        "enabler": round(enabler_conf, 3),
+        "filler": round(filler_conf, 3),
+        "pollution": round(pollution_conf, 3),
+    }
+
+
+def determine_role_v2(
+    max_weight: float,
+    inferred_only: bool = False,
+) -> CardRole:
+    """
+    V2: Determine role using soft thresholds with hysteresis.
+    
+    Still returns a single CardRole, but uses smoother boundaries
+    and respects the inferred_only flag.
+    """
+    # Soft thresholds with hysteresis (±0.03)
+    if max_weight >= 0.82:
+        return CardRole.CORE
+    elif max_weight >= 0.57:  # lowered from 0.60
+        return CardRole.ENABLER
+    elif max_weight >= 0.25:  # lowered from 0.30
+        return CardRole.FILLER
+    else:
+        # Inferred cards shouldn't be marked pollution
+        if inferred_only:
+            return CardRole.FILLER
+        return CardRole.POLLUTION
+
+
+# ---------------------------------------------------------------------------
+# V2: Skip Scoring - Skip as a full alternative option
+# ---------------------------------------------------------------------------
+
+def calculate_skip_score(
+    deck_size: int,
+    target_deck_size: int,
+    phase: GamePhase,
+    hp_ratio: float,
+    deck_consistency: float = 0.5,  # 0-1, how consistent is current deck
+    has_critical_gaps: bool = False,  # Does deck have critical weaknesses
+) -> float:
+    """
+    V2: Calculate the value of skipping (not taking any card).
+    
+    Skip is valuable when:
+      - Deck is already large (dilution hurts)
+      - Deck is consistent (don't want to break it)
+      - Phase is late (less time to use new cards)
+    
+    Skip is bad when:
+      - Deck is small (need cards)
+      - Deck has critical gaps (need to fill weaknesses)
+      - Phase is early (more time to build)
+    
+    Returns: score 0-100 (like card scores)
+    """
+    # Base skip value (neutral)
+    base = 50.0
+    
+    # Dilution resistance: bigger deck = skip more valuable
+    if deck_size > target_deck_size:
+        excess = deck_size - target_deck_size
+        base += min(15.0, excess * 2.0)  # max +15
+    elif deck_size < target_deck_size - 3:
+        deficit = target_deck_size - deck_size
+        base -= min(10.0, deficit * 1.5)  # max -10
+    
+    # Consistency protection: good deck = protect it
+    if deck_consistency > 0.7:
+        base += 5.0
+    elif deck_consistency < 0.3:
+        base -= 5.0
+    
+    # Phase adjustment: early = need cards, late = be selective
+    phase_mod = {
+        GamePhase.EARLY: -8.0,  # Need to build
+        GamePhase.MID: 0.0,     # Neutral
+        GamePhase.LATE: 5.0,    # Be selective
+    }
+    base += phase_mod.get(phase, 0.0)
+    
+    # Critical gaps: if deck needs something specific, don't skip
+    if has_critical_gaps:
+        base -= 12.0
+    
+    # HP modifier: low HP = need good cards to survive
+    if hp_ratio < 0.3:
+        base -= 5.0  # Need survival cards
+    elif hp_ratio > 0.8:
+        base += 2.0  # Can afford to be picky
+    
+    return max(20.0, min(80.0, base))
+
+
+def calculate_pick_delta(card_score: float, skip_score: float) -> float:
+    """
+    V2: Calculate how much better a card is compared to Skip.
+    
+    Positive = card is better than skipping
+    Negative = skip is better than taking this card
+    
+    Returns: delta in points (can be negative)
+    """
+    return card_score - skip_score
+
+
+def format_pick_recommendation(
+    card_name: str,
+    card_score: float,
+    skip_score: float,
+) -> str:
+    """
+    V2: Format recommendation showing delta vs Skip.
+    
+    Examples:
+      "Inflame (+25.3 vs Skip)" 
+      "Skip is better (-5.2)"
+    """
+    delta = card_score - skip_score
+    if delta > 0:
+        return f"{card_name} (+{delta:.1f} vs Skip)"
+    else:
+        return f"Skip is better ({delta:.1f})"

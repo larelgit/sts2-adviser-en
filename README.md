@@ -137,11 +137,11 @@ Each candidate card is independently scored across the following five dimensions
 
 | Dimension | Weight | Scoring Logic |
 |-----------|--------|---------------|
-| Archetype Synergy | **40%** | Max weight of the card across all matched archetypes; 0 if no match (backed by intrinsic value). |
-| Intrinsic Value | **25%** | Rarity baseline (Rare 0.80 / Uncommon 0.60 / Common 0.45) + Cost efficiency (0-cost +0.12, 3+ cost -0.05). |
+| Archetype Synergy | **35%** | V2: Soft-sum across all matched archetypes `1 - ∏(1-w_i)`. Multi-archetype cards get credit for versatility. |
+| Intrinsic Value | **25%** | Rarity baseline + Cost efficiency + V2 bonuses: draw, exhaust, block, AoE, innate, retain. Penalties: ethereal, setup requirements. |
 | Phase Adaptability | **15%** | Core/Enabler cards score higher late-game (Early 0.75 → Late 0.88); Transition cards are strong early (Early 0.85 → Late 0.15); Curse/Status is fixed at 0. |
-| Completion Contribution| **15%** | Deck completion delta × 3 (amplifier, since a single card usually only adds 5~10% completion). |
-| Synergy Bonus | **5%** | Overlap with current relic/deck tags. Each matched tag +0.20, max 1.0. |
+| Completion Contribution| **15%** | V2: Top 3 motif deltas + motif unlock bonus. Single card contribution amplified. |
+| Synergy Bonus | **10%** | V2: Increased from 5%. Relic/deck tag overlap + explicit archetype boosts. |
 
 **Penalties** (deducted directly from the raw score, bypassing weights):
 - **Curse/Status Penalty**: Curse cards −0.50, an extra −0.015 per additional curse in deck (max deduction 0.25).
@@ -195,7 +195,37 @@ python -m uvicorn backend.main:app --port 8001
 
 ## Version History
 
-### v1.0 Test (Current)
+### v2.0 (CDPE - Contextual Delta Pick Engine)
+
+**Major Architecture Upgrade** - Complete overhaul of the scoring system to evaluate **pick delta vs Skip** instead of absolute card scores.
+
+**Core Changes:**
+- **Skip as Full Option**: Skip is now evaluated as a 4th alternative. Recommendations show delta vs Skip: "Inflame (+25.3 vs Skip)" or "Skip is better (-5.2)".
+- **Soft Archetype Aggregation**: Replaced `max(weights)` with soft-sum `1 - ∏(1-w_i)`. Cards good in multiple archetypes now score higher than single-archetype specialists.
+- **Soft Role Thresholds**: Replaced hard cutoffs (0.85/0.60/0.30) with sigmoid transitions. Card at 0.29 vs 0.30 is no longer a cliff.
+- **Extended Value Dimension**: Added bonuses for draw (+0.05/card), exhaust (+0.06), block (+0.006/point), AoE (+0.06), innate (+0.04), retain (+0.03). Added penalties for ethereal (-0.04) and setup requirements (-0.06).
+- **Raised Inference Cap**: Inference weight cap raised from 0.35 to 0.50 (can now reach ENABLER level).
+- **STS2 Character Support**: Removed Watcher profiles (not in STS2). Added Necrobinder (doom, soul_engine, ethereal, osty_attack) and Regent (star_engine, sovereign_blade, colorless) inference profiles.
+- **Multi-Motif Completion**: Completion now considers top 3 motifs + motif unlock bonus, not just primary archetype.
+- **Adjusted Weights**: Archetype 40%→35%, Synergy 5%→10% (more credit for relic/deck synergies).
+
+**Skip Scoring Formula:**
+```
+skip_score = 50 (base)
+  + dilution_resistance (up to +15 if deck > target)
+  + consistency_protection (+5 if deck is good)
+  - opportunity_cost (-8 in early game)
+  - weakness_urgency (-12 if critical gaps)
+  ± hp_modifier
+```
+
+**Files Changed:**
+- `backend/scoring.py` - V2 scoring functions, skip scoring, soft roles
+- `backend/evaluator.py` - Skip integration, V2 recommendations
+- `backend/models.py` - Added SKIP CardRole
+- `backend/archetype_inference.py` - Necrobinder/Regent profiles, raised cap
+
+### v1.0 Test (Previous)
 - **Standalone EXE Available**: First fully independent compiled version. No Python installation needed, extract and play.
 - **GameWatcher Fixes**: Refactored `scripts/` into a standard Python package. Character/floor/deck states now load correctly in EXE mode, making Archetype Synergy scoring much more accurate.
 - **Path Resolution Fix (PyInstaller 6.x)**: Used `sys._MEIPASS` to resolve `_internal/` directory. `data/`, `styles.qss`, and log paths now work correctly in EXE mode.

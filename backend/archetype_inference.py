@@ -1,22 +1,28 @@
 """
 backend/archetype_inference.py
-套路推断层 (v0.6)
+套路推断层 (v2.0 - CDPE)
 
 职责：
   对手动 card_weights 中不存在的卡，根据卡牌的结构化数据
   （powers_applied、keywords、description、card_type、cost）
   自动推断该卡与每个套路的相关度，返回一个推断权重。
 
+V2 Changes:
+  - Raised inference cap from 0.35 to 0.50 (can now reach ENABLER level)
+  - Removed Watcher profiles (not in STS2)
+  - Added Necrobinder profiles: doom, soul_engine, ethereal, osty_attack
+  - Added Regent profiles: star_engine, sovereign_blade, colorless
+
 设计原则：
-  - 推断权重上限 0.35，永远低于手动定义（最低 0.40）
-  - 角色最高 FILLER（不会推断出 CORE/ENABLER）
+  - 推断权重上限 0.50 (V2: raised from 0.35)
+  - V2: 推断层可达 ENABLER（之前只能 FILLER）
   - 推断是"兜底"，不覆盖精确层
   - 每个套路维护一份"推断规则集"（ArchetypeInferenceRule）
 
 推断分类（三级）：
-  HIGH   (~0.30~0.35)  关键词直接命中套路核心机制
-  MID    (~0.18~0.28)  关键词与套路方向相关但非核心
-  LOW    (~0.08~0.15)  类型/费用/通用价值符合，无直接关键词匹配
+  HIGH   (~0.35~0.50)  关键词直接命中套路核心机制 (V2: raised)
+  MID    (~0.20~0.35)  关键词与套路方向相关但非核心
+  LOW    (~0.08~0.18)  类型/费用/通用价值符合，无直接关键词匹配
 """
 
 from __future__ import annotations
@@ -223,30 +229,97 @@ _PROFILES: list[ArchetypeInferenceProfile] = [
         anti_patterns=[r"\bdark\b.*burst|evoke.*dark"],
     ),
 
-    # ── WATCHER ──────────────────────────────────────────────────────────
+    # ── NECROBINDER (STS2 New Character) ─────────────────────────────────
 
     ArchetypeInferenceProfile(
-        archetype_id="watcher_divinity",
+        archetype_id="necrobinder_doom",
         rules=[
-            InferenceRule(0.32, powers_applied_any=["Mantra", "Divinity"]),
-            InferenceRule(0.28, desc_pattern=r"\bmantra\b|顿悟|神性|divinity"),
-            InferenceRule(0.22, keywords_any=["Scry"]),
-            InferenceRule(0.18, desc_pattern=r"\bscry\b|占卜"),
-            InferenceRule(0.12, card_type_match=CardType.SKILL),
+            # Doom mechanic - execute threshold damage
+            InferenceRule(0.32, powers_applied_any=["Doom", "Execute"]),
+            InferenceRule(0.30, desc_pattern=r"\bdoom\b|execute|death mark"),
+            InferenceRule(0.25, desc_pattern=r"if.{0,20}hp.{0,10}(below|less|under)|kill.*threshold"),
+            InferenceRule(0.20, desc_pattern=r"finish.{0,10}off|lethal|deathblow"),
+            InferenceRule(0.15, card_type_match=CardType.ATTACK),
         ],
-        anti_patterns=[r"\bwrath\b.*aggro"],
+        anti_patterns=[r"\bsoul\b.*engine|\bethereal\b.*loop"],
     ),
 
     ArchetypeInferenceProfile(
-        archetype_id="watcher_wrath_aggro",
+        archetype_id="necrobinder_soul_engine",
         rules=[
-            InferenceRule(0.30, desc_pattern=r"\bwrath\b|愤怒"),
-            InferenceRule(0.28, desc_pattern=r"\bcalm\b.*\bwrath\b|\bwrath\b.*\bcalm\b"),
-            InferenceRule(0.22, powers_applied_any=["Strength"]),
-            InferenceRule(0.18, card_type_match=CardType.ATTACK),
-            InferenceRule(0.12, cost_max=1),
+            # Soul resource mechanic
+            InferenceRule(0.32, powers_applied_any=["Soul", "SoulGain"]),
+            InferenceRule(0.30, desc_pattern=r"\bsoul\b|souls?\s+gain|gain.{0,10}souls?"),
+            InferenceRule(0.25, desc_pattern=r"spectral|spirit|essence"),
+            InferenceRule(0.20, desc_pattern=r"summon|conjure|raise|reanimate"),
+            InferenceRule(0.15, card_type_match=CardType.POWER),
         ],
-        anti_patterns=[r"\bmantra\b|divinity"],
+        anti_patterns=[r"\bdoom\b.*execute"],
+    ),
+
+    ArchetypeInferenceProfile(
+        archetype_id="necrobinder_ethereal",
+        rules=[
+            # Ethereal synergy - cards that exhaust at end of turn
+            InferenceRule(0.32, keywords_any=["Ethereal"]),
+            InferenceRule(0.28, desc_pattern=r"\bethereal\b"),
+            InferenceRule(0.22, desc_pattern=r"end of turn.{0,15}exhaust|exhaust.{0,15}end of turn"),
+            InferenceRule(0.18, desc_pattern=r"fleeting|temporary|vanish"),
+            InferenceRule(0.12, keywords_any=["Exhaust"]),
+        ],
+        anti_patterns=[r"\bpermanent\b|\bretain\b"],
+    ),
+
+    ArchetypeInferenceProfile(
+        archetype_id="necrobinder_osty_attack",
+        rules=[
+            # Osty (bone-based) attacks
+            InferenceRule(0.30, desc_pattern=r"\bosty\b|\bbone\b|\bskeleton\b"),
+            InferenceRule(0.25, desc_pattern=r"summon.{0,15}(minion|skeleton|undead)"),
+            InferenceRule(0.20, powers_applied_any=["Bone", "Ossify"]),
+            InferenceRule(0.15, card_type_match=CardType.ATTACK),
+        ],
+        anti_patterns=[],
+    ),
+
+    # ── REGENT (STS2 New Character) ──────────────────────────────────────
+
+    ArchetypeInferenceProfile(
+        archetype_id="regent_star_engine",
+        rules=[
+            # Star resource mechanic
+            InferenceRule(0.32, powers_applied_any=["Star", "StarGain", "Constellation"]),
+            InferenceRule(0.30, desc_pattern=r"\bstar\b|\bstars\b|constellation|celestial"),
+            InferenceRule(0.25, desc_pattern=r"gain.{0,10}star|star.{0,10}gain"),
+            InferenceRule(0.20, desc_pattern=r"astral|cosmic|stellar"),
+            InferenceRule(0.15, card_type_match=CardType.POWER),
+        ],
+        anti_patterns=[r"\bblade\b.*forge|\bsovereign\b"],
+    ),
+
+    ArchetypeInferenceProfile(
+        archetype_id="regent_sovereign_blade",
+        rules=[
+            # Blade/weapon forging mechanic
+            InferenceRule(0.32, desc_pattern=r"\bsovereign\b|\broyal\b.*blade"),
+            InferenceRule(0.28, desc_pattern=r"\bforge\b|\bcraft\b|create.{0,15}(weapon|blade|sword)"),
+            InferenceRule(0.22, desc_pattern=r"\bblade\b|\bsword\b|\bweapon\b"),
+            InferenceRule(0.18, powers_applied_any=["Forge", "Blade", "WeaponMastery"]),
+            InferenceRule(0.15, card_type_match=CardType.ATTACK),
+        ],
+        anti_patterns=[r"\bstar\b.*engine|\bconstellation\b"],
+    ),
+
+    ArchetypeInferenceProfile(
+        archetype_id="regent_colorless",
+        rules=[
+            # Colorless card synergy
+            InferenceRule(0.30, desc_pattern=r"\bcolorless\b|\bneutral\b|any color"),
+            InferenceRule(0.25, desc_pattern=r"add.{0,15}colorless|colorless.{0,15}card"),
+            InferenceRule(0.20, desc_pattern=r"transform.{0,15}into|become.{0,15}colorless"),
+            InferenceRule(0.15, desc_pattern=r"copy|duplicate|replicate"),
+        ],
+        anti_patterns=[],
     ),
 ]
 
@@ -368,7 +441,8 @@ def infer_weight(
         if hit:
             total += rule.weight_add
 
-    return min(0.35, total)
+    # V2: Raised cap from 0.35 to 0.50 (can reach ENABLER level)
+    return min(0.50, total)
 
 
 def infer_all_archetypes(

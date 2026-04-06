@@ -48,6 +48,12 @@ from .scoring import (
     ascension_modifier,
     Alignment,
     CrossValidationResult,
+    # V2 additions
+    calculate_skip_score,
+    calculate_pick_delta,
+    format_pick_recommendation,
+    determine_role_v2,
+    soft_role_confidence,
 )
 
 
@@ -98,13 +104,31 @@ class CardEvaluator:
 
     def rank_cards(self, run_state: RunState) -> list[EvaluationResult]:
         """
-        对 run_state.card_choices 中的所有候选卡进行评估并排序。
+        V2: 对 run_state.card_choices 中的所有候选卡进行评估，
+        包括 Skip 作为第4个选项。
         返回按 total_score 降序排列的 EvaluationResult 列表。
         """
         log.debug(f"card_choices: {run_state.card_choices}")
         detected = self.detect_archetypes(run_state)
         relic_tags = self._extract_relic_tags(run_state)
         relic_boosts = self._build_relic_synergy(run_state, detected)
+
+        # V2: Calculate skip score first
+        target_deck_size = 12 if not detected else detected[0].target_card_count
+        # Estimate deck consistency (simple heuristic based on archetype completion)
+        deck_consistency = 0.5
+        if detected:
+            deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
+            deck_consistency = self._calc_completion(detected[0], deck_set)
+        
+        skip_score = calculate_skip_score(
+            deck_size=len(run_state.deck),
+            target_deck_size=target_deck_size,
+            phase=run_state.phase,
+            hp_ratio=run_state.hp_ratio,
+            deck_consistency=deck_consistency,
+            has_critical_gaps=False,  # TODO: implement gap detection in V2 Deck Profiler
+        )
 
         results: list[EvaluationResult] = []
         for card_id in run_state.card_choices:
@@ -113,8 +137,13 @@ class CardEvaluator:
                 log.warning(f"Card not found in DB: {card_id}")
                 continue
             log.debug(f"Evaluating card: {card_id} -> {card.name}")
-            result = self.evaluate_card(card, run_state, detected, relic_tags, relic_boosts)
+            result = self.evaluate_card(card, run_state, detected, relic_tags, relic_boosts,
+                                        skip_score=skip_score)
             results.append(result)
+
+        # V2: Add Skip as a virtual option
+        skip_result = self._create_skip_result(skip_score, run_state)
+        results.append(skip_result)
 
         log.debug(f"Evaluation results: {[r.card_name for r in results]}")
         results.sort(key=lambda r: r.total_score, reverse=True)
@@ -180,6 +209,7 @@ class CardEvaluator:
         detected_archetypes: list[Archetype],
         relic_synergy_tags: list[str],
         relic_boosts: dict[str, float] | None = None,
+        skip_score: float = 50.0,  # V2: Skip score for delta calculation
     ) -> EvaluationResult:
         """
         对单张卡进行全维度评估，返回 EvaluationResult。
@@ -273,7 +303,19 @@ class CardEvaluator:
             algo_score=algo_score_100,
         )
 
-        recommendation = self._make_recommendation(total, role)
+        # V2: Calculate pick delta vs Skip
+        pick_delta = calculate_pick_delta(total, skip_score)
+        recommendation = self._make_recommendation_v2(total, role, pick_delta)
+        
+        # V2: Add skip comparison to reasons
+        if pick_delta > 10:
+            reasons_for.append(f"Strong pick (+{pick_delta:.1f} vs Skip)")
+        elif pick_delta > 3:
+            reasons_for.append(f"Good pick (+{pick_delta:.1f} vs Skip)")
+        elif pick_delta < -5:
+            reasons_against.append(f"Consider skipping (Skip is {-pick_delta:.1f} better)")
+        elif pick_delta < 0:
+            reasons_against.append(f"Marginal pick (Skip is slightly better)")
 
         return EvaluationResult(
             card_id=card.id,
@@ -329,7 +371,7 @@ class CardEvaluator:
         inferred_only: bool = False,
     ) -> CardRole:
         """
-        根据套路匹配结果推断卡牌在当前 run 中的角色。
+        V2: 根据套路匹配结果推断卡牌角色，使用 soft thresholds。
 
         inferred_only: 若为 True，表示所有权重来自推断层（非手动定义），
                        最低角色保底为 FILLER，不判定为 POLLUTION。
@@ -345,20 +387,9 @@ class CardEvaluator:
                 return CardRole.UNKNOWN
 
         max_weight = max(archetype_weights)
-
-        # 根据权重阈值映射角色
-        if max_weight >= 0.85:
-            return CardRole.CORE
-        elif max_weight >= 0.60:
-            return CardRole.ENABLER
-        elif max_weight >= 0.30:
-            return CardRole.FILLER
-        else:
-            # 精确层明确标注 pollution（如 weight=0.15）→ 保留判断
-            # 推断层低权重（如 attack 类型命中 LOW 规则 0.10）→ 保底 FILLER
-            if inferred_only:
-                return CardRole.FILLER
-            return CardRole.POLLUTION
+        
+        # V2: Use soft role determination with smoother boundaries
+        return determine_role_v2(max_weight, inferred_only)
 
     def _build_reasons(
         self,
@@ -462,7 +493,7 @@ class CardEvaluator:
 
     @staticmethod
     def _make_recommendation(total_score: float, role: CardRole) -> str:
-        """根据分数和角色生成推荐语（与 scoring.py 分档对应）"""
+        """根据分数和角色生成推荐语（与 scoring.py 分档对应）- 旧接口保留"""
         if role == CardRole.POLLUTION:
             return "Skip"
         if total_score >= 80:
@@ -475,6 +506,83 @@ class CardEvaluator:
             return "Caution"
         else:
             return "Skip"
+
+    @staticmethod
+    def _make_recommendation_v2(total_score: float, role: CardRole, pick_delta: float) -> str:
+        """
+        V2: Generate recommendation considering pick delta vs Skip.
+        
+        Includes the delta in the recommendation when relevant.
+        """
+        if role == CardRole.POLLUTION:
+            return "Skip (Pollution)"
+        if role == CardRole.SKIP:
+            return "Skip"
+        
+        # V2: Consider delta vs Skip
+        if pick_delta < -5:
+            return "Skip Recommended"
+        elif pick_delta < 0:
+            return "Consider Skip"
+        
+        # Standard recommendations with delta
+        if total_score >= 80:
+            return f"Highly Recommended (+{pick_delta:.0f})"
+        elif total_score >= 65:
+            return f"Recommended (+{pick_delta:.0f})"
+        elif total_score >= 50:
+            return f"Optional (+{pick_delta:.0f})" if pick_delta > 0 else "Optional"
+        elif total_score >= 30:
+            return "Caution"
+        else:
+            return "Skip"
+
+    def _create_skip_result(self, skip_score: float, run_state: RunState) -> EvaluationResult:
+        """
+        V2: Create an EvaluationResult for the Skip option.
+        """
+        reasons_for = []
+        reasons_against = []
+        
+        deck_size = len(run_state.deck)
+        
+        if deck_size >= 15:
+            reasons_for.append(f"Deck has {deck_size} cards, avoiding dilution")
+        if deck_size >= 20:
+            reasons_for.append("Large deck - skip helps maintain consistency")
+        
+        if run_state.phase == GamePhase.LATE:
+            reasons_for.append("Late game - be selective with picks")
+        elif run_state.phase == GamePhase.EARLY:
+            reasons_against.append("Early game - usually want to build deck")
+        
+        if deck_size < 10:
+            reasons_against.append(f"Small deck ({deck_size} cards) - need more options")
+        
+        if run_state.hp_ratio < 0.3:
+            reasons_against.append("Low HP - may need survival cards")
+        
+        return EvaluationResult(
+            card_id="__SKIP__",
+            card_name="Skip",
+            rarity="",
+            total_score=skip_score,
+            role=CardRole.SKIP,
+            breakdown=ScoreBreakdown(
+                base_score=skip_score / 100.0,
+                rarity_score=0.0,
+                archetype_score=0.0,
+                completion_score=0.0,
+                phase_score=0.0,
+                synergy_bonus=0.0,
+                pollution_penalty=0.0,
+            ),
+            matched_archetypes=[],
+            reasons_for=reasons_for,
+            reasons_against=reasons_against,
+            recommendation="Skip" if skip_score >= 50 else "Pick a card",
+            grade=score_to_grade(skip_score),
+        )
 
     @staticmethod
     def _build_relic_synergy(
