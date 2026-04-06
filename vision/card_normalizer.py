@@ -34,6 +34,11 @@ log = logging.getLogger(__name__)
 # 置信度阈值（低于此值的匹配视为失败）
 DEFAULT_CONFIDENCE_THRESHOLD = 0.55
 
+# V2: 短词名匹配需要更高的置信度阈值
+# 例如 "Stack" (5 字符) 很容易误匹配
+SHORT_NAME_LENGTH = 6
+SHORT_NAME_THRESHOLD_BOOST = 0.15  # 短名加0.15阈值
+
 
 @dataclass
 class MatchResult:
@@ -46,7 +51,11 @@ class MatchResult:
 
     @property
     def is_reliable(self) -> bool:
-        return self.confidence >= DEFAULT_CONFIDENCE_THRESHOLD
+        # V2: 短名卡需要更高置信度
+        threshold = DEFAULT_CONFIDENCE_THRESHOLD
+        if len(self.matched_name) <= SHORT_NAME_LENGTH:
+            threshold += SHORT_NAME_THRESHOLD_BOOST
+        return self.confidence >= threshold
 
 
 @dataclass
@@ -169,6 +178,27 @@ class CardNameIndex:
             return []
 
         results: list[MatchResult] = []
+        input_len = len(normalized.replace(" ", ""))
+
+        def _get_effective_threshold(name: str) -> float:
+            """V2: Short names need higher confidence threshold"""
+            base = threshold
+            if len(name) <= SHORT_NAME_LENGTH:
+                base += SHORT_NAME_THRESHOLD_BOOST
+            return base
+
+        def _length_penalty(name: str) -> float:
+            """V2: Penalize large length mismatch between input and match"""
+            name_len = len(name.replace(" ", ""))
+            if name_len == 0 or input_len == 0:
+                return 0.0
+            ratio = min(name_len, input_len) / max(name_len, input_len)
+            # If lengths differ by more than 50%, apply penalty
+            if ratio < 0.5:
+                return 0.15  # Heavy penalty for big mismatch
+            elif ratio < 0.7:
+                return 0.08  # Moderate penalty
+            return 0.0
 
         # 在英文列表中搜索
         en_names = [name for name, _ in self._en_list]
@@ -176,12 +206,16 @@ class CardNameIndex:
             normalized,
             en_names,
             scorer=fuzz.token_sort_ratio,
-            limit=top_k,
+            limit=top_k * 2,  # Get more candidates, filter later
         )
         for match_name, score, idx in en_matches:
-            confidence = score / 100.0
-            if confidence >= threshold:
-                _, card_id = self._en_list[idx]
+            raw_confidence = score / 100.0
+            actual_name, card_id = self._en_list[idx]
+            # V2: Apply length penalty
+            penalty = _length_penalty(actual_name)
+            confidence = max(0.0, raw_confidence - penalty)
+            effective_threshold = _get_effective_threshold(actual_name)
+            if confidence >= effective_threshold:
                 results.append(MatchResult(
                     card_id=card_id,
                     matched_name=self._index[card_id][0],
@@ -196,12 +230,16 @@ class CardNameIndex:
             normalized,
             zh_names,
             scorer=fuzz.token_sort_ratio,
-            limit=top_k,
+            limit=top_k * 2,  # Get more candidates, filter later
         )
         for match_name, score, idx in zh_matches:
-            confidence = score / 100.0
-            if confidence >= threshold:
-                _, card_id = self._zh_list[idx]
+            raw_confidence = score / 100.0
+            actual_name, card_id = self._zh_list[idx]
+            # V2: Apply length penalty
+            penalty = _length_penalty(actual_name)
+            confidence = max(0.0, raw_confidence - penalty)
+            effective_threshold = _get_effective_threshold(actual_name)
+            if confidence >= effective_threshold:
                 # 避免重复（同一 card_id 已在英文结果中）
                 existing_ids = {r.card_id for r in results}
                 if card_id not in existing_ids:

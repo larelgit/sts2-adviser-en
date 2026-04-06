@@ -295,6 +295,7 @@ class EvaluateRequest(BaseModel):
 class EvaluateResponse(BaseModel):
     results: list[EvaluationResult]
     detected_archetypes: list[str]   # 检测到的套路 id 列表
+    verdict: dict | None = None      # V2: Final recommendation (pick vs skip)
 
 
 # ---------------------------------------------------------------------------
@@ -476,13 +477,14 @@ async def evaluate_cards(request: EvaluateRequest):
 
     try:
         detected = evaluator.detect_archetypes(run_state)
-        results = evaluator.rank_cards(run_state)
+        results, verdict = evaluator.rank_cards(run_state)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"评估失败: {exc}") from exc
 
     return EvaluateResponse(
         results=results,
         detected_archetypes=[a.id for a in detected],
+        verdict=verdict,
     )
 
 

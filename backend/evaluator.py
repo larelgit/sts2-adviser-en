@@ -77,7 +77,7 @@ class CardEvaluator:
 
     使用方式：
         evaluator = CardEvaluator(card_db)
-        results = evaluator.rank_cards(run_state)
+        results, verdict = evaluator.rank_cards(run_state)
     """
 
     def __init__(
@@ -102,11 +102,19 @@ class CardEvaluator:
     # 公开接口
     # ------------------------------------------------------------------
 
-    def rank_cards(self, run_state: RunState) -> list[EvaluationResult]:
+    def rank_cards(self, run_state: RunState) -> tuple[list[EvaluationResult], dict]:
         """
-        V2: 对 run_state.card_choices 中的所有候选卡进行评估，
-        包括 Skip 作为第4个选项。
-        返回按 total_score 降序排列的 EvaluationResult 列表。
+        V2: 对 run_state.card_choices 中的所有候选卡进行评估。
+        
+        Returns:
+            Tuple of (card_results, verdict):
+            - card_results: 按 total_score 降序排列的卡牌 EvaluationResult 列表（不含 Skip）
+            - verdict: 最终判定 dict with keys:
+                - best_action: "pick" 或 "skip"
+                - best_card: 最佳卡名 (如果 pick)
+                - skip_score: Skip 的分数
+                - pick_delta: 最佳卡相对 Skip 的优势
+                - recommendation: 完整推荐文本
         """
         log.debug(f"card_choices: {run_state.card_choices}")
         detected = self.detect_archetypes(run_state)
@@ -141,14 +149,59 @@ class CardEvaluator:
                                         skip_score=skip_score)
             results.append(result)
 
-        # V2: Add Skip as a virtual option
-        skip_result = self._create_skip_result(skip_score, run_state)
-        results.append(skip_result)
-
         log.debug(f"Evaluation results: {[r.card_name for r in results]}")
         results.sort(key=lambda r: r.total_score, reverse=True)
-        self._save_score_log(results, run_state, detected)
-        return results
+        
+        # V2: Build verdict (final recommendation)
+        verdict = self._build_verdict(results, skip_score)
+        
+        self._save_score_log(results, run_state, detected, verdict)
+        return results, verdict
+    
+    def _build_verdict(self, results: list[EvaluationResult], skip_score: float) -> dict:
+        """
+        V2: Build final verdict comparing best card vs Skip.
+        """
+        if not results:
+            return {
+                "best_action": "skip",
+                "best_card": None,
+                "skip_score": skip_score,
+                "pick_delta": 0,
+                "recommendation": "No valid cards — Skip",
+            }
+        
+        best_card = results[0]
+        pick_delta = best_card.total_score - skip_score
+        
+        if pick_delta > 5:
+            # Clear pick
+            action = "pick"
+            if pick_delta > 20:
+                rec_text = f"🎯 Pick {best_card.card_name} (+{pick_delta:.0f} vs Skip)"
+            else:
+                rec_text = f"✓ Pick {best_card.card_name} (+{pick_delta:.0f} vs Skip)"
+        elif pick_delta > 0:
+            # Marginal pick
+            action = "pick"
+            rec_text = f"⚖ Slight edge: {best_card.card_name} (+{pick_delta:.0f})"
+        elif pick_delta > -5:
+            # Borderline - could go either way
+            action = "skip"
+            rec_text = f"⚖ Borderline — Skip preferred ({-pick_delta:.0f})"
+        else:
+            # Clear skip
+            action = "skip"
+            rec_text = f"⏭ Skip is better ({-pick_delta:.0f})"
+        
+        return {
+            "best_action": action,
+            "best_card": best_card.card_name if action == "pick" else None,
+            "best_card_id": best_card.card_id if action == "pick" else None,
+            "skip_score": round(skip_score, 1),
+            "pick_delta": round(pick_delta, 1),
+            "recommendation": rec_text,
+        }
 
     def detect_archetypes(self, run_state: RunState) -> list[Archetype]:
         """
@@ -617,6 +670,7 @@ class CardEvaluator:
         results: list[EvaluationResult],
         run_state: RunState,
         detected_archetypes: list | None = None,
+        verdict: dict | None = None,
     ) -> None:
         """
         将评分细节写入 logs/score_YYYYMMDD_HHMMSS.json。
@@ -636,6 +690,7 @@ class CardEvaluator:
                 "deck": run_state.deck,
                 "detected_archetypes": [a.id for a in (detected_archetypes or [])],
                 "relics": [r.id for r in run_state.relics],
+                "verdict": verdict,  # V2: final recommendation
                 "results": [
                     {
                         "card_id": r.card_id,

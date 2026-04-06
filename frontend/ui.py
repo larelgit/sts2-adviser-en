@@ -1023,6 +1023,75 @@ class CardResultWidget(QFrame):
             lbl.setWordWrap(True)
             lbl.setStyleSheet("color:#FF8A65;font-size:12px;padding-top:1px;")
             outer.addWidget(lbl)
+
+
+class VerdictWidget(QFrame):
+    """
+    V2: Final recommendation widget showing pick vs skip verdict.
+    Displayed at the bottom of the results list.
+    """
+
+    def __init__(self, verdict: dict, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setObjectName("VerdictWidget")
+        self._build_ui(verdict)
+
+    def _build_ui(self, verdict: dict) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
+
+        best_action = verdict.get("best_action", "skip")
+        recommendation = verdict.get("recommendation", "")
+        skip_score = verdict.get("skip_score", 50)
+        pick_delta = verdict.get("pick_delta", 0)
+
+        # Background color based on action
+        if best_action == "pick":
+            if pick_delta > 15:
+                bg_color = "rgba(76, 175, 80, 0.25)"   # Strong pick - green
+                border_color = "#4CAF50"
+            else:
+                bg_color = "rgba(100, 181, 246, 0.25)"  # Marginal pick - blue
+                border_color = "#64B5F6"
+        else:
+            if pick_delta < -10:
+                bg_color = "rgba(239, 83, 80, 0.20)"   # Strong skip - red
+                border_color = "#EF5350"
+            else:
+                bg_color = "rgba(255, 183, 77, 0.25)"   # Borderline skip - orange
+                border_color = "#FFB74D"
+
+        self.setStyleSheet(f"""
+            QFrame#VerdictWidget {{
+                background: {bg_color};
+                border: 2px solid {border_color};
+                border-radius: 8px;
+            }}
+        """)
+
+        # Header: "FINAL VERDICT"
+        header = QLabel("📊 FINAL VERDICT")
+        header.setStyleSheet(f"color: {border_color}; font-size: 11px; font-weight: bold;")
+        layout.addWidget(header)
+
+        # Main recommendation text
+        rec_label = QLabel(recommendation)
+        rec_label.setWordWrap(True)
+        rec_label.setStyleSheet(f"color: #E0E0E0; font-size: 15px; font-weight: bold;")
+        layout.addWidget(rec_label)
+
+        # Skip score info
+        info_parts = [f"Skip score: {skip_score:.0f}"]
+        if pick_delta != 0:
+            delta_sign = "+" if pick_delta > 0 else ""
+            info_parts.append(f"Delta: {delta_sign}{pick_delta:.0f}")
+        
+        info_label = QLabel(" | ".join(info_parts))
+        info_label.setStyleSheet("color: #888; font-size: 11px;")
+        layout.addWidget(info_label)
+
+
 # ---------------------------------------------------------------------------
 # 主窗口
 # ---------------------------------------------------------------------------
@@ -1951,7 +2020,12 @@ class CardAdviserWindow(QWidget):
     def _on_result(self, data: dict) -> None:
         results = data.get("results", [])
         archetypes = data.get("detected_archetypes", [])
-        self._render_results(results)
+        verdict = data.get("verdict")
+        
+        # V2: Filter out __SKIP__ from results (it's now in verdict)
+        results = [r for r in results if r.get("card_id") != "__SKIP__"]
+        
+        self._render_results(results, verdict)
 
         if not results:
             self._status_label.setText("❌ No matching cards found")
@@ -1968,7 +2042,7 @@ class CardAdviserWindow(QWidget):
     def _on_error(self, message: str) -> None:
         self._status_label.setText(f"Error: {message}")
 
-    def _render_results(self, results: list[dict]) -> None:
+    def _render_results(self, results: list[dict], verdict: dict | None = None) -> None:
         """清空列表并重新渲染评估结果"""
         # 移除旧 widget（保留 stretch）
         while self._list_layout.count() > 1:
@@ -1976,9 +2050,15 @@ class CardAdviserWindow(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
+        # Render card results
         for result in results:
             widget = CardResultWidget(result, language=self._language)
             self._list_layout.insertWidget(self._list_layout.count() - 1, widget)
+        
+        # V2: Add verdict widget at the bottom (before stretch)
+        if verdict:
+            verdict_widget = VerdictWidget(verdict)
+            self._list_layout.insertWidget(self._list_layout.count() - 1, verdict_widget)
 
     def _show_placeholder(self) -> None:
         """初始占位内容"""
