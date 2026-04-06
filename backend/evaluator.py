@@ -460,7 +460,7 @@ class CardEvaluator:
 
         return reasons_for, reasons_against
 
-@staticmethod
+    @staticmethod
     def _make_recommendation(total_score: float, role: CardRole) -> str:
         """根据分数和角色生成推荐语（与 scoring.py 分档对应）"""
         if role == CardRole.POLLUTION:
