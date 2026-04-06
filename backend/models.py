@@ -65,6 +65,7 @@ class CardRole(str, Enum):
     TRANSITION  = "transition"  # 过渡卡（前期强，后期换掉）
     FILLER      = "filler"      # 补件（有用但可替换）
     POLLUTION   = "pollution"   # 污染（降低 deck 质量）
+    SKIP        = "skip"        # 不拿牌 / 主动跳过
     UNKNOWN     = "unknown"     # 尚未判断
 
 
@@ -109,11 +110,15 @@ class Card(BaseModel):
     base_damage:  Optional[int] = None
     base_block:   Optional[int] = None
     base_draw:    Optional[int] = None
+    hit_count:    Optional[int] = None
+    energy_gain:  Optional[int] = None
+    hp_loss:      Optional[int] = None
 
     keywords: CardKeywords = Field(default_factory=CardKeywords)
 
     # 标签（用于套路匹配，e.g. ["shiv", "dexterity", "discard"]）
     tags: list[str] = Field(default_factory=list)
+    spawned_cards: list[str] = Field(default_factory=list)
 
     class Config:
         frozen = True   # 卡牌定义不可变
@@ -170,16 +175,28 @@ class RunState(BaseModel):
     """
     character:   Character
     floor:       int = Field(ge=0)
+    act:         Optional[int] = Field(default=None, ge=1)
     hp:          int = Field(ge=0)
     max_hp:      int = Field(ge=1)
     gold:        int = Field(ge=0)
     ascension:   int = Field(ge=0, default=0)   # 当前进阶难度（0 = 普通模式）
+    act_boss:    str = ""
 
     # 已有牌组（card.id 列表，含升级后缀，如 "shiv+"）
     deck:        list[str] = Field(default_factory=list)
 
     # 已有遗物
     relics:      list[RelicInfo] = Field(default_factory=list)
+
+    # 上下文扩展（v2-lite：允许数据源逐步接入）
+    potions:          list[str] = Field(default_factory=list)
+    upcoming_nodes:   list[str] = Field(default_factory=list)
+    planned_removes:  int = Field(default=0, ge=0)
+    planned_upgrades: int = Field(default=0, ge=0)
+    mode:             str = "solo"
+    patch_version:    str = ""
+    ocr_confidence:   float = Field(default=1.0, ge=0.0, le=1.0)
+    parse_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
 
     # 当前选卡池（本次选择的 3 张卡 id）
     card_choices: list[str] = Field(default_factory=list)
@@ -193,8 +210,26 @@ class RunState(BaseModel):
         return GamePhase.LATE
 
     @property
+    def act_number(self) -> int:
+        if self.act is not None:
+            return self.act
+        if self.floor <= 17:
+            return 1
+        elif self.floor <= 34:
+            return 2
+        return 3
+
+    @property
     def hp_ratio(self) -> float:
         return self.hp / self.max_hp
+
+    @property
+    def input_confidence(self) -> float:
+        # OCR 在手动模式下可能不存在，因此只在有候选卡时纳入平均
+        values = [self.parse_confidence]
+        if self.card_choices:
+            values.append(self.ocr_confidence)
+        return sum(values) / len(values)
 
 
 # ---------------------------------------------------------------------------
@@ -235,3 +270,7 @@ class EvaluationResult(BaseModel):
     # 最终建议
     recommendation: str = ""   # e.g. "强烈推荐" / "可选" / "跳过"
     grade: str = ""             # 字母等级 e.g. "S" / "A+" / "B-" / "D"
+    pick_delta_vs_skip: float = 0.0
+    confidence: float = 0.0
+    confidence_label: str = ""
+    is_skip_option: bool = False

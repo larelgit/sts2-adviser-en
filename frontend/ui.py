@@ -911,6 +911,7 @@ _ROLE_ZH = {
     "transition": "Transition",
     "filler":     "Filler",
     "pollution":  "Curse/Status",
+    "skip":       "Skip",
     "unknown":    "Unknown",
 }
 
@@ -1005,6 +1006,23 @@ class CardResultWidget(QFrame):
         meta_row.addWidget(rec_label)
 
         outer.addLayout(meta_row)
+
+        delta = result.get("pick_delta_vs_skip")
+        confidence_label = result.get("confidence_label", "")
+        is_skip_option = result.get("is_skip_option", False)
+        info_parts = []
+        if is_skip_option:
+            info_parts.append("Baseline action")
+        elif delta is not None:
+            info_parts.append(f"Δ vs Skip {delta:+.1f}")
+        if confidence_label:
+            info_parts.append(confidence_label)
+        if info_parts:
+            info_label = QLabel(" • ".join(info_parts))
+            info_label.setObjectName("cardDecisionInfo")
+            info_label.setWordWrap(True)
+            info_label.setStyleSheet("color:#9FB2C8;font-size:11px;padding-top:1px;")
+            outer.addWidget(info_label)
 
         # ── 行3+：推荐 / 不推荐理由 ─────────────────────────────────────
         reasons_for     = result.get("reasons_for", [])
@@ -1959,7 +1977,7 @@ class CardAdviserWindow(QWidget):
         else:
             if archetypes:
                 arch_text = ", ".join(archetypes)
-                self._archetype_label.setText(f"⚔ Archetypes: {arch_text}")
+                self._archetype_label.setText(f"⚔ Motifs: {arch_text}")
                 self._archetype_label.setVisible(True)
             else:
                 self._archetype_label.setVisible(False)
