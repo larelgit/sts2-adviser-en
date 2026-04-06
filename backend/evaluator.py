@@ -50,11 +50,14 @@ from .scoring import (
     CrossValidationResult,
     # V2 additions
     calculate_skip_score,
+    calculate_skip_score_v2,
     calculate_pick_delta,
     format_pick_recommendation,
     determine_role_v2,
     soft_role_confidence,
 )
+from .deck_profiler import analyze_deck
+from .threat_model import assess_threats
 
 
 def score_to_grade(score: float) -> str:
@@ -121,22 +124,22 @@ class CardEvaluator:
         relic_tags = self._extract_relic_tags(run_state)
         relic_boosts = self._build_relic_synergy(run_state, detected)
 
-        # V2: Calculate skip score first
+        # V2-lite: analyze deck and threats first
         target_deck_size = 12 if not detected else detected[0].target_card_count
-        # Estimate deck consistency (simple heuristic based on archetype completion)
-        deck_consistency = 0.5
-        if detected:
-            deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
-            deck_consistency = self._calc_completion(detected[0], deck_set)
-        
-        skip_score = calculate_skip_score(
+        deck_profile = analyze_deck(run_state, self.card_db, target_size=target_deck_size)
+        threat_profile = assess_threats(run_state, deck_profile)
+
+        # Keep old function as fallback safety
+        legacy_skip = calculate_skip_score(
             deck_size=len(run_state.deck),
             target_deck_size=target_deck_size,
             phase=run_state.phase,
             hp_ratio=run_state.hp_ratio,
-            deck_consistency=deck_consistency,
-            has_critical_gaps=False,  # TODO: implement gap detection in V2 Deck Profiler
+            deck_consistency=deck_profile.consistency_score,
+            has_critical_gaps=bool(deck_profile.critical_gaps),
         )
+        skip_score = calculate_skip_score_v2(deck_profile, threat_profile, run_state.phase)
+        skip_score = round((skip_score * 0.75) + (legacy_skip * 0.25), 1)
 
         results: list[EvaluationResult] = []
         for card_id in run_state.card_choices:
@@ -145,8 +148,16 @@ class CardEvaluator:
                 log.warning(f"Card not found in DB: {card_id}")
                 continue
             log.debug(f"Evaluating card: {card_id} -> {card.name}")
-            result = self.evaluate_card(card, run_state, detected, relic_tags, relic_boosts,
-                                        skip_score=skip_score)
+            result = self.evaluate_card(
+                card,
+                run_state,
+                detected,
+                relic_tags,
+                relic_boosts,
+                skip_score=skip_score,
+                deck_profile=deck_profile,
+                threat_profile=threat_profile,
+            )
             results.append(result)
 
         log.debug(f"Evaluation results: {[r.card_name for r in results]}")
@@ -154,6 +165,17 @@ class CardEvaluator:
         
         # V2: Build verdict (final recommendation)
         verdict = self._build_verdict(results, skip_score)
+        verdict["confidence"] = self._estimate_confidence(results, deck_profile, threat_profile)
+        verdict["deck_profile"] = {
+            "consistency": round(deck_profile.consistency_score, 3),
+            "dead_draw_rate": round(deck_profile.dead_draw_rate, 3),
+            "critical_gaps": deck_profile.critical_gaps,
+        }
+        verdict["threat_profile"] = {
+            "survival_urgency": round(threat_profile.survival_urgency, 3),
+            "elite_readiness": round(threat_profile.elite_readiness, 3),
+            "boss_plan": round(threat_profile.boss_plan_completeness, 3),
+        }
         
         self._save_score_log(results, run_state, detected, verdict)
         return results, verdict
@@ -263,6 +285,8 @@ class CardEvaluator:
         relic_synergy_tags: list[str],
         relic_boosts: dict[str, float] | None = None,
         skip_score: float = 50.0,  # V2: Skip score for delta calculation
+        deck_profile=None,
+        threat_profile=None,
     ) -> EvaluationResult:
         """
         对单张卡进行全维度评估，返回 EvaluationResult。
@@ -356,8 +380,24 @@ class CardEvaluator:
             algo_score=algo_score_100,
         )
 
-        # V2: Calculate pick delta vs Skip
+        # V2-lite: deck/threat aware delta adjustment
         pick_delta = calculate_pick_delta(total, skip_score)
+        if deck_profile is not None and threat_profile is not None:
+            gap_bonus = 0.0
+            card_text = (card.description or "").lower()
+            tags = {t.lower() for t in card.tags}
+            if "block" in deck_profile.critical_gaps and (card.base_block or 0) >= 6:
+                gap_bonus += 1.5
+            if "frontload" in deck_profile.critical_gaps and card.card_type.value == "attack":
+                gap_bonus += 1.0
+            if "draw" in deck_profile.critical_gaps and ("draw" in card_text or "draw" in tags):
+                gap_bonus += 1.0
+            if "aoe" in deck_profile.critical_gaps and ("all enemies" in card_text or "aoe" in tags):
+                gap_bonus += 1.2
+            if "scaling" in deck_profile.critical_gaps and any(k in card_text for k in ("strength", "focus", "poison", "star", "doom")):
+                gap_bonus += 1.2
+            urgency_scale = 1.0 + (threat_profile.survival_urgency * 0.15)
+            pick_delta = round(pick_delta + gap_bonus * urgency_scale, 1)
         recommendation = self._make_recommendation_v2(total, role, pick_delta)
         
         # V2: Add skip comparison to reasons
@@ -383,6 +423,37 @@ class CardEvaluator:
             recommendation=recommendation,
             grade=score_to_grade(total),
         )
+
+    @staticmethod
+    def _estimate_confidence(results: list[EvaluationResult], deck_profile, threat_profile) -> dict:
+        """
+        V2-lite confidence estimate for recommendation quality.
+        """
+        if not results:
+            return {"level": "low", "score": 0.25, "reason": "No valid card matches"}
+
+        top = results[0].total_score
+        second = results[1].total_score if len(results) > 1 else top - 1
+        gap = abs(top - second)
+
+        model_conf = 0.45
+        model_conf += min(0.20, gap / 30.0)
+        model_conf += max(0.0, (deck_profile.consistency_score - 0.45) * 0.25)
+        model_conf += max(0.0, (0.70 - deck_profile.dead_draw_rate) * 0.15)
+        model_conf -= threat_profile.survival_urgency * 0.12
+        model_conf = max(0.05, min(0.95, model_conf))
+
+        if model_conf >= 0.72:
+            level = "high"
+            reason = "Clear score separation and stable deck context"
+        elif model_conf >= 0.48:
+            level = "medium"
+            reason = "Usable signal with moderate uncertainty"
+        else:
+            level = "low"
+            reason = "Close scores or unstable context"
+
+        return {"level": level, "score": round(model_conf, 3), "reason": reason}
 
     # ------------------------------------------------------------------
     # 内部辅助方法

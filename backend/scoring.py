@@ -46,6 +46,8 @@ from .models import (
     Card, Rarity, GamePhase, RunState,
     ScoreBreakdown, CardRole, Character,
 )
+from .deck_profiler import DeckProfile
+from .threat_model import ThreatProfile
 
 log = logging.getLogger(__name__)
 
@@ -726,6 +728,49 @@ def calculate_skip_score(
         base += 2.0  # Can afford to be picky
     
     return max(20.0, min(80.0, base))
+
+
+def calculate_skip_score_v2(
+    deck_profile: DeckProfile,
+    threat_profile: ThreatProfile,
+    phase: GamePhase,
+) -> float:
+    """
+    V2-lite skip model driven by deck profile + threat profile.
+    """
+    base = 50.0
+
+    # Dilution resistance
+    if deck_profile.deck_size > deck_profile.target_size:
+        excess = deck_profile.deck_size - deck_profile.target_size
+        base += min(18.0, excess * 2.2)
+    elif deck_profile.deck_size < deck_profile.target_size - 3:
+        deficit = deck_profile.target_size - deck_profile.deck_size
+        base -= min(12.0, deficit * 1.8)
+
+    # Preserve consistency in good, stable decks
+    base += (deck_profile.consistency_score - 0.5) * 14.0
+
+    # Dead-draw and setup burden incentivize skipping weak fillers
+    base += deck_profile.dead_draw_rate * 10.0
+    base += deck_profile.setup_burden * 6.0
+
+    # Threat pressure reduces skip appetite
+    base -= threat_profile.survival_urgency * 14.0
+    base -= (1.0 - threat_profile.elite_readiness) * 8.0
+
+    # Explicit deck gaps reduce skip value
+    base -= min(15.0, len(deck_profile.critical_gaps) * 4.0)
+
+    # Phase adjustment
+    phase_mod = {
+        GamePhase.EARLY: -6.0,
+        GamePhase.MID: 0.0,
+        GamePhase.LATE: 5.0,
+    }
+    base += phase_mod.get(phase, 0.0)
+
+    return max(15.0, min(85.0, base))
 
 
 def calculate_pick_delta(card_score: float, skip_score: float) -> float:
