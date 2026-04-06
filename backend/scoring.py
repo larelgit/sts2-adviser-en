@@ -55,7 +55,7 @@ log = logging.getLogger(__name__)
 # 社区交叉验证：可调常数
 # ---------------------------------------------------------------------------
 
-_COMMUNITY_WEIGHT: float      = 0.25   # 社区数据最大影响权重
+_COMMUNITY_WEIGHT: float      = 0.05   # 社区数据最大影响权重 (Sanity check layer only)
 _DAMPENING: float             = 0.85   # 补丁滞后折扣（永久降低社区权重 15%）
 _AGREEMENT_THRESHOLD: float   = 0.15   # delta ≤ 此值 → AGREEMENT
 _CONFLICT_THRESHOLD: float    = 0.30   # delta > 此值 → CONFLICT

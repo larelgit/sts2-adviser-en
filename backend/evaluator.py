@@ -253,13 +253,13 @@ class CardEvaluator:
             if completion < _DETECT_THRESHOLD:
                 continue
 
-            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌
+            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌 (Soft posterior - removed hard restriction)
             has_core = any(
                 w.role.value == "core" and w.card_id.lower() in deck_set
                 for w in archetype.card_weights
             )
-            if not has_core:
-                continue
+            # if not has_core:
+            #     continue
 
             scored.append((completion, archetype))
 
@@ -381,7 +381,6 @@ class CardEvaluator:
         )
 
         # V2-lite: deck/threat aware delta adjustment
-        pick_delta = calculate_pick_delta(total, skip_score)
         if deck_profile is not None and threat_profile is not None:
             gap_bonus = 0.0
             card_text = (card.description or "").lower()
@@ -397,7 +396,12 @@ class CardEvaluator:
             if "scaling" in deck_profile.critical_gaps and any(k in card_text for k in ("strength", "focus", "poison", "star", "doom")):
                 gap_bonus += 1.2
             urgency_scale = 1.0 + (threat_profile.survival_urgency * 0.15)
-            pick_delta = round(pick_delta + gap_bonus * urgency_scale, 1)
+            
+            # Apply gap_bonus directly to total_score before final ranking
+            total = round(min(100.0, total + gap_bonus * urgency_scale), 1)
+
+        pick_delta = calculate_pick_delta(total, skip_score)
+        
         recommendation = self._make_recommendation_v2(total, role, pick_delta)
         
         # V2: Add skip comparison to reasons
