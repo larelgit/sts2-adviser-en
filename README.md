@@ -10,7 +10,7 @@ STS2 Adviser automatically takes a screenshot to recognize candidate cards when 
 
 ### Method 1: Run EXE Directly (Recommended, no Python required)
 
-1. Go to [Releases](https://github.com/Skyerolic/sts2-adviser/releases) and download the latest ZIP version.
+1. Go to [Releases](https://github.com/larelgit/sts2-adviser-en/releases) and download the latest ZIP version.
 2. Extract the archive and double-click `sts2_adviser.exe`.
 
 ### Method 2: Run from Source
