@@ -63,7 +63,7 @@ Configuration is saved in `~/.sts2-adviser/config.json` and takes effect after r
 OCR relies on the resolution of the game window screenshot. The larger the window, the more accurate the recognition. Card text is easily misread in small windows.
 
 Other measures:
-- Ensure the game language is set to **Chinese** (OCR currently targets Chinese UI).
+- Ensure the game language is set to **Chinese** or **English**.
 - Ensure the game window title contains `Slay the Spire 2`.
 - Run the diagnostic tool on the card selection screen to view screenshots and OCR segmentation results:
   ```bash
