@@ -8,13 +8,13 @@ backend/archetype_inference.py
   自动推断该卡与每个套路的相关度，返回一个推断权重。
 
 设计原则：
-  - 推断权重上限 0.58，仍低于大多数手动 CORE 权重
-  - 推断层主要服务于缺失映射时的兜底，最高可接近 ENABLER
+  - 推断权重上限 0.35，永远低于手动定义（最低 0.40）
+  - 角色最高 FILLER（不会推断出 CORE/ENABLER）
   - 推断是"兜底"，不覆盖精确层
   - 每个套路维护一份"推断规则集"（ArchetypeInferenceRule）
 
 推断分类（三级）：
-HIGH   (~0.30~0.45)  关键词直接命中套路核心机制
+  HIGH   (~0.30~0.35)  关键词直接命中套路核心机制
   MID    (~0.18~0.28)  关键词与套路方向相关但非核心
   LOW    (~0.08~0.15)  类型/费用/通用价值符合，无直接关键词匹配
 """
@@ -66,7 +66,7 @@ class InferenceRule:
 class ArchetypeInferenceProfile:
     """
     单个套路的推断配置。
-    包含一组规则，最终权重 = min(0.58, sum(命中规则的 weight_add))
+    包含一组规则，最终权重 = min(0.35, sum(命中规则的 weight_add))
     """
     archetype_id: str
     rules: list[InferenceRule] = field(default_factory=list)
@@ -223,89 +223,30 @@ _PROFILES: list[ArchetypeInferenceProfile] = [
         anti_patterns=[r"\bdark\b.*burst|evoke.*dark"],
     ),
 
-    # ── NECROBINDER ───────────────────────────────────────────────────────
+    # ── WATCHER ──────────────────────────────────────────────────────────
 
     ArchetypeInferenceProfile(
-        archetype_id="necrobinder_osty_attack",
+        archetype_id="watcher_divinity",
         rules=[
-            InferenceRule(0.34, desc_pattern=r"\bosty\b"),
-            InferenceRule(0.30, desc_pattern=r"\bsummon\b|\bminion\b"),
-            InferenceRule(0.24, desc_pattern=r"if .*osty.*alive"),
-            InferenceRule(0.16, card_type_match=CardType.ATTACK),
-            InferenceRule(0.12, desc_pattern=r"deal .* damage"),
-        ],
-        anti_patterns=[r"\bdoom\b|\bethereal\b|\bsoul\b"],
-    ),
-
-    ArchetypeInferenceProfile(
-        archetype_id="necrobinder_soul_engine",
-        rules=[
-            InferenceRule(0.34, desc_pattern=r"\bsouls?\b"),
-            InferenceRule(0.30, desc_pattern=r"add .*souls?.*draw pile|transform .* into .*soul"),
-            InferenceRule(0.22, desc_pattern=r"\bdraw pile\b|\bdiscard pile\b"),
-            InferenceRule(0.16, card_type_match=CardType.SKILL),
-            InferenceRule(0.12, desc_pattern=r"\bsummon\b"),
-        ],
-        anti_patterns=[r"\bdoom\b|\bethereal\b.*costs? .* less"],
-    ),
-
-    ArchetypeInferenceProfile(
-        archetype_id="necrobinder_doom_execute",
-        rules=[
-            InferenceRule(0.36, powers_applied_any=["Doom"]),
-            InferenceRule(0.32, desc_pattern=r"\bdoom\b"),
-            InferenceRule(0.24, desc_pattern=r"kill enemies? with at least as much doom|apply .* doom"),
-            InferenceRule(0.12, desc_pattern=r"\bweak\b|\bvulnerable\b"),
-        ],
-        anti_patterns=[r"\bsoul\b|\bethereal\b|\bosty\b"],
-    ),
-
-    ArchetypeInferenceProfile(
-        archetype_id="necrobinder_ethereal_engine",
-        rules=[
-            InferenceRule(0.34, keywords_any=["Ethereal"]),
-            InferenceRule(0.30, desc_pattern=r"\bethereal\b"),
-            InferenceRule(0.24, desc_pattern=r"costs? .* less .*ethereal|played .*ethereal"),
-            InferenceRule(0.20, desc_pattern=r"\bexhaust\b"),
-            InferenceRule(0.12, card_type_match=CardType.POWER),
-        ],
-        anti_patterns=[r"\bdoom\b|\bosty\b"],
-    ),
-
-    # ── REGENT ────────────────────────────────────────────────────────────
-
-    ArchetypeInferenceProfile(
-        archetype_id="regent_star_engine",
-        rules=[
-            InferenceRule(0.36, desc_pattern=r"\[star:|\bstar\b"),
-            InferenceRule(0.30, desc_pattern=r"spend \[star:|for each \[star:"),
-            InferenceRule(0.24, desc_pattern=r"gain \[star:"),
-            InferenceRule(0.14, card_type_match=CardType.SKILL),
-        ],
-        anti_patterns=[r"\bcolorless\b|\bforge\b.*sovereign blade"],
-    ),
-
-    ArchetypeInferenceProfile(
-        archetype_id="regent_sovereign_blade_forge",
-        rules=[
-            InferenceRule(0.36, desc_pattern=r"\bforge\b"),
-            InferenceRule(0.34, desc_pattern=r"sovereign blade"),
-            InferenceRule(0.24, desc_pattern=r"double damage .*sovereign blade|forge \d"),
-            InferenceRule(0.14, card_type_match=CardType.POWER),
-        ],
-        anti_patterns=[r"\bcolorless\b"],
-    ),
-
-    ArchetypeInferenceProfile(
-        archetype_id="regent_colorless_create",
-        rules=[
-            InferenceRule(0.36, desc_pattern=r"\bcolorless\b"),
-            InferenceRule(0.32, desc_pattern=r"random colorless|choose 1 of 3 random colorless"),
-            InferenceRule(0.24, powers_applied_any=["Arsenal"]),
-            InferenceRule(0.16, desc_pattern=r"add .* into your hand"),
+            InferenceRule(0.32, powers_applied_any=["Mantra", "Divinity"]),
+            InferenceRule(0.28, desc_pattern=r"\bmantra\b|顿悟|神性|divinity"),
+            InferenceRule(0.22, keywords_any=["Scry"]),
+            InferenceRule(0.18, desc_pattern=r"\bscry\b|占卜"),
             InferenceRule(0.12, card_type_match=CardType.SKILL),
         ],
-        anti_patterns=[r"\[star:|\bforge\b"],
+        anti_patterns=[r"\bwrath\b.*aggro"],
+    ),
+
+    ArchetypeInferenceProfile(
+        archetype_id="watcher_wrath_aggro",
+        rules=[
+            InferenceRule(0.30, desc_pattern=r"\bwrath\b|愤怒"),
+            InferenceRule(0.28, desc_pattern=r"\bcalm\b.*\bwrath\b|\bwrath\b.*\bcalm\b"),
+            InferenceRule(0.22, powers_applied_any=["Strength"]),
+            InferenceRule(0.18, card_type_match=CardType.ATTACK),
+            InferenceRule(0.12, cost_max=1),
+        ],
+        anti_patterns=[r"\bmantra\b|divinity"],
     ),
 ]
 
@@ -366,9 +307,9 @@ def infer_weight(
     """
     对一张卡（cards.json 原始 dict）推断其与指定套路的相关度。
 
-    返回值：0.0 ~ 0.58
+    返回值：0.0 ~ 0.35
       0.0    — 无关联 or 被排斥
-      >0     — 推断权重（v2-lite 允许推断层到 ENABLER 附近）
+      >0     — 推断权重（角色固定为 FILLER）
     """
     profile = _PROFILE_INDEX.get(archetype_id)
     if profile is None:
@@ -427,7 +368,7 @@ def infer_weight(
         if hit:
             total += rule.weight_add
 
-    return min(0.58, total)
+    return min(0.35, total)
 
 
 def infer_all_archetypes(

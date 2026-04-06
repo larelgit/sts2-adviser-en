@@ -36,15 +36,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from .contextual import (
-    CardProfile,
-    RunContext,
-    clamp01,
-    need_coverage,
-    network_synergy,
-    profile_card,
-    soft_or,
-)
 from .models import (
     Card, Rarity, GamePhase, RunState,
     ScoreBreakdown, CardRole, Character,
@@ -106,29 +97,6 @@ def community_score_from_raw(win_rate_pct: float, pick_rate_pct: float) -> float
     norm_win  = _sigmoid(win_rate_pct,  center=50.0, steepness=0.12)
     norm_pick = _sigmoid(pick_rate_pct, center=18.0, steepness=0.08)
     return round(0.65 * norm_win + 0.35 * norm_pick, 4)
-
-
-def _logit(norm: float) -> float:
-    eps = 1e-4
-    clipped = max(eps, min(1.0 - eps, norm))
-    return math.log(clipped / (1.0 - clipped))
-
-
-def apply_contextual_prior(
-    algo_norm: float,
-    community_score: Optional[float],
-    alpha: float = 0.0,
-) -> float:
-    """
-    Use community data as a small contextual prior instead of only doing
-    a straight linear blend at the end.
-    """
-    if community_score is None or alpha <= 0.0:
-        return algo_norm
-
-    posterior_logit = _logit(algo_norm) + alpha * _logit(community_score)
-    posterior = 1.0 / (1.0 + math.exp(-posterior_logit))
-    return clamp01(posterior)
 
 
 # ---------------------------------------------------------------------------
@@ -212,11 +180,11 @@ def cross_validate(
 # ---------------------------------------------------------------------------
 
 WEIGHTS: dict[str, float] = {
-    "archetype":   0.16,   # soft motif fit
-    "value":       0.10,   # intrinsic baseline
-    "phase":       0.36,   # threat / immediate needs
-    "completion":  0.23,   # boss plan / weakness repair / pivots
-    "synergy":     0.15,   # relic + network value
+    "archetype":   0.40,   # 套路契合：最重要
+    "value":       0.25,   # 卡牌固有价值（稀有度+费用）
+    "phase":       0.15,   # 阶段适配
+    "completion":  0.15,   # 完成度贡献
+    "synergy":     0.05,   # 协同加成
 }
 # 合计 = 1.00
 
@@ -227,34 +195,21 @@ WEIGHTS: dict[str, float] = {
 def score_archetype_dimension(
     card: Card,
     matched_archetype_weights: list[float],
-    matched_archetype_confidences: list[float] | None = None,
 ) -> float:
     """
-    v2-lite: use soft aggregation instead of max(weight).
+    取该卡在所有匹配套路中的最高权重。
+    无匹配时返回 0.0（由 value_score 兜底）。
     """
     if not matched_archetype_weights:
         return 0.0
-
-    if matched_archetype_confidences:
-        weighted: list[float] = []
-        for idx, weight in enumerate(matched_archetype_weights):
-            confidence = matched_archetype_confidences[idx] if idx < len(matched_archetype_confidences) else 1.0
-            weighted.append(clamp01(weight * confidence))
-        return soft_or(weighted)
-
-    return soft_or(matched_archetype_weights)
+    return max(matched_archetype_weights)
 
 
 # ---------------------------------------------------------------------------
 # 维度2：卡牌固有价值
 # ---------------------------------------------------------------------------
 
-def score_value_dimension(
-    card: Card,
-    phase: GamePhase,
-    card_profile: CardProfile | None = None,
-    run_context: RunContext | None = None,
-) -> float:
+def score_value_dimension(card: Card, phase: GamePhase) -> float:
     """
     卡牌独立于套路的固有价值评估。
     综合：稀有度基线 + 费用效率 + 阶段无关通用性。
@@ -264,54 +219,29 @@ def score_value_dimension(
       - common 给 0.45 左右作为中性值
       - 0 费牌有显著加成（灵活性价值）
     """
-    if card_profile is None:
-        card_profile = profile_card(card)
-
     rarity_base: dict[Rarity, float] = {
-        Rarity.ANCIENT:  0.58,
-        Rarity.RARE:     0.52,
-        Rarity.UNCOMMON: 0.44,
-        Rarity.COMMON:   0.36,
-        Rarity.BASIC:    0.28,
-        Rarity.STARTER:  0.22,
-        Rarity.SPECIAL:  0.18,
+        Rarity.ANCIENT:  0.90,
+        Rarity.RARE:     0.80,
+        Rarity.UNCOMMON: 0.60,
+        Rarity.COMMON:   0.45,
+        Rarity.BASIC:    0.35,
+        Rarity.STARTER:  0.20,
+        Rarity.SPECIAL:  0.10,
         Rarity.CURSE:    0.00,
         Rarity.STATUS:   0.05,
     }
-    base = rarity_base.get(card.rarity, 0.36)
+    base = rarity_base.get(card.rarity, 0.45)
 
-    utility = (
-        0.18 * card_profile.frontload
-        + 0.16 * card_profile.block
-        + 0.18 * card_profile.consistency
-        + 0.14 * card_profile.energy
-        + 0.10 * card_profile.aoe
-        + 0.12 * card_profile.scaling
-        + 0.08 * card_profile.cleanup
-    )
+    # 费用效率
+    cost_bonus = 0.0
+    if card.cost == 0:
+        cost_bonus = 0.12
+    elif card.cost == 1:
+        cost_bonus = 0.05
+    elif card.cost >= 3:
+        cost_bonus = -0.05   # 高费用略微减分
 
-    phase_tilt = 0.0
-    if phase == GamePhase.EARLY:
-        phase_tilt += 0.05 * card_profile.frontload + 0.05 * card_profile.block
-    elif phase == GamePhase.LATE:
-        phase_tilt += 0.05 * card_profile.scaling + 0.04 * card_profile.consistency
-
-    taxes = (
-        0.16 * card_profile.setup
-        + 0.12 * card_profile.upgrade_tax
-        + 0.18 * card_profile.dead_draw
-        + (0.02 if card.cost >= 3 and card_profile.energy < 0.15 else 0.0)
-    )
-
-    if card.cost == 0 and (card_profile.frontload + card_profile.consistency + card_profile.energy) > 0.40:
-        base += 0.03
-    elif card.cost == 0 and card_profile.dead_draw > 0.45:
-        base -= 0.02
-
-    if run_context is not None:
-        utility += 0.04 * need_coverage(card_profile, run_context)
-
-    return clamp01(base + utility + phase_tilt - taxes)
+    return min(1.0, max(0.0, base + cost_bonus))
 
 
 # ---------------------------------------------------------------------------
@@ -323,8 +253,6 @@ def score_phase_dimension(
     phase: GamePhase,
     card_role: CardRole,
     hp_ratio: float = 1.0,
-    card_profile: CardProfile | None = None,
-    run_context: RunContext | None = None,
 ) -> float:
     """
     当前阶段对该卡的适配度。
@@ -338,19 +266,6 @@ def score_phase_dimension(
       对纯进攻攻击牌（无格挡、无摸牌）减 -0.08。
       最终影响上限约 ±1.2 分（权重 0.15），不会翻转推荐等级。
     """
-    if run_context is not None and card_profile is not None:
-        if card_role == CardRole.POLLUTION:
-            return 0.0
-        if card_role == CardRole.SKIP:
-            return 0.0
-        coverage = need_coverage(card_profile, run_context)
-        greed_penalty = (1.0 - run_context.greed_tolerance) * max(card_profile.setup, card_profile.upgrade_tax) * 0.35
-        dilution_penalty = run_context.dilution_pressure * card_profile.dead_draw * 0.25
-        base = 0.22 + 0.74 * coverage - greed_penalty - dilution_penalty
-        if card_role in (CardRole.CORE, CardRole.ENABLER):
-            base += 0.04
-        return clamp01(base)
-
     if card_role == CardRole.POLLUTION:
         return 0.0
     if card_role == CardRole.TRANSITION:
@@ -393,27 +308,15 @@ def score_phase_dimension(
 def score_completion_dimension(
     archetype_completion_before: float,
     archetype_completion_after: float,
-    secondary_deltas: list[tuple[float, float, float]] | None = None,
-    weakness_repair: float = 0.0,
-    second_plan_unlock: float = 0.0,
 ) -> float:
     """
     拿了这张卡后套路完成度提升多少。
     完成度 delta 放大 3 倍（因为单张卡通常只提升 5~10%，
     不放大的话贡献微乎其微）。
     """
-    primary_delta = max(0.0, archetype_completion_after - archetype_completion_before)
-    secondary_score = 0.0
-    for before, after, confidence in secondary_deltas or []:
-        secondary_score += max(0.0, after - before) * clamp01(confidence)
-
-    total = (
-        primary_delta * 2.2
-        + secondary_score * 1.8
-        + weakness_repair * 0.35
-        + second_plan_unlock * 0.30
-    )
-    return clamp01(total)
+    delta = archetype_completion_after - archetype_completion_before
+    # 放大并上限 1.0
+    return min(1.0, max(0.0, delta * 3.0))
 
 
 # ---------------------------------------------------------------------------
@@ -426,9 +329,6 @@ def score_synergy_bonus(
     relic_synergy_tags: list[str],
     relic_boosts: dict[str, float] | None = None,
     matched_archetype_ids: list[str] | None = None,
-    matched_archetype_confidences: list[float] | None = None,
-    card_profile: CardProfile | None = None,
-    run_context: RunContext | None = None,
 ) -> float:
     """
     遗物/已有卡协同加成。
@@ -436,7 +336,7 @@ def score_synergy_bonus(
     - boost 路径：遗物→套路显式映射（relic_archetype_map），取该卡已匹配套路中的最高 boost
     取两条路径的最大值，避免重复累加。
     """
-    tag_score = clamp01(len(set(card.tags) & set(relic_synergy_tags)) * 0.16)
+    tag_score = min(1.0, len(set(card.tags) & set(relic_synergy_tags)) * 0.20)
 
     boost_score = 0.0
     if relic_boosts and matched_archetype_ids:
@@ -444,15 +344,7 @@ def score_synergy_bonus(
             if aid in relic_boosts:
                 boost_score = max(boost_score, relic_boosts[aid])
 
-    motif_score = 0.0
-    if matched_archetype_confidences:
-        motif_score = soft_or(conf * 0.40 for conf in matched_archetype_confidences)
-
-    network_score = 0.0
-    if card_profile is not None and run_context is not None:
-        network_score = network_synergy(card_profile, run_context)
-
-    return soft_or([tag_score, boost_score, motif_score, network_score])
+    return min(1.0, max(tag_score, boost_score))
 
 
 # ---------------------------------------------------------------------------
@@ -463,8 +355,6 @@ def pollution_penalty(
     card: Card,
     deck_size: int,
     card_role: CardRole,
-    dead_draw_risk: float = 0.0,
-    dilution_pressure: float = 0.0,
 ) -> float:
     """
     污染惩罚（直接减分，不经过权重，单位：0~1）。
@@ -473,35 +363,28 @@ def pollution_penalty(
     """
     if card_role != CardRole.POLLUTION:
         return 0.0
-    base_penalty = 0.38 + 0.14 * dilution_pressure + 0.08 * dead_draw_risk
-    size_discount = min(0.20, max(deck_size - 12, 0) * 0.01)
-    return clamp01(base_penalty - size_discount)
+    # 基础惩罚 0.50，deck 每增加一张卡折扣 0.015
+    base_penalty = 0.50
+    size_discount = min(0.25, deck_size * 0.015)
+    return base_penalty - size_discount
 
 
 def deck_bloat_penalty(
     card: Card,
     deck_size: int,
     card_role: CardRole,
-    dilution_pressure: float = 0.0,
-    consistency_need: float = 0.0,
-    dead_draw_risk: float = 0.0,
 ) -> float:
     """
     厚牌组对低价值牌的额外惩罚。
     deck >= 20 张后，FILLER/UNKNOWN 卡每多一张 deck 给 0.01 惩罚，上限 0.15。
     CORE/ENABLER 不受影响。
     """
-    if card_role in (CardRole.CORE, CardRole.ENABLER, CardRole.SKIP):
+    if card_role in (CardRole.CORE, CardRole.ENABLER):
         return 0.0
-    if deck_size < 16:
-        base = 0.0
-    else:
-        base = min(0.12, (deck_size - 16) * 0.008)
-
-    pressure = 0.05 * dilution_pressure + 0.03 * consistency_need + 0.02 * dead_draw_risk
-    if card_role == CardRole.POLLUTION:
-        pressure += 0.03
-    return clamp01(base + pressure)
+    if deck_size < 20:
+        return 0.0
+    extra = deck_size - 20
+    return min(0.15, extra * 0.01)
 
 
 # ---------------------------------------------------------------------------
@@ -598,14 +481,9 @@ def combine_scores(breakdown: "ScoreBreakdown", bloat_penalty: float = 0.0) -> f
 # 保留旧接口兼容（evaluator.py 调用）
 # ---------------------------------------------------------------------------
 
-def score_base_dimension(
-    card: Card,
-    phase: GamePhase,
-    card_profile: CardProfile | None = None,
-    run_context: RunContext | None = None,
-) -> float:
+def score_base_dimension(card: Card, phase: GamePhase) -> float:
     """兼容旧接口：内部调用 score_value_dimension"""
-    return score_value_dimension(card, phase, card_profile=card_profile, run_context=run_context)
+    return score_value_dimension(card, phase)
 
 
 def score_rarity_dimension(card: Card) -> float:

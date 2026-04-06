@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 from datetime import datetime
 from typing import Optional
 
@@ -31,23 +30,11 @@ log = logging.getLogger(__name__)
 
 from .archetypes import ArchetypeLibrary, archetype_library
 from .archetype_inference import infer_weight
-from .contextual import (
-    build_deck_metrics,
-    build_run_context,
-    community_prior_alpha,
-    estimate_confidence,
-    motif_signal_support,
-    need_coverage,
-    profile_card,
-    soft_or,
-    top_need_hits,
-)
 from .models import (
-    Card, Archetype, CardRole, CardType, GamePhase, Rarity,
+    Card, Archetype, CardRole, GamePhase, Rarity,
     RunState, EvaluationResult, ScoreBreakdown,
 )
 from .scoring import (
-    apply_contextual_prior,
     score_base_dimension,
     score_rarity_dimension,
     score_archetype_dimension,
@@ -115,8 +102,7 @@ class CardEvaluator:
         返回按 total_score 降序排列的 EvaluationResult 列表。
         """
         log.debug(f"card_choices: {run_state.card_choices}")
-        run_context, motif_profile = self._prepare_context(run_state)
-        detected = [archetype for archetype, _ in motif_profile]
+        detected = self.detect_archetypes(run_state)
         relic_tags = self._extract_relic_tags(run_state)
         relic_boosts = self._build_relic_synergy(run_state, detected)
 
@@ -127,142 +113,71 @@ class CardEvaluator:
                 log.warning(f"Card not found in DB: {card_id}")
                 continue
             log.debug(f"Evaluating card: {card_id} -> {card.name}")
-            result = self.evaluate_card(
-                card,
-                run_state,
-                motif_profile,
-                run_context,
-                relic_tags,
-                relic_boosts,
-            )
+            result = self.evaluate_card(card, run_state, detected, relic_tags, relic_boosts)
             results.append(result)
 
-        skip_result = self._build_skip_result(run_state, run_context, motif_profile, results)
-        skip_score = skip_result.total_score
-        decision_threshold = run_context.skip_threshold
-
-        best_card: Optional[EvaluationResult] = None
-        best_margin = float("-inf")
-        for result in results:
-            delta = round(result.total_score - skip_score, 1)
-            result.pick_delta_vs_skip = delta
-            result.recommendation = self._make_recommendation(
-                result.total_score,
-                result.role,
-                pick_delta=delta,
-                threshold=decision_threshold,
-            )
-            if delta > 0:
-                result.reasons_for.insert(0, f"Beats Skip by +{delta:.1f}")
-            else:
-                result.reasons_against.insert(0, f"Below Skip by {abs(delta):.1f}")
-
-            margin = delta - decision_threshold
-            if margin > best_margin:
-                best_margin = margin
-                best_card = result
-
-        if best_card is not None and best_margin > 0:
-            skip_result.reasons_against.insert(
-                0,
-                f"{best_card.card_name} clears the Skip threshold by +{best_margin:.1f}",
-            )
-        else:
-            skip_result.reasons_for.insert(
-                0,
-                f"No reward clears the +{decision_threshold:.1f} Skip threshold",
-            )
-
-        results.append(skip_result)
         log.debug(f"Evaluation results: {[r.card_name for r in results]}")
-        results.sort(
-            key=lambda r: (
-                0.0 if r.is_skip_option else r.pick_delta_vs_skip - decision_threshold,
-                r.total_score,
-            ),
-            reverse=True,
-        )
+        results.sort(key=lambda r: r.total_score, reverse=True)
         self._save_score_log(results, run_state, detected)
         return results
 
     def detect_archetypes(self, run_state: RunState) -> list[Archetype]:
         """
-        v2-lite: return soft motifs instead of only 1-2 hard archetypes.
+        根据当前牌组，检测玩家正在走的套路。
+
+        检测条件（同时满足）：
+          1. 必须持有至少 1 张该套路定义的 CORE 牌（精确层）
+          2. 整体完成度 >= _DETECT_THRESHOLD（防止只靠通用 filler 触发）
+
+        过滤逻辑：
+          - 按完成度降序排列
+          - 只返回不超过 _MAX_ARCHETYPES 个套路
+          - 第 2 个以后的套路，其完成度必须 >= 领先套路的 _SECONDARY_RATIO 倍
+            （避免只有 1 张 filler 牌就并列检测出多个套路）
         """
-        run_context, motif_profile = self._prepare_context(run_state)
-        _ = run_context
-        return [archetype for archetype, _confidence in motif_profile]
+        _DETECT_THRESHOLD   = 0.04   # 整体完成度最低门槛（主要靠 CORE 门槛过滤，此值仅排除极低噪音）
+        _MAX_ARCHETYPES     = 2      # 最多同时检测几个套路
+        _SECONDARY_RATIO    = 0.55   # 次选套路至少是领先套路完成度的 55%
 
-    def _prepare_context(self, run_state: RunState):
-        deck_profiles = []
-        raw_costs: list[int] = []
-        starter_flags: list[bool] = []
-        power_flags: list[bool] = []
-        status_flags: list[bool] = []
-
-        for card_id in run_state.deck:
-            card = self._resolve_card(card_id)
-            if card is None:
-                continue
-            raw = self.raw_card_db.get(card.id)
-            deck_profiles.append(profile_card(card, raw))
-            raw_costs.append(card.cost)
-            starter_flags.append(card.rarity in (Rarity.STARTER, Rarity.BASIC))
-            power_flags.append(card.card_type == CardType.POWER)
-            status_flags.append(card.card_type in (CardType.STATUS, CardType.CURSE))
-
-        deck_metrics = build_deck_metrics(
-            deck_profiles,
-            raw_costs=raw_costs,
-            starters=starter_flags,
-            power_cards=power_flags,
-            status_cards=status_flags,
-        )
-        run_context = build_run_context(run_state, deck_metrics)
-        motif_profile = self._build_motif_profile(run_state, run_context)
-        run_context.motif_confidences = {
-            archetype.id: confidence for archetype, confidence in motif_profile
-        }
-        return run_context, motif_profile
-
-    def _build_motif_profile(self, run_state: RunState, run_context) -> list[tuple[Archetype, float]]:
-        deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
         candidate_archetypes = self.library.get_by_character(run_state.character)
+        deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
 
         scored: list[tuple[float, Archetype]] = []
         for archetype in candidate_archetypes:
+            # 门槛1：整体完成度
             completion = self._calc_completion(archetype, deck_set)
-            core_weights = [
-                weight.weight
-                for weight in archetype.card_weights
-                if weight.role == CardRole.CORE and weight.card_id.lower() in deck_set
-            ]
-            support_weights = [
-                min(0.85, weight.weight)
-                for weight in archetype.card_weights
-                if weight.role != CardRole.POLLUTION and weight.card_id.lower() in deck_set
-            ]
-            signal_support = motif_signal_support(archetype.key_tags, run_context.deck)
-            confidence = soft_or(
-                [
-                    completion,
-                    soft_or(core_weights) * 0.75,
-                    soft_or(support_weights) * 0.55,
-                    signal_support * 0.45,
-                ]
-            )
-            if confidence >= 0.12:
-                scored.append((confidence, archetype))
+            if completion < _DETECT_THRESHOLD:
+                continue
 
-        scored.sort(key=lambda item: item[0], reverse=True)
-        return [(archetype, confidence) for confidence, archetype in scored[:4]]
+            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌
+            has_core = any(
+                w.role.value == "core" and w.card_id.lower() in deck_set
+                for w in archetype.card_weights
+            )
+            if not has_core:
+                continue
+
+            scored.append((completion, archetype))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+
+        # 过滤：次选套路完成度不能太低于领先套路
+        if not scored:
+            return []
+
+        top_score = scored[0][0]
+        result: list[Archetype] = []
+        for completion, archetype in scored[:_MAX_ARCHETYPES]:
+            if completion >= top_score * _SECONDARY_RATIO:
+                result.append(archetype)
+
+        return result
 
     def evaluate_card(
         self,
         card: Card,
         run_state: RunState,
-        motif_profile: list[tuple[Archetype, float]],
-        run_context,
+        detected_archetypes: list[Archetype],
         relic_synergy_tags: list[str],
         relic_boosts: dict[str, float] | None = None,
     ) -> EvaluationResult:
@@ -270,92 +185,52 @@ class CardEvaluator:
         对单张卡进行全维度评估，返回 EvaluationResult。
         """
         deck_set = set(self._normalize_card_id(cid) for cid in run_state.deck)
-        raw = self.raw_card_db.get(card.id)
-        card_profile = profile_card(card, raw)
 
+        # 1. 收集该卡在各套路中的权重
+        # 精确层：手动 card_weights 定义（权重 0.40~0.98）
+        # 推断层：基于 powers_applied / keywords / desc 自动推断（上限 0.35）
         archetype_weights: list[float] = []
-        archetype_confidences: list[float] = []
         matched_archetype_ids: list[str] = []
-        negative_archetype_ids: list[str] = []
-        inferred_archetype_ids: list[str] = []
-        weighted_matches: list[tuple[Archetype, float, float]] = []
-        is_exact_match = False
-        explicit_pollution_hit = False
+        inferred_archetype_ids: list[str] = []   # 仅推断层命中（用于日志区分）
+        is_exact_match = False  # 是否有精确层命中
 
-        for archetype, confidence in motif_profile:
+        raw = self.raw_card_db.get(card.id)      # 原始 JSON dict（可能为 None）
+
+        for archetype in detected_archetypes:
             weight_info = self.library.get_card_weight(archetype.id, card.id)
             if weight_info:
-                if weight_info.role == CardRole.POLLUTION:
-                    explicit_pollution_hit = True
-                    negative_archetype_ids.append(archetype.id)
-                    continue
+                # 精确层命中
                 archetype_weights.append(weight_info.weight)
-                archetype_confidences.append(confidence)
                 matched_archetype_ids.append(archetype.id)
-                weighted_matches.append((archetype, weight_info.weight, confidence))
                 is_exact_match = True
             elif raw is not None:
+                # 推断层兜底
                 inferred_w = infer_weight(raw, archetype.id)
                 if inferred_w > 0.0:
                     archetype_weights.append(inferred_w)
-                    archetype_confidences.append(confidence)
                     matched_archetype_ids.append(archetype.id)
                     inferred_archetype_ids.append(archetype.id)
-                    weighted_matches.append((archetype, inferred_w, confidence))
-                    log.debug(f"inferred weight {card.id} -> {archetype.id}: {inferred_w:.2f}")
+                    log.debug(
+                        f"推断权重 {card.id} → {archetype.id}: {inferred_w:.2f}"
+                    )
 
-        value_score = score_base_dimension(
-            card,
-            run_state.phase,
-            card_profile=card_profile,
-            run_context=run_context,
-        )
-        need_cover = need_coverage(card_profile, run_context)
-        archetype_score = score_archetype_dimension(
-            card,
-            archetype_weights,
-            matched_archetype_confidences=archetype_confidences,
-        )
-        role = self._determine_role(
-            card,
-            motif_profile,
-            archetype_weights,
-            inferred_only=not is_exact_match and bool(inferred_archetype_ids),
-            need_cover=need_cover,
-            intrinsic_score=value_score,
-            dead_draw_risk=card_profile.dead_draw,
-            dilution_pressure=run_context.dilution_pressure,
-            explicit_pollution_hit=explicit_pollution_hit,
-        )
+        # 2. 确定卡牌角色
+        # 推断层命中的卡最低为 FILLER，不判定为 POLLUTION（推断层设计上限 0.35 < 精确层最低 0.40）
+        role = self._determine_role(card, detected_archetypes, archetype_weights,
+                                    inferred_only=not is_exact_match and bool(inferred_archetype_ids))
 
-        new_deck = deck_set | {card.id}
-        primary_before = 0.0
-        primary_after = 0.0
-        secondary_deltas: list[tuple[float, float, float]] = []
-        second_plan_unlock = 0.0
-        weighted_matches.sort(key=lambda item: item[1] * item[2], reverse=True)
-        for idx, (archetype, weight, confidence) in enumerate(weighted_matches[:3]):
-            before = self._calc_completion(archetype, deck_set)
-            after = self._calc_completion(archetype, new_deck)
-            if idx == 0:
-                primary_before = before
-                primary_after = after
-            else:
-                secondary_deltas.append((before, after, confidence))
-            if idx > 0 and confidence < 0.40:
-                second_plan_unlock = max(
-                    second_plan_unlock,
-                    weight * (0.40 - confidence) / 0.40,
-                )
+        # 3. 计算套路完成度贡献
+        comp_before = 0.0
+        comp_after = 0.0
+        if detected_archetypes:
+            primary = detected_archetypes[0]
+            comp_before = self._calc_completion(primary, deck_set)
+            new_deck = deck_set | {card.id}
+            comp_after = self._calc_completion(primary, new_deck)
 
-        bloat_pen = deck_bloat_penalty(
-            card,
-            len(run_state.deck),
-            role,
-            dilution_pressure=run_context.dilution_pressure,
-            consistency_need=run_context.needs.get("consistency", 0.0),
-            dead_draw_risk=card_profile.dead_draw,
-        )
+        # 4. 各维度评分
+        # v0.7: bloat_penalty 显式计算；rarity_score 字段改存 community_score
+        bloat_pen = deck_bloat_penalty(card, len(run_state.deck), role)
 
         # 查社区数据
         community_stats = self.community_db.get(card.id)
@@ -364,91 +239,41 @@ class CardEvaluator:
         )
 
         breakdown = ScoreBreakdown(
-            base_score=value_score,
-            rarity_score=community_norm if community_norm is not None else 0.0,
-            archetype_score=archetype_score,
-            completion_score=score_completion_dimension(
-                primary_before,
-                primary_after,
-                secondary_deltas=secondary_deltas,
-                weakness_repair=need_cover,
-                second_plan_unlock=second_plan_unlock,
-            ),
-            phase_score=score_phase_dimension(
-                card,
-                run_state.phase,
-                role,
-                hp_ratio=run_state.hp_ratio,
-                card_profile=card_profile,
-                run_context=run_context,
-            ),
+            base_score=score_base_dimension(card, run_state.phase),
+            rarity_score=community_norm if community_norm is not None else 0.0,  # community_score
+            archetype_score=score_archetype_dimension(card, archetype_weights),
+            completion_score=score_completion_dimension(comp_before, comp_after),
+            phase_score=score_phase_dimension(card, run_state.phase, role, hp_ratio=run_state.hp_ratio),
             synergy_bonus=score_synergy_bonus(
-                card,
-                run_state,
-                relic_synergy_tags,
+                card, run_state, relic_synergy_tags,
                 relic_boosts=relic_boosts or {},
                 matched_archetype_ids=matched_archetype_ids,
-                matched_archetype_confidences=archetype_confidences,
-                card_profile=card_profile,
-                run_context=run_context,
             ),
-            pollution_penalty=pollution_penalty(
-                card,
-                len(run_state.deck),
-                role,
-                dead_draw_risk=card_profile.dead_draw,
-                dilution_pressure=run_context.dilution_pressure,
-            ),
+            pollution_penalty=pollution_penalty(card, len(run_state.deck), role),
         )
 
+        # algo_score（原有流程）
         algo_score_100 = combine_scores(breakdown, bloat_penalty=bloat_pen)
+
+        # Ascension 修正（在社区交叉验证之前，基于算法分施加）
         asc_delta = ascension_modifier(role, run_state.ascension, breakdown.archetype_score)
         algo_score_100 = round(max(0.0, min(100.0, algo_score_100 + asc_delta)), 1)
 
-        prior_alpha = community_prior_alpha(
-            run_state,
-            run_context,
-            community_norm is not None,
-        )
-        prior_norm = apply_contextual_prior(
-            algo_score_100 / 100.0,
-            community_norm,
-            alpha=prior_alpha,
-        )
-        cv_result = cross_validate(
-            prior_norm,
-            community_norm,
-            community_weight=max(0.05, prior_alpha * 0.55),
-        )
+        # 社区交叉验证（post-processing）
+        algo_norm = algo_score_100 / 100.0
+        cv_result = cross_validate(algo_norm, community_norm)
         total = round(cv_result.blended_norm * 100, 1)
 
-        confidence, confidence_label = estimate_confidence(
-            run_state=run_state,
-            run_context=run_context,
-            matched_strength=archetype_score,
-            need_cover=need_cover,
-            exact_match=is_exact_match,
-            inferred_only=not is_exact_match and bool(inferred_archetype_ids),
-            has_community=community_norm is not None,
-        )
-
+        # 5. 生成解释
         reasons_for, reasons_against = self._build_reasons(
-            card,
-            role,
-            breakdown,
-            matched_archetype_ids,
-            run_state,
-            run_context=run_context,
-            card_profile=card_profile,
-            need_hits=top_need_hits(card_profile, run_context),
-            confidence_label=confidence_label,
-            second_plan_unlock=second_plan_unlock,
-            negative_ids=negative_archetype_ids,
+            card, role, breakdown, matched_archetype_ids, run_state,
             inferred_ids=inferred_archetype_ids,
             community_stats=community_stats,
             cv_result=cv_result,
             algo_score=algo_score_100,
         )
+
+        recommendation = self._make_recommendation(total, role)
 
         return EvaluationResult(
             card_id=card.id,
@@ -460,10 +285,8 @@ class CardEvaluator:
             matched_archetypes=matched_archetype_ids,
             reasons_for=reasons_for,
             reasons_against=reasons_against,
-            recommendation=self._make_recommendation(total, role),
+            recommendation=recommendation,
             grade=score_to_grade(total),
-            confidence=round(confidence, 3),
-            confidence_label=confidence_label,
         )
 
     # ------------------------------------------------------------------
@@ -501,14 +324,9 @@ class CardEvaluator:
     def _determine_role(
         self,
         card: Card,
-        detected_archetypes: list[Archetype] | list[tuple[Archetype, float]],
+        detected_archetypes: list[Archetype],
         archetype_weights: list[float],
         inferred_only: bool = False,
-        need_cover: float = 0.0,
-        intrinsic_score: float = 0.0,
-        dead_draw_risk: float = 0.0,
-        dilution_pressure: float = 0.0,
-        explicit_pollution_hit: bool = False,
     ) -> CardRole:
         """
         根据套路匹配结果推断卡牌在当前 run 中的角色。
@@ -516,49 +334,31 @@ class CardEvaluator:
         inferred_only: 若为 True，表示所有权重来自推断层（非手动定义），
                        最低角色保底为 FILLER，不判定为 POLLUTION。
         """
-        soft_match = soft_or(archetype_weights)
-
         if not detected_archetypes or not archetype_weights:
-            if explicit_pollution_hit and need_cover < 0.35:
-                return CardRole.POLLUTION
-            if dead_draw_risk * max(0.25, dilution_pressure) > 0.30:
-                return CardRole.POLLUTION
-            if need_cover >= 0.45 or intrinsic_score >= 0.55:
+            # 未匹配任何套路 → 按稀有度做保守判断
+            from .models import Rarity
+            if card.rarity in (Rarity.RARE, Rarity.ANCIENT):
                 return CardRole.FILLER
-            return CardRole.UNKNOWN
+            elif card.rarity in (Rarity.UNCOMMON, Rarity.COMMON):
+                return CardRole.FILLER
+            else:
+                return CardRole.UNKNOWN
 
-        def smooth(value: float, center: float, width: float) -> float:
-            safe_width = max(width, 1e-6)
-            return 1.0 / (1.0 + math.exp(-(value - center) / safe_width))
+        max_weight = max(archetype_weights)
 
-        core_score = smooth(soft_match, 0.78, 0.08)
-        enabler_score = smooth(soft_match, 0.48, 0.10) * (0.75 + 0.25 * need_cover)
-        filler_score = max(
-            smooth(soft_match, 0.20, 0.12),
-            0.45 * need_cover + 0.35 * intrinsic_score,
-        )
-        pollution_score = smooth(
-            dead_draw_risk * max(dilution_pressure, 0.25),
-            0.20,
-            0.06,
-        ) * (1.0 - min(1.0, soft_match + need_cover * 0.6))
-        if explicit_pollution_hit and need_cover < 0.35:
-            pollution_score = max(pollution_score, 0.72)
-
-        if inferred_only:
-            core_score *= 0.70
-            enabler_score *= 0.90
-
-        scores = {
-            CardRole.CORE: core_score,
-            CardRole.ENABLER: enabler_score,
-            CardRole.FILLER: filler_score,
-            CardRole.POLLUTION: pollution_score,
-        }
-        role = max(scores.items(), key=lambda item: item[1])[0]
-        if role == CardRole.POLLUTION and need_cover > 0.35:
+        # 根据权重阈值映射角色
+        if max_weight >= 0.85:
+            return CardRole.CORE
+        elif max_weight >= 0.60:
+            return CardRole.ENABLER
+        elif max_weight >= 0.30:
             return CardRole.FILLER
-        return role
+        else:
+            # 精确层明确标注 pollution（如 weight=0.15）→ 保留判断
+            # 推断层低权重（如 attack 类型命中 LOW 规则 0.10）→ 保底 FILLER
+            if inferred_only:
+                return CardRole.FILLER
+            return CardRole.POLLUTION
 
     def _build_reasons(
         self,
@@ -567,12 +367,6 @@ class CardEvaluator:
         breakdown: ScoreBreakdown,
         matched_archetypes: list[str],
         run_state: RunState,
-        run_context=None,
-        card_profile=None,
-        need_hits: Optional[list[str]] = None,
-        confidence_label: str = "",
-        second_plan_unlock: float = 0.0,
-        negative_ids: Optional[list[str]] = None,
         inferred_ids: Optional[list[str]] = None,
         community_stats=None,
         cv_result: Optional[CrossValidationResult] = None,
@@ -582,12 +376,11 @@ class CardEvaluator:
         生成中文可解释理由。
         返回 (reasons_for, reasons_against)。
         """
-        negative_ids = negative_ids or []
         inferred_ids = inferred_ids or []
-        need_hits = need_hits or []
         reasons_for: list[str] = []
         reasons_against: list[str] = []
 
+# 套路契合：区分精确层和推断层
         exact_ids = [aid for aid in matched_archetypes if aid not in inferred_ids]
         if exact_ids:
             archetype_names = [
@@ -595,60 +388,45 @@ class CardEvaluator:
                 for a in [self.library.get_archetype(aid) for aid in exact_ids]
                 if a is not None
             ]
-            reasons_for.append(f"Supports motifs: {', '.join(archetype_names)}")
+            reasons_for.append(f"Fits Archetypes: {', '.join(archetype_names)}")
         if inferred_ids:
             inferred_names = [
                 a.name
                 for a in [self.library.get_archetype(aid) for aid in inferred_ids]
                 if a is not None
             ]
-            reasons_for.append(f"Inferred fit: {', '.join(inferred_names)}")
+            reasons_for.append(f"Inferred Synergy (Keywords): {', '.join(inferred_names)}")
 
-        if negative_ids:
-            negative_names = [
-                a.name
-                for a in [self.library.get_archetype(aid) for aid in negative_ids]
-                if a is not None
-            ]
-            if negative_names:
-                reasons_against.append(f"Conflicts with motifs: {', '.join(negative_names)}")
+        # 稀有度（直接读 card.rarity，不依赖 breakdown.rarity_score）
+        if card.rarity in (Rarity.RARE, Rarity.ANCIENT):
+            reasons_for.append(f"High rarity ({card.rarity.value}), high baseline value")
 
-        if need_hits:
-            reasons_for.append(f"Covers current gap: {', '.join(need_hits)}")
+        # 套路完成度贡献
+        if breakdown.completion_score > 0.05:
+            pct = round(breakdown.completion_score * 100, 1)
+            reasons_for.append(f"Boosts primary archetype completion +{pct}%")
 
-        if breakdown.base_score >= 0.60:
-            reasons_for.append("Strong standalone baseline for this reward")
+        # 协同
+        if breakdown.synergy_bonus > 0.0:
+            reasons_for.append("Has synergy with current relics or deck")
 
-        if breakdown.completion_score > 0.22:
-            reasons_for.append("Improves the current shell and/or future boss plan")
+        # 阶段适配
+        if role == CardRole.TRANSITION and run_state.phase != GamePhase.EARLY:
+            reasons_against.append(f"Transition card value drops in {run_state.phase.value} phase")
 
-        if second_plan_unlock > 0.20:
-            reasons_for.append("Keeps a secondary plan or pivot open")
-
-        if breakdown.synergy_bonus > 0.22:
-            reasons_for.append("Hooks into relics or deck network effects")
-
-        if card_profile is not None and card_profile.energy > 0.35 and card_profile.consistency > 0.30:
-            reasons_for.append("Improves turn economy and hand quality")
-
+        # 污染
         if role == CardRole.POLLUTION:
-            reasons_against.append("Adds more dilution than payoff in the current shell")
+            reasons_against.append("No synergy with current archetypes, will dilute the deck")
 
+        # 仅推断匹配时，补充置信度说明
         if matched_archetypes and not exact_ids and inferred_ids:
-            reasons_against.append("Mostly supported by inference instead of exact library coverage")
+            reasons_against.append("Only matched via keyword inference (not a core card), actual value may vary")
 
-        if not matched_archetypes and not need_hits:
-            reasons_against.append("Does not meaningfully fit current motifs or fix a major weakness")
+        # 无任何匹配
+        if not matched_archetypes:
+            reasons_against.append("Does not match any detected archetypes, value in current run is unclear")
 
-        if card_profile is not None and run_context is not None:
-            if card_profile.dead_draw > 0.50 and run_context.dilution_pressure > 0.35:
-                reasons_against.append("High dead-draw risk in an already stretched deck")
-            if card_profile.setup > 0.45 and run_context.greed_tolerance < 0.45:
-                reasons_against.append("Setup-heavy for the current HP/path pressure")
-
-        if confidence_label == "Low confidence":
-            reasons_against.append("Low confidence: partial inference / thin context coverage")
-
+        # 社区数据理由
         if cv_result is not None:
             if cv_result.has_community_data and community_stats is not None:
                 wr = f"{community_stats.win_rate_pct:.1f}%"
@@ -657,94 +435,46 @@ class CardEvaluator:
 
                 if cv_result.alignment == Alignment.AGREEMENT:
                     if cs >= 0.70:
-                        reasons_for.append(f"Community prior leans positive ({wr} WR / {pr} PR)")
+                        reasons_for.append(
+                            f"Community Support: Win Rate {wr}, Pick Rate {pr}, aligns with algorithm"
+                        )
                     elif cs <= 0.35:
-                        reasons_against.append(f"Community prior is cautious ({wr} WR / {pr} PR)")
+                        reasons_against.append(
+                            f"Community Warning: Win Rate {wr}, Pick Rate {pr}, generally skipped by players"
+                        )
                 elif cv_result.alignment == Alignment.SOFT_CONFLICT:
-                    reasons_against.append(f"Community context disagrees somewhat ({cv_result.delta:.0%} delta)")
+                    reasons_against.append(
+                        f"Community vs Algorithm discrepancy ({cv_result.delta:.0%} delta), score compromised"
+                    )
                 elif cv_result.alignment == Alignment.CONFLICT:
                     if algo_score / 100.0 > cv_result.community_score:
-                        reasons_against.append(f"Community data pushes back against this line ({wr} WR)")
+                        reasons_against.append(
+                            f"Significant Discrepancy: Algorithm score is high, but community win rate {wr} is low. Check archetype fit."
+                        )
                     else:
-                        reasons_for.append(f"Community data suggests this may be undervalued ({wr} WR)")
+                        reasons_for.append(
+                            f"Potentially Undervalued: Algorithm score is low, but community win rate {wr} is high."
+                        )
             elif not cv_result.has_community_data and 40 <= algo_score <= 65:
-                reasons_against.append("No community prior available; using local evaluation only")
-
-        if confidence_label and confidence_label != "Low confidence":
-            reasons_for.append(confidence_label)
+                reasons_against.append("Missing community statistics, score based entirely on algorithm")
 
         return reasons_for, reasons_against
 
     @staticmethod
-    def _make_recommendation(
-        total_score: float,
-        role: CardRole,
-        pick_delta: float = 0.0,
-        threshold: float = 3.0,
-    ) -> str:
-        """Generate a recommendation anchored against Skip."""
-        if role in (CardRole.POLLUTION, CardRole.SKIP):
+    def _make_recommendation(total_score: float, role: CardRole) -> str:
+        """根据分数和角色生成推荐语（与 scoring.py 分档对应）"""
+        if role == CardRole.POLLUTION:
             return "Skip"
-        if pick_delta <= 0:
-            return "Skip"
-        if pick_delta < threshold:
-            return "Caution"
-        if total_score >= 78 or pick_delta >= threshold + 7.0:
+        if total_score >= 80:
             return "Highly Recommended"
-        elif total_score >= 60 or pick_delta >= threshold + 3.5:
+        elif total_score >= 65:
             return "Recommended"
-        elif total_score >= 48 or pick_delta >= threshold:
+        elif total_score >= 50:
             return "Optional"
-        return "Caution"
-
-    @staticmethod
-    def _build_skip_result(
-        run_state: RunState,
-        run_context,
-        motif_profile: list[tuple[Archetype, float]],
-        card_results: list[EvaluationResult],
-    ) -> EvaluationResult:
-        top_motifs = [archetype.name for archetype, _ in motif_profile[:2]]
-        reasons_for: list[str] = []
-        reasons_against: list[str] = []
-
-        if run_context.dilution_pressure > 0.40:
-            reasons_for.append("Deck dilution pressure is already high")
-        if run_context.deck.dead_draw > 0.35:
-            reasons_for.append("Preserving draw quality has real value here")
-        if top_motifs:
-            reasons_for.append(f"Current shell already has direction: {', '.join(top_motifs)}")
-
-        if run_context.short_term_survival > 0.55:
-            reasons_against.append("You still need short-term help if one offer clearly provides it")
-        if not card_results:
-            reasons_for.append("No reliable card evaluations were available")
-
-        return EvaluationResult(
-            card_id="__skip__",
-            card_name="Skip",
-            rarity="action",
-            total_score=round(run_context.skip_score_norm * 100, 1),
-            role=CardRole.SKIP,
-            breakdown=ScoreBreakdown(
-                base_score=run_context.skip_score_norm,
-                rarity_score=0.0,
-                archetype_score=0.0,
-                completion_score=0.0,
-                phase_score=run_context.dilution_pressure,
-                synergy_bonus=0.0,
-                pollution_penalty=0.0,
-            ),
-            matched_archetypes=[],
-            reasons_for=reasons_for,
-            reasons_against=reasons_against,
-            recommendation="Skip",
-            grade="",
-            pick_delta_vs_skip=0.0,
-            confidence=round(run_context.input_confidence, 3),
-            confidence_label="High confidence" if run_context.input_confidence >= 0.78 else "Medium confidence" if run_context.input_confidence >= 0.56 else "Low confidence",
-            is_skip_option=True,
-        )
+        elif total_score >= 30:
+            return "Caution"
+        else:
+            return "Skip"
 
     @staticmethod
     def _build_relic_synergy(
@@ -806,10 +536,6 @@ class CardEvaluator:
                         "total_score": r.total_score,
                         "grade": r.grade,
                         "recommendation": r.recommendation,
-                        "pick_delta_vs_skip": r.pick_delta_vs_skip,
-                        "confidence": r.confidence,
-                        "confidence_label": r.confidence_label,
-                        "is_skip_option": r.is_skip_option,
                         "role": r.role.value if hasattr(r.role, "value") else str(r.role),
                         "matched_archetypes": r.matched_archetypes,
                         "breakdown": {

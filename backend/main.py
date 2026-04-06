@@ -147,11 +147,10 @@ def _load_card_db_from_json() -> dict[str, Card]:
                         "regent": Character.REGENT,
                         "necrobinder": Character.NECROBINDER,
                         "quest": Character.QUEST,
-                        "token": Character.ANY,
                         "any": Character.ANY,
                     }
                     character = fallback_map.get(color, Character.ANY)
-                    if color not in fallback_map:
+                    if character == Character.ANY:
                         print(f"[WARN] Unknown character color: {color} for card {r.get('id', '?')}")
 
                 rarity_key = r.get("rarity_key", "common").lower()
@@ -170,10 +169,9 @@ def _load_card_db_from_json() -> dict[str, Card]:
                         "status": Rarity.STATUS,
                         "event": Rarity.EVENT,
                         "quest": Rarity.QUEST,
-                        "token": Rarity.SPECIAL,
                     }
                     rarity = fallback_map.get(rarity_key, Rarity.COMMON)
-                    if rarity_key not in fallback_map and rarity_key != "common":
+                    if rarity == Rarity.COMMON:
                         print(f"[WARN] Unknown rarity: {rarity_key} for card {r.get('id', '?')}")
 
                 type_key = r.get("type_key", "skill").lower()
@@ -192,20 +190,6 @@ def _load_card_db_from_json() -> dict[str, Card]:
                     if card_type == CardType.SKILL:
                         print(f"[WARN] Unknown card type: {type_key} for card {r.get('id', '?')}")
 
-                raw_keywords = [
-                    str(k).strip().lower()
-                    for k in (r.get("keywords_key") or r.get("keywords") or [])
-                    if str(k).strip()
-                ]
-                keywords = CardKeywords(
-                    exhaust="exhaust" in raw_keywords,
-                    innate="innate" in raw_keywords,
-                    retain="retain" in raw_keywords,
-                    ethereal="ethereal" in raw_keywords,
-                    scry="scry" in raw_keywords,
-                    extras=sorted(set(raw_keywords)),
-                )
-
                 card = Card(
                     id=r["id"].lower(),  # 统一小写
                     name=r["name"],
@@ -217,20 +201,7 @@ def _load_card_db_from_json() -> dict[str, Card]:
                     base_damage=r.get("damage"),
                     base_block=r.get("block"),
                     base_draw=r.get("cards_draw"),
-                    hit_count=r.get("hit_count"),
-                    energy_gain=r.get("energy_gain"),
-                    hp_loss=r.get("hp_loss"),
-                    keywords=keywords,
-                    tags=[
-                        str(tag).strip().lower()
-                        for tag in (r.get("tags") or [])
-                        if str(tag).strip()
-                    ],
-                    spawned_cards=[
-                        str(spawn).strip().lower()
-                        for spawn in (r.get("spawns_cards") or [])
-                        if str(spawn).strip()
-                    ],
+                    keywords=CardKeywords(),
                 )
                 db[card.id] = card
             except Exception as e:
