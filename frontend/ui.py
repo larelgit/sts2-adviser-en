@@ -78,9 +78,9 @@ class EvaluateWorker(QThread):
             resp.raise_for_status()
             self.result_ready.emit(resp.json())
         except requests.exceptions.ConnectionError:
-            self.error_occurred.emit("无法连接后端服务（请先启动 main.py）")
+            self.error_occurred.emit("Cannot connect to backend service (please start main.py first)")
         except requests.exceptions.Timeout:
-            self.error_occurred.emit("请求超时")
+            self.error_occurred.emit("Request timed out")
         except Exception as exc:
             self.error_occurred.emit(str(exc))
 
@@ -108,7 +108,7 @@ class _OcrSnapshotWorker(QThread):
             if capture.find_window() is None:
                 self.result_ready.emit({
                     "screen_type": "unknown",
-                    "error": "未找到 STS2 窗口",
+                    "error": "STS2 window not found",
                 })
                 return
 
@@ -116,7 +116,7 @@ class _OcrSnapshotWorker(QThread):
             if screenshot is None:
                 self.result_ready.emit({
                     "screen_type": "unknown",
-                    "error": "截图失败",
+                    "error": "Screenshot failed",
                 })
                 return
 
@@ -203,7 +203,7 @@ class CardsFetchWorker(QThread):
 
             self.cards_ready.emit(char_cards + colorless_cards)
         except requests.exceptions.ConnectionError:
-            self.error_occurred.emit("无法连接后端")
+            self.error_occurred.emit("Cannot connect to backend")
         except Exception as exc:
             self.error_occurred.emit(str(exc))
 
@@ -425,7 +425,7 @@ class SelectionTrayWidget(QWidget):
         layout.setContentsMargins(6, 4, 6, 4)
         layout.setSpacing(6)
 
-        self._prefix_label = QLabel("候选:")
+        self._prefix_label = QLabel("Candidates:")
         self._prefix_label.setStyleSheet("color: #888; font-size: 12pt;")
         layout.addWidget(self._prefix_label)
 
@@ -440,7 +440,7 @@ class SelectionTrayWidget(QWidget):
         self._count_label.setStyleSheet("color: #666; font-size: 12pt;")
         layout.addWidget(self._count_label)
 
-        self._evaluate_btn = QPushButton("⟳ 评估")
+        self._evaluate_btn = QPushButton("⟳ Evaluate")
         self._evaluate_btn.setObjectName("EvaluateButton")
         self._evaluate_btn.setEnabled(False)
         self._evaluate_btn.clicked.connect(
@@ -520,7 +520,7 @@ class GameStateWatcher(QThread):
 
             except Exception as e:
                 log.error(f"WebSocket 连接失败: {e}")
-                self.connection_status.emit(f"连接失败: {e}", False)
+                self.connection_status.emit(f"Connection failed: {e}", False)
 
                 # 重试连接
                 if self.is_running:
@@ -529,7 +529,7 @@ class GameStateWatcher(QThread):
     def on_open(self, ws):
         """WebSocket 连接打开"""
         log.info("✓ WebSocket 已连接")
-        self.connection_status.emit("已连接游戏监视", True)
+        self.connection_status.emit("Game monitor connected", True)
 
     def on_message(self, ws, message: str):
         """接收 WebSocket 消息"""
@@ -562,13 +562,13 @@ class GameStateWatcher(QThread):
     def on_error(self, ws, error):
         """WebSocket 错误"""
         log.error(f"WebSocket 错误: {error}")
-        self.connection_status.emit(f"连接错误: {error}", False)
+        self.connection_status.emit(f"Connection error: {error}", False)
 
     def on_close(self, ws, close_status_code, close_msg):
         """WebSocket 关闭"""
         log.info("WebSocket 已关闭")
         if self.is_running:
-            self.connection_status.emit("连接已断开，尝试重新连接...", False)
+            self.connection_status.emit("Connection lost, trying to reconnect...", False)
 
     def stop(self):
         """停止 WebSocket 连接"""
@@ -595,7 +595,7 @@ class PathSettingsDialog(QDialog):
     def __init__(self, parent: QWidget | None = None, backend_url: str = "") -> None:
         super().__init__(parent)
         self.backend_url = backend_url
-        self.setWindowTitle("路径设置")
+        self.setWindowTitle("Path Settings")
         self.setModal(True)
         self.setMinimumWidth(500)
         self._build_ui()
@@ -606,9 +606,9 @@ class PathSettingsDialog(QDialog):
 
         # 帮助信息
         help_text = QLabel(
-            "设置游戏文件所在的文件夹。系统会自动在文件夹内搜索对应的文件。\n"
-            "• 存档文件夹：应包含 current_run.save 等存档文件\n"
-            "• 日志文件夹：应包含 godot.log 等日志文件"
+            "Set the folders where game files are located. The system will automatically search for the corresponding files in the folders.\n"
+            "• Save Folder: Should contain save files like current_run.save\n"
+            "• Log Folder: Should contain log files like godot.log"
         )
         help_text.setStyleSheet("color: #666; font-size: 12pt; padding: 8px;")
         help_text.setWordWrap(True)
@@ -616,7 +616,7 @@ class PathSettingsDialog(QDialog):
 
         # ===== 语言设置 =====
         lang_layout = QHBoxLayout()
-        lang_label = QLabel("🌐 卡牌显示语言:")
+        lang_label = QLabel("🌐 Card Display Language:")
         lang_label.setStyleSheet("font-weight: bold; font-size: 11pt;")
         lang_layout.addWidget(lang_label)
 
@@ -644,7 +644,7 @@ class PathSettingsDialog(QDialog):
 
         # ===== 存档路径 =====
         save_header_layout = QHBoxLayout()
-        save_label = QLabel("📂 存档文件夹:")
+        save_label = QLabel("📂 Save Folder:")
         save_label.setStyleSheet("font-weight: bold; font-size: 11pt;")
         save_header_layout.addWidget(save_label)
 
@@ -656,10 +656,10 @@ class PathSettingsDialog(QDialog):
 
         save_input_layout = QHBoxLayout()
         self._save_path_input = QLineEdit()
-        self._save_path_input.setPlaceholderText("选择存档文件所在的文件夹...")
+        self._save_path_input.setPlaceholderText("Select the folder containing save files...")
         self._save_path_input.setMinimumHeight(32)
         self._save_path_input.textChanged.connect(self._validate_save_path)
-        save_browse_btn = QPushButton("浏览...")
+        save_browse_btn = QPushButton("Browse...")
         save_browse_btn.setMaximumWidth(80)
         save_browse_btn.clicked.connect(self._browse_save_path)
         save_input_layout.addWidget(self._save_path_input)
@@ -681,7 +681,7 @@ class PathSettingsDialog(QDialog):
 
         # ===== 日志路径 =====
         log_header_layout = QHBoxLayout()
-        log_label = QLabel("📋 日志文件夹:")
+        log_label = QLabel("📋 Log Folder:")
         log_label.setStyleSheet("font-weight: bold; font-size: 11pt;")
         log_header_layout.addWidget(log_label)
 
@@ -693,10 +693,10 @@ class PathSettingsDialog(QDialog):
 
         log_input_layout = QHBoxLayout()
         self._log_path_input = QLineEdit()
-        self._log_path_input.setPlaceholderText("选择日志文件所在的文件夹...")
+        self._log_path_input.setPlaceholderText("Select the folder containing log files...")
         self._log_path_input.setMinimumHeight(32)
         self._log_path_input.textChanged.connect(self._validate_log_path)
-        log_browse_btn = QPushButton("浏览...")
+        log_browse_btn = QPushButton("Browse...")
         log_browse_btn.setMaximumWidth(80)
         log_browse_btn.clicked.connect(self._browse_log_path)
         log_input_layout.addWidget(self._log_path_input)
@@ -716,12 +716,12 @@ class PathSettingsDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
 
-        save_btn = QPushButton("保存配置")
+        save_btn = QPushButton("Save Settings")
         save_btn.setMinimumWidth(100)
         save_btn.clicked.connect(self._save_settings)
         button_layout.addWidget(save_btn)
 
-        cancel_btn = QPushButton("取消")
+        cancel_btn = QPushButton("Cancel")
         cancel_btn.setMinimumWidth(100)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
@@ -744,19 +744,19 @@ class PathSettingsDialog(QDialog):
 
         if not path_text:
             self._save_indicator.setStyleSheet("color: #aaa;")
-            self._save_status.setText("未设置")
+            self._save_status.setText("Not set")
             return False
 
         try:
             folder = Path(path_text)
             if not folder.exists():
                 self._save_indicator.setStyleSheet("color: #F44336;")
-                self._save_status.setText(f"❌ 文件夹不存在: {path_text}")
+                self._save_status.setText(f"❌ Folder does not exist: {path_text}")
                 return False
 
             if not folder.is_dir():
                 self._save_indicator.setStyleSheet("color: #F44336;")
-                self._save_status.setText(f"❌ 不是文件夹: {path_text}")
+                self._save_status.setText(f"❌ Not a folder: {path_text}")
                 return False
 
             # 搜索合适的存档文件
@@ -764,16 +764,16 @@ class PathSettingsDialog(QDialog):
             if save_files:
                 found_file = save_files[0]
                 self._save_indicator.setStyleSheet("color: #4CAF50;")
-                self._save_status.setText(f"✓ 找到存档文件: {found_file.name}")
+                self._save_status.setText(f"✓ Found save file: {found_file.name}")
                 return True
             else:
                 self._save_indicator.setStyleSheet("color: #FFC107;")
-                self._save_status.setText(f"⚠ 文件夹存在但未找到 *.save 文件")
+                self._save_status.setText(f"⚠ Folder exists but no *.save files found")
                 return False
 
         except Exception as e:
             self._save_indicator.setStyleSheet("color: #F44336;")
-            self._save_status.setText(f"❌ 检查失败: {e}")
+            self._save_status.setText(f"❌ Check failed: {e}")
             return False
 
     def _check_log_folder(self, path_text: str) -> bool:
@@ -782,19 +782,19 @@ class PathSettingsDialog(QDialog):
 
         if not path_text:
             self._log_indicator.setStyleSheet("color: #aaa;")
-            self._log_status.setText("未设置")
+            self._log_status.setText("Not set")
             return False
 
         try:
             folder = Path(path_text)
             if not folder.exists():
                 self._log_indicator.setStyleSheet("color: #F44336;")
-                self._log_status.setText(f"❌ 文件夹不存在: {path_text}")
+                self._log_status.setText(f"❌ Folder does not exist: {path_text}")
                 return False
 
             if not folder.is_dir():
                 self._log_indicator.setStyleSheet("color: #F44336;")
-                self._log_status.setText(f"❌ 不是文件夹: {path_text}")
+                self._log_status.setText(f"❌ Not a folder: {path_text}")
                 return False
 
             # 搜索合适的日志文件
@@ -803,16 +803,16 @@ class PathSettingsDialog(QDialog):
                 # 找最新的日志文件
                 latest = max(log_files, key=lambda p: p.stat().st_mtime)
                 self._log_indicator.setStyleSheet("color: #4CAF50;")
-                self._log_status.setText(f"✓ 找到日志文件: {latest.name}")
+                self._log_status.setText(f"✓ Found log file: {latest.name}")
                 return True
             else:
                 self._log_indicator.setStyleSheet("color: #FFC107;")
-                self._log_status.setText(f"⚠ 文件夹存在但未找到 *.log 或 *.txt 文件")
+                self._log_status.setText(f"⚠ Folder exists but no *.log or *.txt files found")
                 return False
 
         except Exception as e:
             self._log_indicator.setStyleSheet("color: #F44336;")
-            self._log_status.setText(f"❌ 检查失败: {e}")
+            self._log_status.setText(f"❌ Check failed: {e}")
             return False
 
     def _update_save_hint(self) -> None:
@@ -823,7 +823,7 @@ class PathSettingsDialog(QDialog):
             if steam_path.exists():
                 for save_dir in steam_path.glob("*/profile*/saves"):
                     if save_dir.is_dir():
-                        self._save_path_input.setPlaceholderText(f"默认位置: {save_dir}")
+                        self._save_path_input.setPlaceholderText(f"Default location: {save_dir}")
                         self._check_save_folder(str(save_dir))
                         return
         except Exception:
@@ -835,7 +835,7 @@ class PathSettingsDialog(QDialog):
             from pathlib import Path
             log_path = Path.home() / "AppData" / "Roaming" / "SlayTheSpire2" / "logs"
             if log_path.exists():
-                self._log_path_input.setPlaceholderText(f"默认位置: {log_path}")
+                self._log_path_input.setPlaceholderText(f"Default location: {log_path}")
                 self._check_log_folder(str(log_path))
                 return
         except Exception:
@@ -849,7 +849,7 @@ class PathSettingsDialog(QDialog):
 
         path = QFileDialog.getExistingDirectory(
             self,
-            "选择存档文件所在的文件夹",
+            "Select Save Folder",
             default_dir,
             QFileDialog.Option.ShowDirsOnly
         )
@@ -864,7 +864,7 @@ class PathSettingsDialog(QDialog):
 
         path = QFileDialog.getExistingDirectory(
             self,
-            "选择日志文件所在的文件夹",
+            "Select Log Folder",
             default_dir,
             QFileDialog.Option.ShowDirsOnly
         )
@@ -906,12 +906,12 @@ class PathSettingsDialog(QDialog):
 # ---------------------------------------------------------------------------
 
 _ROLE_ZH = {
-    "core":       "套路核心",
-    "enabler":    "使能卡",
-    "transition": "过渡卡",
-    "filler":     "补件",
-    "pollution":  "污染",
-    "unknown":    "未知",
+    "core":       "Core",
+    "enabler":    "Enabler",
+    "transition": "Transition",
+    "filler":     "Filler",
+    "pollution":  "Curse/Status",
+    "unknown":    "Unknown",
 }
 
 _REC_COLORS = {
@@ -1011,20 +1011,18 @@ class CardResultWidget(QFrame):
         reasons_against = result.get("reasons_against", [])
 
         if reasons_for:
-            lbl = QLabel("▸ " + "；".join(reasons_for))
+            lbl = QLabel("▸ " + "; ".join(reasons_for))
             lbl.setObjectName("cardReasonFor")
             lbl.setWordWrap(True)
             lbl.setStyleSheet("color:#8BC34A;font-size:12px;padding-top:1px;")
             outer.addWidget(lbl)
 
         if reasons_against:
-            lbl = QLabel("▸ " + "；".join(reasons_against))
+            lbl = QLabel("▸ " + "; ".join(reasons_against))
             lbl.setObjectName("cardReasonAgainst")
             lbl.setWordWrap(True)
             lbl.setStyleSheet("color:#FF8A65;font-size:12px;padding-top:1px;")
             outer.addWidget(lbl)
-
-
 # ---------------------------------------------------------------------------
 # 主窗口
 # ---------------------------------------------------------------------------
@@ -1169,7 +1167,7 @@ class CardAdviserWindow(QWidget):
         status_row.setContentsMargins(0, 0, 0, 0)
         status_row.setSpacing(0)
 
-        self._status_label = QLabel("就绪 — 等待游戏数据")
+        self._status_label = QLabel("Ready — Waiting for game data")
         self._status_label.setObjectName("StatusBar")
         self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         status_row.addWidget(self._status_label, 1)
@@ -1184,7 +1182,7 @@ class CardAdviserWindow(QWidget):
         # ── 拨片按钮（主面板右侧，始终可见）───────────────────────────
         self._drawer_toggle_btn = QPushButton("◀")
         self._drawer_toggle_btn.setObjectName("DrawerToggleBtn")
-        self._drawer_toggle_btn.setToolTip("展开/收起手动选牌面板")
+        self._drawer_toggle_btn.setToolTip("Expand/Collapse Manual Card Selection")
         self._drawer_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._drawer_toggle_btn.clicked.connect(self._toggle_side_drawer)
         self._drawer_toggle_btn.setSizePolicy(
@@ -1237,23 +1235,23 @@ class CardAdviserWindow(QWidget):
         btn_layout.setSpacing(4)
 
         # 刷新检测按钮
-        refresh_detect_btn = QPushButton("🔄 检测")
+        refresh_detect_btn = QPushButton("🔄 Detect")
         refresh_detect_btn.setObjectName("RefreshDetectButton")
-        refresh_detect_btn.setToolTip("重新检测游戏和日志")
+        refresh_detect_btn.setToolTip("Re-detect game and logs")
         refresh_detect_btn.clicked.connect(self._on_refresh_detect)
         btn_layout.addWidget(refresh_detect_btn)
 
         # 手动截图识别按钮（单次触发，与后台自动轮询独立）
-        self._ocr_btn = QPushButton("📷 截图识别")
+        self._ocr_btn = QPushButton("📷 OCR Snapshot")
         self._ocr_btn.setObjectName("OcrButton")
-        self._ocr_btn.setToolTip("手动截一次图做OCR识别（后台也在自动轮询，此按钮用于即时触发）")
+        self._ocr_btn.setToolTip("Manually take a snapshot for OCR (runs independently from background polling)")
         self._ocr_btn.clicked.connect(self._on_ocr_snapshot)
         btn_layout.addWidget(self._ocr_btn)
 
         # 设置按钮
-        settings_btn = QPushButton("⚙ 设置")
+        settings_btn = QPushButton("⚙ Settings")
         settings_btn.setObjectName("SettingsButton")
-        settings_btn.setToolTip("路径设置")
+        settings_btn.setToolTip("Path Settings")
         settings_btn.clicked.connect(self._on_settings)
         btn_layout.addWidget(settings_btn)
 
@@ -1264,7 +1262,7 @@ class CardAdviserWindow(QWidget):
         info_layout = QHBoxLayout()
         info_layout.setSpacing(8)
 
-        self._game_info_label = QLabel("等待游戏数据...")
+        self._game_info_label = QLabel("Waiting for game data...")
         self._game_info_label.setObjectName("GameInfoLabel")
         self._game_info_label.setStyleSheet("font-size: 12pt; color: #666;")
         self._game_info_label.setTextFormat(Qt.TextFormat.RichText)
@@ -1280,7 +1278,7 @@ class CardAdviserWindow(QWidget):
         # 后端连接指示器
         backend_box = QVBoxLayout()
         backend_box.setSpacing(2)
-        self._backend_indicator = QLabel("● 后端")
+        self._backend_indicator = QLabel("● Backend")
         self._backend_indicator.setObjectName("BackendIndicator")
         self._backend_indicator.setStyleSheet("color: #aaa; font-weight: bold;")
         backend_box.addWidget(self._backend_indicator)
@@ -1289,7 +1287,7 @@ class CardAdviserWindow(QWidget):
         # 游戏存档指示器
         game_box = QVBoxLayout()
         game_box.setSpacing(2)
-        self._game_indicator = QLabel("● 游戏")
+        self._game_indicator = QLabel("● Game")
         self._game_indicator.setObjectName("GameIndicator")
         self._game_indicator.setStyleSheet("color: #F44336; font-weight: bold;")
         game_box.addWidget(self._game_indicator)
@@ -1298,7 +1296,7 @@ class CardAdviserWindow(QWidget):
         # 日志监视指示器
         log_box = QVBoxLayout()
         log_box.setSpacing(2)
-        self._log_indicator = QLabel("● 日志")
+        self._log_indicator = QLabel("● Logs")
         self._log_indicator.setObjectName("LogIndicator")
         self._log_indicator.setStyleSheet("color: #F44336; font-weight: bold;")
         log_box.addWidget(self._log_indicator)
@@ -1307,13 +1305,13 @@ class CardAdviserWindow(QWidget):
         # 视觉自动轮询指示器（后台 VisionBridge 状态）
         ocr_box = QHBoxLayout()
         ocr_box.setSpacing(4)
-        self._ocr_indicator = QLabel("● 视觉")
+        self._ocr_indicator = QLabel("● Vision")
         self._ocr_indicator.setObjectName("OcrIndicator")
         self._ocr_indicator.setStyleSheet("color: #aaa; font-weight: bold;")
-        self._ocr_indicator.setToolTip("后台自动视觉识别状态（每秒轮询截图）")
+        self._ocr_indicator.setToolTip("Background Auto Vision Status (Polling 1/sec)")
         ocr_box.addWidget(self._ocr_indicator)
         # 轮询状态小字（监视中 / 识别中 / 已锁定）
-        self._ocr_state_badge = QLabel("监视中")
+        self._ocr_state_badge = QLabel("Monitoring")
         self._ocr_state_badge.setObjectName("OcrStateBadge")
         self._ocr_state_badge.setStyleSheet(
             "color: #555; font-size: 10px; "
@@ -1338,7 +1336,7 @@ class CardAdviserWindow(QWidget):
 
     def _run_debug(self) -> None:
         log.info("调试按钮被点击，开始执行调试逻辑...")
-        self._status_label.setText("调试中，请查看日志...")
+        self._status_label.setText("Debugging, check logs...")
 
     def _open_log_directory(self) -> None:
         log_dir = str(get_app_root())
@@ -1363,12 +1361,12 @@ class CardAdviserWindow(QWidget):
 
         # 标题行：图标 + "视觉识别" + 状态
         title_row = QHBoxLayout()
-        lbl_title = QLabel("📷 视觉识别")
+        lbl_title = QLabel("📷 Vision Recognition")
         lbl_title.setStyleSheet("color:#64B5F6;font-size:12px;font-weight:bold;")
         title_row.addWidget(lbl_title)
         title_row.addStretch()
 
-        self._ocr_preview_status = QLabel("识别中...")
+        self._ocr_preview_status = QLabel("Recognizing...")
         self._ocr_preview_status.setStyleSheet("color:#888;font-size:11px;")
         title_row.addWidget(self._ocr_preview_status)
         layout.addLayout(title_row)
@@ -1378,7 +1376,7 @@ class CardAdviserWindow(QWidget):
         cards_row.setSpacing(6)
         self._ocr_preview_cards: list[QLabel] = []
         for i in range(3):
-            card_lbl = QLabel(f"— 卡 {i+1} —")
+            card_lbl = QLabel(f"— Card {i+1} —")
             card_lbl.setObjectName(f"OcrPreviewCard{i}")
             card_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             card_lbl.setStyleSheet(
@@ -1392,7 +1390,7 @@ class CardAdviserWindow(QWidget):
         layout.addLayout(cards_row)
 
         # 提示文字（解释性）
-        self._ocr_hint_label = QLabel("识别到选卡界面，正在评估候选卡...")
+        self._ocr_hint_label = QLabel("Card reward screen detected, evaluating candidates...")
         self._ocr_hint_label.setStyleSheet("color:#556672;font-size:11px;padding-top:2px;")
         self._ocr_hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._ocr_hint_label)
@@ -1405,7 +1403,7 @@ class CardAdviserWindow(QWidget):
         layout = QHBoxLayout(header)
         layout.setContentsMargins(10, 2, 10, 2)
 
-        lbl = QLabel("候选卡评估")
+        lbl = QLabel("Candidate Evaluation")
         lbl.setObjectName("HeaderLabel")
         lbl.setStyleSheet("color:#8A7A5A;font-size:11px;")
         layout.addWidget(lbl)
@@ -1429,10 +1427,10 @@ class CardAdviserWindow(QWidget):
 
     def _set_backend_connected(self, connected: bool) -> None:
         if connected:
-            self._backend_indicator.setText("● 后端已连接")
+            self._backend_indicator.setText("● Backend Connected")
             self._backend_indicator.setStyleSheet("color: #4CAF50;")
         else:
-            self._backend_indicator.setText("● 后端未连接")
+            self._backend_indicator.setText("● Backend Disconnected")
             self._backend_indicator.setStyleSheet("color: #F44336;")
 
     def _start_game_watcher(self) -> None:
@@ -1483,7 +1481,7 @@ class CardAdviserWindow(QWidget):
         floor = state.get("floor", 0)
 
         if character and floor > 0:
-            self._game_indicator.setText("● 游戏")
+            self._game_indicator.setText("● Game")
             self._game_indicator.setStyleSheet("color: #4CAF50; font-weight: bold;")
 
             # 显示游戏信息
@@ -1505,9 +1503,9 @@ class CardAdviserWindow(QWidget):
             asc_text = f" <span style='color:#9C27B0'>A{ascension}</span>" if ascension > 0 else ""
             game_mode = state.get("mode", "single")
             if game_mode == "coop":
-                mode_text = "  <span style='color:#26C6DA;font-size:10pt'>👥 协作</span>"
+                mode_text = "  <span style='color:#26C6DA;font-size:10pt'>👥 Co-op</span>"
             else:
-                mode_text = "  <span style='color:#81C784;font-size:10pt'>🧍 单人</span>"
+                mode_text = "  <span style='color:#81C784;font-size:10pt'>🧍 Solo</span>"
             info_html = (
                 f"<span style='color:#64B5F6;font-weight:bold'>{character}</span>"
                 f"{asc_text}"
@@ -1520,16 +1518,16 @@ class CardAdviserWindow(QWidget):
             self._game_info_label.setText(info_html)
             self._game_info_label.setStyleSheet("font-size: 12pt;")
         else:
-            self._game_indicator.setText("● 游戏")
+            self._game_indicator.setText("● Game")
             self._game_indicator.setStyleSheet("color: #F44336; font-weight: bold;")
-            self._game_info_label.setText("<span style='color:#999'>未检测到游戏运行</span>")
+            self._game_info_label.setText("<span style='color:#999'>Game not detected</span>")
             self._game_info_label.setStyleSheet("font-size: 12pt;")
 
         # 更新底部状态栏
         if state.get("hand"):
-            self._status_label.setText(f"当前手牌: {len(state.get('hand', []))} 张")
+            self._status_label.setText(f"Hand size: {len(state.get('hand', []))} cards")
         elif character and floor > 0:
-            self._status_label.setText(f"就绪 — 选择候选卡后点击评估")
+            self._status_label.setText(f"Ready — Select candidates and click Evaluate")
 
         # 检测到角色时加载对应卡牌
         if norm_char and norm_char != self._current_character:
@@ -1546,11 +1544,11 @@ class CardAdviserWindow(QWidget):
         """处理日志监视状态更新"""
         active = status.get("active", False)
         if active:
-            self._log_indicator.setText("● 日志")
+            self._log_indicator.setText("● Logs")
             self._log_indicator.setStyleSheet("color: #4CAF50;")
             log.info(f"日志正在监视: {status.get('path')}")
         else:
-            self._log_indicator.setText("● 日志")
+            self._log_indicator.setText("● Logs")
             self._log_indicator.setStyleSheet("color: #F44336;")
             log.warning("日志未被监视")
 
@@ -1565,37 +1563,37 @@ class CardAdviserWindow(QWidget):
         # 更新视觉轮询指示灯 + badge
         if screen_type == "card_reward":
             if all_reliable:
-                self._ocr_indicator.setText("● 视觉")
+                self._ocr_indicator.setText("● Vision")
                 self._ocr_indicator.setStyleSheet("color: #4CAF50; font-weight: bold;")
-                self._ocr_indicator.setToolTip("后台视觉识别：已锁定选卡界面（自动轮询）")
-                self._ocr_state_badge.setText("已锁定")
+                self._ocr_indicator.setToolTip("Background Vision: Locked on Card Reward (Auto Polling)")
+                self._ocr_state_badge.setText("Locked")
                 self._ocr_state_badge.setStyleSheet(
                     "color: #4CAF50; font-size: 10px; "
                     "border: 1px solid #2E7D32; border-radius: 3px; padding: 0px 4px;"
                 )
             else:
-                self._ocr_indicator.setText("● 视觉")
+                self._ocr_indicator.setText("● Vision")
                 self._ocr_indicator.setStyleSheet("color: #FF9800; font-weight: bold;")
-                self._ocr_indicator.setToolTip("后台视觉识别：识别中（等待多帧稳定）")
-                self._ocr_state_badge.setText("识别中")
+                self._ocr_indicator.setToolTip("Background Vision: Recognizing (Waiting for stabilization)")
+                self._ocr_state_badge.setText("Recognizing")
                 self._ocr_state_badge.setStyleSheet(
                     "color: #FF9800; font-size: 10px; "
                     "border: 1px solid #E65100; border-radius: 3px; padding: 0px 4px;"
                 )
         elif screen_type == "shop":
-            self._ocr_indicator.setText("● 视觉")
+            self._ocr_indicator.setText("● Vision")
             self._ocr_indicator.setStyleSheet("color: #64B5F6; font-weight: bold;")
-            self._ocr_indicator.setToolTip("后台视觉识别：检测到商店界面")
-            self._ocr_state_badge.setText("商店")
+            self._ocr_indicator.setToolTip("Background Vision: Shop Detected")
+            self._ocr_state_badge.setText("Shop")
             self._ocr_state_badge.setStyleSheet(
                 "color: #64B5F6; font-size: 10px; "
                 "border: 1px solid #1565C0; border-radius: 3px; padding: 0px 4px;"
             )
         else:
-            self._ocr_indicator.setText("● 视觉")
+            self._ocr_indicator.setText("● Vision")
             self._ocr_indicator.setStyleSheet("color: #aaa; font-weight: bold;")
-            self._ocr_indicator.setToolTip("后台视觉识别：监视中（每秒自动截图）")
-            self._ocr_state_badge.setText("监视中")
+            self._ocr_indicator.setToolTip("Background Vision: Monitoring (Auto snapshot every 1s)")
+            self._ocr_state_badge.setText("Monitoring")
             self._ocr_state_badge.setStyleSheet(
                 "color: #555; font-size: 10px; "
                 "border: 1px solid #333; border-radius: 3px; padding: 0px 4px;"
@@ -1603,9 +1601,9 @@ class CardAdviserWindow(QWidget):
 
         # 更新 OCR 界面提示文字
         _SCREEN_ICONS = {
-            "card_reward": "🃏 选卡界面",
-            "shop":        "🛒 商店界面",
-            "other":       "🗺 其他界面",
+            "card_reward": "🃏 Card Reward",
+            "shop":        "🛒 Shop",
+            "other":       "🗺 Other Screen",
             "unknown":     "",
         }
         screen_label = _SCREEN_ICONS.get(screen_type, "")
@@ -1660,14 +1658,14 @@ class CardAdviserWindow(QWidget):
 
         # 状态文字
         if all_reliable:
-            self._ocr_preview_status.setText("已锁定 ✓")
+            self._ocr_preview_status.setText("Locked ✓")
             self._ocr_preview_status.setStyleSheet("color:#4CAF50;font-size:11px;")
-            self._ocr_hint_label.setText("识别稳定，已自动填入候选卡并触发评估")
+            self._ocr_hint_label.setText("Recognition stable, candidates auto-filled and evaluated")
             self._ocr_hint_label.setStyleSheet("color:#4A7A40;font-size:11px;padding-top:2px;")
         else:
-            self._ocr_preview_status.setText("识别中...")
+            self._ocr_preview_status.setText("Recognizing...")
             self._ocr_preview_status.setStyleSheet("color:#FF9800;font-size:11px;")
-            self._ocr_hint_label.setText("正在等待多帧稳定以确认卡名...")
+            self._ocr_hint_label.setText("Waiting for stabilization across multiple frames...")
             self._ocr_hint_label.setStyleSheet("color:#7A6030;font-size:11px;padding-top:2px;")
 
         # 三张卡名标签
@@ -1675,7 +1673,7 @@ class CardAdviserWindow(QWidget):
             name = card_names[i] if i < len(card_names) else ""
             conf = confidences[i] if i < len(confidences) else 0.0
             if not name:
-                lbl.setText(f"卡 {i+1}")
+                lbl.setText(f"Card {i+1}")
                 lbl.setStyleSheet(
                     "color: #555; font-size: 11px; "
                     "border: 1px solid #333; border-radius: 4px; "
@@ -1706,15 +1704,15 @@ class CardAdviserWindow(QWidget):
     def _on_ocr_snapshot(self) -> None:
         """手动触发一次截图识别（独立于后台自动轮询）"""
         self._ocr_btn.setEnabled(False)
-        self._ocr_btn.setText("📷 识别中...")
-        self._status_label.setText("手动截图识别中...")
+        self._ocr_btn.setText("📷 Processing...")
+        self._status_label.setText("Manual OCR snapshot in progress...")
 
         # 在后台线程执行，避免冻结 UI
         worker = _OcrSnapshotWorker(BACKEND_URL)
         worker.result_ready.connect(self._on_ocr_snapshot_result)
         def _restore_btn():
             self._ocr_btn.setEnabled(True)
-            self._ocr_btn.setText("📷 截图识别")
+            self._ocr_btn.setText("📷 OCR Snapshot")
         worker.finished.connect(_restore_btn)
         worker.start()
         # 保持引用避免被 GC
@@ -1725,13 +1723,13 @@ class CardAdviserWindow(QWidget):
         self._on_vision_state_update(data)
         screen_type = data.get("screen_type", "unknown")
         if screen_type == "card_reward":
-            self._status_label.setText("OCR 识别完成：选卡界面")
+            self._status_label.setText("OCR Complete: Card Reward Screen")
         elif screen_type == "shop":
-            self._status_label.setText("OCR 识别完成：商店界面")
+            self._status_label.setText("OCR Complete: Shop Screen")
         elif screen_type == "other":
-            self._status_label.setText("OCR 识别完成：其他界面")
+            self._status_label.setText("OCR Complete: Other Screen")
         else:
-            self._status_label.setText("OCR 识别完成：未识别到特定界面")
+            self._status_label.setText("OCR Complete: Unknown Screen")
 
     def _auto_fill_vision_cards(self, card_ids: list) -> None:
         """OCR 识别稳定后，自动填入候选卡到当前 run_state 并触发评估"""
@@ -1740,14 +1738,14 @@ class CardAdviserWindow(QWidget):
         normalized = [cid.lower() for cid in card_ids]
         # 构造虚拟 card dict 列表（只需 id 字段供评估器使用）
         fake_cards = [{"id": cid} for cid in normalized]
-        self._status_label.setText(f"OCR 自动识别到 {len(normalized)} 张候选卡，正在评估...")
+        self._status_label.setText(f"OCR automatically identified {len(normalized)} candidates, evaluating...")
         log.info(f"OCR 自动填入候选卡: {normalized}")
         self._on_evaluate_from_picker(fake_cards)
 
     def _on_refresh_detect(self) -> None:
         """刷新检测：重新初始化游戏和日志检测"""
         try:
-            self._status_label.setText("正在重新检测...")
+            self._status_label.setText("Re-detecting...")
 
             # 通过调用配置端点来触发后端重新初始化 GameWatcher
             resp = requests.post(
@@ -1758,15 +1756,15 @@ class CardAdviserWindow(QWidget):
 
             if resp.status_code == 200:
                 log.info("✓ 已触发重新检测")
-                self._status_label.setText("检测中... 稍候")
+                self._status_label.setText("Detecting... Please wait")
                 # 延迟1秒后查看指示灯更新
-                QTimer.singleShot(1000, lambda: self._status_label.setText("检测完成"))
+                QTimer.singleShot(1000, lambda: self._status_label.setText("Detection complete"))
             else:
-                self._status_label.setText(f"检测失败: {resp.status_code}")
+                self._status_label.setText(f"Detection failed: {resp.status_code}")
 
         except Exception as e:
             log.error(f"重新检测失败: {e}")
-            self._status_label.setText(f"错误: {e}")
+            self._status_label.setText(f"Error: {e}")
 
     def _on_settings(self) -> None:
         """打开设置对话框"""
@@ -1800,7 +1798,7 @@ class CardAdviserWindow(QWidget):
         layout.setContentsMargins(6, 8, 6, 8)
         layout.setSpacing(4)
 
-        title = QLabel("手动选牌")
+        title = QLabel("Manual Selection")
         title.setObjectName("DrawerTitle")
         layout.addWidget(title)
 
@@ -1839,12 +1837,12 @@ class CardAdviserWindow(QWidget):
         self._card_picker.set_language(self._language)
         self._card_picker.clear_cards()
         self._selection_tray.update_selection([])
-        self._status_label.setText(f"加载 {character.upper()} 卡牌中...")
+        self._status_label.setText(f"Loading cards for {character.upper()}...")
 
         self._cards_fetch_worker = CardsFetchWorker(character)
         self._cards_fetch_worker.cards_ready.connect(self._on_cards_fetched)
         self._cards_fetch_worker.error_occurred.connect(
-            lambda e: self._status_label.setText(f"加载卡牌失败: {e}")
+            lambda e: self._status_label.setText(f"Failed to load cards: {e}")
         )
         self._cards_fetch_worker.start()
 
@@ -1852,14 +1850,14 @@ class CardAdviserWindow(QWidget):
         playable_types = {"attack", "skill", "power"}
         playable = [c for c in cards if c.get("card_type", "").lower() in playable_types]
         self._card_picker.populate(playable)
-        self._status_label.setText(f"已加载 {len(playable)} 张卡牌，请选择候选卡")
+        self._status_label.setText(f"Loaded {len(playable)} cards. Please select candidates.")
 
     def _on_card_selection_changed(self, selected_cards: list[dict], display_names: list[str]) -> None:
         self._selection_tray.update_selection(selected_cards, display_names)
 
     def _on_evaluate_from_picker(self, selected_cards: list[dict]) -> None:
         if not selected_cards:
-            self._status_label.setText("请先选择候选卡")
+            self._status_label.setText("Please select candidate cards first")
             return
 
         card_ids = [c["id"].lower() for c in selected_cards]
@@ -1886,7 +1884,7 @@ class CardAdviserWindow(QWidget):
             for r in run_state["relics"]
         ]
 
-        self._status_label.setText("评估中...")
+        self._status_label.setText("Evaluating...")
         self._selection_tray._evaluate_btn.setEnabled(False)
 
         self._worker = EvaluateWorker(run_state)
@@ -1931,7 +1929,7 @@ class CardAdviserWindow(QWidget):
             run_state["deck"] = []
         if "card_choices" not in run_state or not run_state["card_choices"]:
             # 无法进行评估，因为没有选卡池
-            self._status_label.setText("等待选卡数据... (需要日志文件或游戏运行中)")
+            self._status_label.setText("Waiting for card data... (Needs active game or log files)")
             return
 
         # 规范化字段（去除游戏前缀）
@@ -1943,7 +1941,7 @@ class CardAdviserWindow(QWidget):
             if isinstance(r, str) else r
             for r in raw_relics
         ]
-        self._status_label.setText("评估中...")
+        self._status_label.setText("Evaluating...")
 
         self._worker = EvaluateWorker(run_state)
         self._worker.result_ready.connect(self._on_result)
@@ -1956,19 +1954,19 @@ class CardAdviserWindow(QWidget):
         self._render_results(results)
 
         if not results:
-            self._status_label.setText("❌ 未找到匹配的卡牌")
+            self._status_label.setText("❌ No matching cards found")
             self._archetype_label.setVisible(False)
         else:
             if archetypes:
-                arch_text = "、".join(archetypes)
-                self._archetype_label.setText(f"⚔ 套路：{arch_text}")
+                arch_text = ", ".join(archetypes)
+                self._archetype_label.setText(f"⚔ Archetypes: {arch_text}")
                 self._archetype_label.setVisible(True)
             else:
                 self._archetype_label.setVisible(False)
-            self._status_label.setText("评估完成")
+            self._status_label.setText("Evaluation complete")
 
     def _on_error(self, message: str) -> None:
-        self._status_label.setText(f"错误：{message}")
+        self._status_label.setText(f"Error: {message}")
 
     def _render_results(self, results: list[dict]) -> None:
         """清空列表并重新渲染评估结果"""
@@ -1984,7 +1982,7 @@ class CardAdviserWindow(QWidget):
 
     def _show_placeholder(self) -> None:
         """初始占位内容"""
-        placeholder = QLabel("点击「刷新」加载评估结果")
+        placeholder = QLabel("Click 'Detect' to load evaluation results")
         placeholder.setObjectName("Placeholder")
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._list_layout.insertWidget(0, placeholder)
@@ -2026,7 +2024,6 @@ def run_ui() -> None:
     window = CardAdviserWindow()
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     run_ui()
