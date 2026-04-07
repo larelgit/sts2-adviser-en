@@ -1,136 +1,175 @@
 /* =========================================================
-   styles.qss — STS2 Adviser 深色主题
-   参考杀戮尖塔的暗色调 + 金属质感风格
+   styles.qss  —  STS2 Adviser  Minimal Dark v2
+   Clean, compact overlay theme
    ========================================================= */
 
-/* ── 全局字体 ── */
+/* ── Global ── */
 * {
     font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
-    font-size: 18px;
-    color: #D4C5A9;
+    font-size: 13px;
+    color: #D8D0C4;
 }
 
-/* ── 主容器（圆角 + 半透明深色背景）── */
+/* ── Main Container ── */
 #MainContainer {
-    background-color: rgba(22, 18, 14, 0.92);
-    border: 1px solid #4A3C28;
+    background-color: rgba(11, 10, 9, 0.96);
+    border: 1px solid #252015;
     border-radius: 8px;
 }
 
-/* ── 标题栏 ── */
+/* ── Title Bar ── */
 #TitleBar {
-    background-color: rgba(40, 30, 18, 0.95);
+    background-color: rgba(16, 13, 10, 0.99);
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-    border-bottom: 1px solid #3A2E1E;
-    min-height: 42px;
+    border-bottom: 1px solid #201A10;
+    min-height: 34px;
+    max-height: 34px;
 }
 
 #TitleLabel {
-    font-size: 19px;
+    font-size: 13px;
     font-weight: bold;
-    color: #C8A96E;
-    letter-spacing: 0.5px;
+    color: #B89A58;
+    letter-spacing: 1.5px;
 }
 
 #CloseButton {
     background-color: transparent;
-    border: 1px solid #5A4530;
-    border-radius: 4px;
-    color: #8A7560;
-    font-size: 20px;
+    border: none;
+    border-radius: 11px;
+    color: #3A3028;
+    font-size: 18px;
     font-weight: bold;
     padding: 0;
-    min-width: 28px;
-    min-height: 28px;
+    min-width: 22px;
+    max-width: 22px;
+    min-height: 22px;
+    max-height: 22px;
 }
 
 #CloseButton:hover {
-    background-color: #6B2020;
-    border-color: #A03030;
-    color: #FF6B6B;
+    background-color: rgba(160, 35, 35, 0.85);
+    color: #FF7070;
 }
 
-/* ── 工具栏 ── */
+/* ── Toolbar ── */
 #Toolbar {
-    background-color: rgba(30, 24, 16, 0.85);
-    border-bottom: 1px solid #2E2416;
+    background-color: rgba(14, 12, 9, 0.92);
+    border-bottom: 1px solid #1A1510;
+    padding: 0px;
 }
 
-#RefreshButton, #RefreshDetectButton, #SettingsButton {
-    background-color: #3A2E1E;
-    border: 1px solid #5A4A2E;
+/* ── Toolbar Buttons ── */
+#RefreshDetectButton, #SettingsButton {
+    background-color: transparent;
+    border: 1px solid #2A2218;
     border-radius: 4px;
+    color: #7A6A50;
+    padding: 2px 9px;
+    font-size: 12px;
+    min-height: 24px;
+    max-height: 24px;
+}
+
+#RefreshDetectButton:hover, #SettingsButton:hover {
+    background-color: rgba(184, 154, 88, 0.07);
+    border-color: #B89A58;
     color: #C8A96E;
-    padding: 4px 14px;
-    font-size: 15px;
-    min-height: 30px;
 }
 
-#RefreshButton:hover, #RefreshDetectButton:hover, #SettingsButton:hover {
-    background-color: #4A3C26;
-    border-color: #8A6A3E;
-    color: #E8C98E;
+#RefreshDetectButton:pressed, #SettingsButton:pressed {
+    background-color: rgba(184, 154, 88, 0.14);
 }
 
-#RefreshButton:pressed, #RefreshDetectButton:pressed, #SettingsButton:pressed {
-    background-color: #2A1E10;
+#RefreshDetectButton:disabled, #SettingsButton:disabled {
+    color: #302820;
+    border-color: #201810;
 }
 
-#RefreshButton:disabled, #RefreshDetectButton:disabled {
-    color: #5A4A3E;
-    border-color: #3A2E1E;
+/* ── OCR Button ── */
+#OcrButton {
+    background-color: transparent;
+    border: 1px solid #1A2A3A;
+    border-radius: 4px;
+    color: #3A6A8A;
+    padding: 2px 9px;
+    font-size: 12px;
+    min-height: 24px;
+    max-height: 24px;
 }
 
-#BackendIndicator {
-    font-size: 15px;
-    color: #6A5A4A;
+#OcrButton:hover {
+    background-color: rgba(66, 145, 210, 0.07);
+    border-color: #3A80B0;
+    color: #55A0D0;
 }
 
-/* ── 分隔线 ── */
+#OcrButton:disabled {
+    color: #1A2A38;
+    border-color: #141E28;
+}
+
+/* ── Indicators ── */
+#BackendIndicator, #GameIndicator, #LogIndicator, #OcrIndicator {
+    font-size: 11px;
+    font-weight: bold;
+    color: #3A3028;
+}
+
+#OcrStateBadge {
+    font-size: 10px;
+    border: 1px solid #252015;
+    border-radius: 3px;
+    padding: 0px 4px;
+    color: #3A3028;
+}
+
+/* ── Separator ── */
 #Separator {
-    color: #3A2E1E;
-    background-color: #3A2E1E;
+    color: #181410;
+    background-color: #181410;
     border: none;
     height: 1px;
     max-height: 1px;
 }
 
-/* ── 列表头 ── */
+/* ── List Header ── */
 #ListHeader {
-    background-color: rgba(30, 24, 16, 0.60);
-    border-bottom: 1px solid #2E2416;
-    min-height: 26px;
+    background-color: transparent;
+    border-bottom: 1px solid #141010;
+    min-height: 20px;
+    max-height: 20px;
 }
 
 #HeaderLabel {
-    font-size: 13px;
-    color: #7A6A52;
+    font-size: 9px;
+    color: #3A3028;
     font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
 }
 
-/* ── 滚动区域 ── */
+/* ── Scroll Area ── */
 #CardScrollArea {
     background-color: transparent;
     border: none;
 }
 
 #CardScrollArea QScrollBar:vertical {
-    background: rgba(20, 16, 10, 0.5);
-    width: 8px;
-    border-radius: 4px;
+    background: transparent;
+    width: 4px;
+    border-radius: 2px;
+    margin: 2px 0;
 }
 
 #CardScrollArea QScrollBar::handle:vertical {
-    background: #4A3C28;
-    border-radius: 4px;
+    background: #252015;
+    border-radius: 2px;
     min-height: 20px;
 }
 
 #CardScrollArea QScrollBar::handle:vertical:hover {
-    background: #6A5A3E;
+    background: #3A3028;
 }
 
 #CardScrollArea QScrollBar::add-line:vertical,
@@ -138,78 +177,100 @@
     height: 0;
 }
 
-/* ── 卡牌结果行 ── */
+/* ── Card Result Widget ── */
 #CardResultWidget {
-    background-color: rgba(35, 28, 18, 0.70);
-    border: 1px solid #2E2416;
-    border-radius: 4px;
-    min-height: 44px;
+    background-color: rgba(17, 14, 10, 0.90);
+    border: 1px solid #181410;
+    border-left: 2px solid #2A2216;
+    border-radius: 0px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    min-height: 50px;
 }
 
 #CardResultWidget:hover {
-    background-color: rgba(55, 44, 28, 0.80);
-    border-color: #5A4A2E;
+    background-color: rgba(26, 22, 16, 0.92);
+    border-color: #2A2216;
+    border-left-color: #B89A58;
 }
 
 #cardName {
-    color: #D4C5A9;
-    font-size: 18px;
+    color: #E0D8CC;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 #cardRole {
-    color: #8A7A60;
-    font-size: 14px;
+    color: #5A5040;
+    font-size: 11px;
 }
 
 #cardScore {
-    color: #C8A96E;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-/* ── 套路提示标签 ── */
-#ArchetypeLabel {
-    font-size: 18px;
-    font-weight: bold;
-    color: #C8A96E;
-    padding: 2px 0px;
-}
-
-/* ── 状态栏 ── */
-#StatusBar {
     font-size: 14px;
-    color: #7A6A50;
-    padding: 2px 8px;
+    font-weight: bold;
+    color: #C8A96E;
 }
 
-/* ── 占位文本 ── */
+#cardReason {
+    color: #4A5040;
+    font-size: 11px;
+    padding-left: 2px;
+}
+
+/* ── Archetype Label ── */
+#ArchetypeLabel {
+    font-size: 11px;
+    color: #8A7848;
+    padding: 1px 0px;
+}
+
+/* ── Status Bar ── */
+#StatusBar {
+    font-size: 11px;
+    color: #3A3028;
+    padding: 1px 8px;
+}
+
+/* ── Placeholder ── */
 #Placeholder {
-    color: #5A4A36;
-    font-size: 17px;
-    padding: 24px;
+    color: #2E2820;
+    font-size: 13px;
+    padding: 32px;
 }
 
-/* ── 卡牌选择器 ── */
-#CardPickerSection {
-    background-color: transparent;
+/* ── OCR Preview Panel ── */
+#OcrPreviewPanel {
+    background-color: rgba(8, 13, 22, 0.92);
+    border-bottom: 1px solid #0D2035;
 }
 
+#OcrScreenLabel {
+    font-size: 11px;
+    padding: 1px 4px;
+    color: #5A5A5A;
+}
+
+/* ── Card Picker Scroll ── */
 #CardPickerScroll {
-    background-color: rgba(20, 16, 10, 0.6);
-    border: 1px solid #2E2416;
+    background-color: rgba(9, 8, 6, 0.85);
+    border: 1px solid #181410;
     border-radius: 4px;
 }
 
 #CardPickerScroll QScrollBar:vertical {
-    background: rgba(20, 16, 10, 0.5);
-    width: 6px;
-    border-radius: 3px;
+    background: transparent;
+    width: 4px;
+    border-radius: 2px;
 }
 
 #CardPickerScroll QScrollBar::handle:vertical {
-    background: #4A3C28;
-    border-radius: 3px;
+    background: #252015;
+    border-radius: 2px;
     min-height: 16px;
+}
+
+#CardPickerScroll QScrollBar::handle:vertical:hover {
+    background: #3A3028;
 }
 
 #CardPickerScroll QScrollBar::add-line:vertical,
@@ -218,159 +279,144 @@
 }
 
 #CardPickerSectionHeader {
-    color: #7A6A52;
-    font-size: 14px;
+    color: #3A3028;
+    font-size: 9px;
     font-weight: bold;
-    padding: 3px 2px 1px 2px;
+    letter-spacing: 1.2px;
+    padding: 5px 2px 2px 2px;
 }
 
-/* 未选中的卡片 */
-#CardChip {
-    background-color: rgba(35, 28, 18, 0.8);
-    border: 1px solid #3A2E1E;
-    border-radius: 3px;
-    color: #9A8A6A;
-    font-size: 15px;
-    padding: 3px 6px;
-    text-align: left;
-}
-
-#CardChip:hover {
-    background-color: rgba(55, 44, 28, 0.9);
-    border-color: #5A4A2E;
-    color: #C8A96E;
-}
-
-/* 已选中的卡片 */
-#CardChipSelected {
-    background-color: rgba(50, 80, 30, 0.85);
-    border: 1px solid #5A8A2E;
-    border-radius: 3px;
-    color: #A8D870;
-    font-size: 15px;
-    padding: 3px 6px;
-    text-align: left;
-}
-
-#CardChipSelected:hover {
-    background-color: rgba(65, 100, 40, 0.9);
-    border-color: #7AAA4E;
-}
-
-/* 候选托盘 */
+/* ── Selection Tray ── */
 #SelectionTray {
-    background-color: rgba(25, 20, 12, 0.75);
-    border: 1px solid #2E2416;
-    border-radius: 4px;
-    min-height: 44px;
+    background-color: rgba(14, 12, 9, 0.92);
+    border-top: 1px solid #1A1510;
+    border-radius: 0px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    min-height: 38px;
+    max-height: 38px;
 }
 
-/* 评估按钮 */
+/* ── Evaluate Button ── */
 #EvaluateButton {
-    background-color: #3A5A1E;
-    border: 1px solid #5A8A3E;
+    background-color: rgba(40, 65, 20, 0.85);
+    border: 1px solid #3A6520;
     border-radius: 4px;
-    color: #A8D870;
+    color: #7AB040;
     font-weight: bold;
-    font-size: 16px;
-    padding: 4px 14px;
-    min-height: 30px;
+    font-size: 12px;
+    padding: 2px 12px;
+    min-height: 24px;
+    max-height: 24px;
 }
 
 #EvaluateButton:hover {
-    background-color: #4A7A28;
-    border-color: #7AAA5E;
-    color: #C8F090;
+    background-color: rgba(55, 90, 25, 0.92);
+    border-color: #50882A;
+    color: #9AD060;
 }
 
 #EvaluateButton:disabled {
-    background-color: #2A2A1A;
-    border-color: #3A3A2A;
-    color: #5A5A3A;
+    background-color: transparent;
+    border-color: #1A1A12;
+    color: #2A2A1A;
 }
 
-/* ── 缩放手柄 ── */
-#ResizeGrip {
-    background-color: rgba(180, 160, 80, 0.35);
-    border-top: 2px solid rgba(220, 200, 100, 0.7);
-    border-left: 2px solid rgba(220, 200, 100, 0.7);
-    border-bottom-right-radius: 6px;
-    width: 24px;
-    height: 24px;
-}
-#ResizeGrip:hover {
-    background-color: rgba(220, 200, 100, 0.55);
-}
-
-/* ── OCR 识别按钮 ── */
-#OcrButton {
-    background-color: #1A2A3A;
-    border: 1px solid #2A5A8A;
+/* ── Clear Selection Button ── */
+#ClearButton {
+    background-color: transparent;
+    border: 1px solid #1E1A14;
     border-radius: 4px;
-    color: #64B5F6;
-    padding: 3px 10px;
-    font-weight: bold;
+    color: #3A3028;
+    font-size: 12px;
+    padding: 2px 7px;
+    min-height: 24px;
+    max-height: 24px;
 }
 
-#OcrButton:hover {
-    background-color: #1E3A5A;
-    border-color: #4A8ABA;
-    color: #90CAF9;
+#ClearButton:hover {
+    background-color: rgba(160, 45, 45, 0.10);
+    border-color: #4A1818;
+    color: #8A4040;
 }
 
-#OcrButton:disabled {
-    background-color: #1A1A2A;
-    border-color: #2A2A3A;
-    color: #3A4A5A;
+#ClearButton:disabled {
+    color: #1E1A14;
+    border-color: #141010;
 }
 
-/* ── OCR 界面识别提示标签 ── */
-#OcrScreenLabel {
-    font-size: 13px;
-    padding: 2px 4px;
-    color: #888;
+/* ── Resize Grip ── */
+#ResizeGrip {
+    background-color: rgba(90, 80, 40, 0.15);
+    border-top: 1px solid rgba(160, 140, 60, 0.25);
+    border-left: 1px solid rgba(160, 140, 60, 0.25);
+    border-bottom-right-radius: 5px;
+    width: 14px;
+    height: 14px;
 }
 
-/* ── OCR 识别+评分合并面板 ── */
-#OcrPreviewPanel {
-    background-color: rgba(15, 22, 35, 0.85);
-    border-bottom: 1px solid #1E3A5A;
+#ResizeGrip:hover {
+    background-color: rgba(180, 160, 70, 0.30);
 }
 
-/* ── 卡牌解释文本 ── */
-#cardReason {
-    color: #6A7A60;
-    font-size: 13px;
-    padding-left: 4px;
-}
-
-/* ── 侧边手动选牌抽屉 ── */
+/* ── Side Drawer Panel ── */
 #SideDrawerPanel {
-    background-color: rgba(18, 14, 10, 0.95);
-    border-left: 1px solid #3A2E1E;
+    background-color: rgba(11, 10, 8, 0.98);
+    border-left: 1px solid #1A1510;
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
+/* ── Drawer Toggle Button ── */
 #DrawerToggleBtn {
-    background-color: rgba(30, 24, 16, 0.90);
-    border: 1px solid #3A2E1E;
+    background-color: rgba(14, 12, 9, 0.96);
+    border: 1px solid #1A1510;
+    border-left: none;
     border-radius: 0px;
-    color: #7A6A52;
-    font-size: 16px;
-    min-width: 22px;
-    max-width: 22px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    color: #2E2820;
+    font-size: 11px;
+    min-width: 16px;
+    max-width: 16px;
     padding: 0;
 }
 
 #DrawerToggleBtn:hover {
-    background-color: rgba(50, 40, 24, 0.95);
-    color: #C8A96E;
+    background-color: rgba(22, 18, 12, 0.98);
+    color: #B89A58;
+    border-color: #3A3028;
 }
 
+/* ── Drawer Title ── */
 #DrawerTitle {
-    font-size: 15px;
+    font-size: 9px;
     font-weight: bold;
-    color: #9A8A6A;
+    color: #3A3028;
+    letter-spacing: 2px;
+    padding: 2px 4px;
+}
+
+/* ── Card Search Box ── */
+#CardSearchBox {
+    background-color: rgba(18, 16, 12, 0.95);
+    border: 1px solid #252015;
+    border-radius: 4px;
+    color: #C0B898;
+    font-size: 12px;
     padding: 4px 8px;
+    min-height: 26px;
+    max-height: 26px;
+    selection-background-color: rgba(184, 154, 88, 0.25);
+}
+
+#CardSearchBox:focus {
+    border-color: #6A5830;
+    background-color: rgba(20, 18, 14, 0.98);
+    color: #D8CEB0;
+}
+
+/* ── Game Info Label ── */
+#GameInfoLabel {
+    font-size: 12px;
 }
