@@ -117,8 +117,9 @@ sts2-adviser/
 │   └── models.py             # Data models
 │
 ├── data/
-│   ├── card_functions.json   # Structured card data (142 cards)
+│   ├── card_functions.json   # Structured card data (268 cards)
 │   │                         # {damage_flat, block_flat, draw, aoe, scaling_type, ...}
+│   ├── boss_threats.json     # Boss threat profiles (Acts 1-2)
 │   ├── cards.json            # Card metadata (cost, rarity, type)
 │   └── card_library.json     # Community win/pick rates
 │
@@ -173,19 +174,23 @@ Cards are defined in `data/card_functions.json` with structured functions:
 }
 ```
 
-Currently covers **142 cards**: Ironclad (33), Silent (39), Defect (24), Necrobinder (23), Regent (23).
+Currently covers **268 cards**: Ironclad (33), Silent (39), Defect (24), Necrobinder (23), Regent (23), Colorless Uncommon (38), Colorless Rare (27), Colorless Ancient (9), Status (14), Curse (18), Quest (3), Token (11), Event (9).
 
 ## Scoring Details
 
-### Gap-Based Scoring
+### Gap-Based Scoring (V2.1: Act-Aware)
 
-| Metric | Normalization | Explanation |
-|--------|---------------|-------------|
-| Damage | 10 dmg = 1.0 | Raw damage contribution |
-| Block | 8 block = 1.0 | Defensive capability |
-| Draw | 2 draw = 1.0 | Card cycling |
-| Scaling | 3 points = 1.0 | Strength/poison/focus |
-| AoE | +0.5 flat | Multi-target bonus |
+Normalization is now **act-aware** — the same raw stats have different value depending on the act:
+
+| Metric | Act 1 | Act 2 | Act 3 | Act 4 |
+|--------|-------|-------|-------|-------|
+| Damage | 8 = 1.0 | 12 = 1.0 | 15 = 1.0 | 18 = 1.0 |
+| Block | 6 = 1.0 | 9 = 1.0 | 11 = 1.0 | 13 = 1.0 |
+| Draw | 2 = 1.0 | 2 = 1.0 | 2 = 1.0 | 2 = 1.0 |
+| Scaling | 4 = 1.0 | 3 = 1.0 | 2.5 = 1.0 | 2 = 1.0 |
+| AoE | +0.4 | +0.5 | +0.5 | +0.5 |
+
+This fixes the contradiction where 10 damage had the same contribution in Act 1 (enemies with 50 HP) and Act 3 (bosses with 300+ HP).
 
 ### Priority Modifiers
 
@@ -206,14 +211,17 @@ dilution_cost = 2.0 + (deck_size - 12) × 0.3  if deck_size > 12
 
 Draw cards partially offset dilution (draw × 1.5 reduction).
 
-### Skip Scoring
+### Skip Scoring (V2.1: Unified Formula)
+
+Old formula had double-counting between deck size bonus and gap penalty.
+New formula uses a single unified calculation:
 
 ```
-skip_score = 0
-  + (deck_size - 12) × 3.0   if large deck
-  + 5.0                      if no critical gaps
-  - 8.0 × critical_gap_count if gaps exist
-  + 3.0                      if draw_density > 0.6
+skip_value = dilution_saved - opportunity_cost + consistency_bonus
+
+dilution_saved = actual dilution cost that picking would incur
+opportunity_cost = Σ(gap^1.3 × priority × 6.0) for each mechanic with positive gap
+consistency_bonus = 3.0 if no critical gaps + 2.0 if draw_density > 0.6
 ```
 
 ## System Requirements
@@ -233,6 +241,22 @@ skip_score = 0
 ---
 
 ## Version History
+
+### v2.1.1 (CDPE V2.1 - Act-Aware + Boss Threats)
+
+**Fixes and improvements over V2.1:**
+
+**Algorithmic Fixes:**
+- **Act-aware normalization** — Damage/block normalizers now scale by act (8 dmg = 1.0 in Act 1, 15 = 1.0 in Act 3). Fixes contradiction between static normalizers and dynamic ACT_TARGETS.
+- **Skip formula rewrite** — Replaced linear `(deck_size - 12) × 3.0` with unified formula: `dilution_saved - opportunity_cost`. Fixes double-counting between deck size bonus and critical_gap_count penalty.
+- **Scaling saturation** — Diminishing returns for redundant scaling cards (3rd Inflame with Demon Form penalized by up to 70%).
+- **Unknown card fallback** — Cards not in database now get inferred scores from Card model data instead of 0.0. Prevents systematic skip bias for unlisted cards.
+- **AoE targets adjusted** — Act 3 AoE raised from 0.30 to 0.40 (multi-phase bosses still need AoE). Act 4 AoE raised to 0.25.
+
+**New Features:**
+- **Relic gap adjustments** — Relics that provide stats (e.g., Brimstone gives +2 Strength) now reduce the corresponding gap in gap_analysis. 17 relics mapped.
+- **Boss threat database** — `boss_threats.json` with full boss profiles for Acts 1-2 (Overgrowth, Underdocks, Hive). Threat model adjusts priorities based on actual boss mechanics.
+- **Card database expanded** — 142 → 268 cards. Added all Colorless cards: Uncommon (38), Rare (27), Ancient (9), Status (14), Curse (18), Quest (3), Token (11), Event (9).
 
 ### v2.1 (CDPE V2 - Marginal Delta Engine)
 

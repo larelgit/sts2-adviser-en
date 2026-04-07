@@ -185,6 +185,18 @@ class RunState(BaseModel):
     # 当前选卡池（本次选择的 3 张卡 id）
     card_choices: list[str] = Field(default_factory=list)
 
+    # V2.2: Save file enriched data
+    # Boss IDs per act: {1: "CEREMONIAL_BEAST", 2: "KNOWLEDGE_DEMON", ...}
+    act_boss_ids:   dict[int, str] = Field(default_factory=dict)
+    # Current act zone: "overgrowth", "underdocks", "hive", "glory", etc.
+    zone_id:        Optional[str] = None
+    # Current potions held
+    potions:        list[str] = Field(default_factory=list)
+    # Max energy per turn
+    max_energy:     int = 3
+    # Upcoming node types from map lookahead: ["monster", "elite", "boss", ...]
+    upcoming_nodes: list[str] = Field(default_factory=list)
+
     @property
     def phase(self) -> GamePhase:
         if self.floor <= 16:
@@ -196,6 +208,29 @@ class RunState(BaseModel):
     @property
     def hp_ratio(self) -> float:
         return self.hp / self.max_hp
+
+    @property
+    def current_act(self) -> int:
+        if self.floor <= 16:
+            return 1
+        elif self.floor <= 33:
+            return 2
+        elif self.floor <= 50:
+            return 3
+        return 4
+
+    @property
+    def current_boss_id(self) -> Optional[str]:
+        """Get the boss ID for the current act (if known from save file)."""
+        return self.act_boss_ids.get(self.current_act)
+
+    @property
+    def has_upcoming_elite(self) -> bool:
+        return "elite" in self.upcoming_nodes
+
+    @property
+    def has_upcoming_boss(self) -> bool:
+        return "boss" in self.upcoming_nodes
 
 
 # ---------------------------------------------------------------------------

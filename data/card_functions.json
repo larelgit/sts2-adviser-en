@@ -1,8 +1,9 @@
 {
   "_meta": {
-    "version": "1.0",
-    "description": "Structured card functions and tags for CDPE V2 updated to Slay the Spire 2.",
-    "last_updated": "2026-04-06"
+    "version": "2.0",
+    "description": "Structured card functions and tags for CDPE V2.1 — Slay the Spire 2. Includes all character cards + Colorless (Uncommon, Rare, Ancient, Status, Curse, Quest, Token, Event).",
+    "last_updated": "2026-04-07",
+    "card_count": 268
   },
   
   "STRIKE_IRONCLAD": {
@@ -2499,5 +2500,2359 @@
       "block_scaling_discard_pile": 1
     },
     "tags": ["block", "scaling", "event"]
+  },
+
+  "AUTOMATION": {
+    "id": "AUTOMATION",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "energy",
+      "energy_gain": 1,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["power", "energy", "scaling", "draw_trigger"]
+  },
+
+  "BELIEVE_IN_YOU": {
+    "id": "BELIEVE_IN_YOU",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 3,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "coop_target": true
+    },
+    "tags": ["energy", "support", "coop"]
+  },
+
+  "CATASTROPHE": {
+    "id": "CATASTROPHE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "play_random_from_draw": 2
+    },
+    "tags": ["random", "value", "draw_pile"]
+  },
+
+  "COORDINATE": {
+    "id": "COORDINATE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "strength_gain": 5,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "temporary": true,
+      "coop_target": true
+    },
+    "tags": ["strength", "support", "coop", "scaling"]
+  },
+
+  "DARK_SHACKLES": {
+    "id": "DARK_SHACKLES",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "enemy_strength_loss": 9,
+      "temporary": true
+    },
+    "tags": ["debuff", "exhaust", "zero_cost", "defensive"]
+  },
+
+  "DISCOVERY": {
+    "id": "DISCOVERY",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discover": 3
+    },
+    "tags": ["draw", "exhaust", "discover", "value"]
+  },
+
+  "DRAMATIC_ENTRANCE": {
+    "id": "DRAMATIC_ENTRANCE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 11,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": true,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "aoe", "innate", "exhaust", "zero_cost"]
+  },
+
+  "EQUILIBRIUM": {
+    "id": "EQUILIBRIUM",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 13,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "retain_hand": true
+    },
+    "tags": ["block", "retain_hand", "defensive"]
+  },
+
+  "FASTEN": {
+    "id": "FASTEN",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "dexterity",
+      "dexterity_gain": 0,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "defend_bonus": 5
+    },
+    "tags": ["power", "block", "scaling", "defensive"]
+  },
+
+  "FINESSE": {
+    "id": "FINESSE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 4,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "draw", "zero_cost", "cycle"]
+  },
+
+  "FISTICUFFS": {
+    "id": "FISTICUFFS",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 7,
+      "block_flat": 7,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_equals_damage": true
+    },
+    "tags": ["damage", "block", "hybrid"]
+  },
+
+  "FLASH_OF_STEEL": {
+    "id": "FLASH_OF_STEEL",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "draw", "zero_cost", "cycle"]
+  },
+
+  "GANG_UP": {
+    "id": "GANG_UP",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "coop_bonus_damage": 5
+    },
+    "tags": ["damage", "coop", "conditional"]
+  },
+
+  "HUDDLE_UP": {
+    "id": "HUDDLE_UP",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "all_allies_draw": 2
+    },
+    "tags": ["draw", "coop", "support"]
+  },
+
+  "IMPATIENCE": {
+    "id": "IMPATIENCE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "conditional_no_attacks": true
+    },
+    "tags": ["draw", "zero_cost", "conditional"]
+  },
+
+  "INTERCEPT": {
+    "id": "INTERCEPT",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 9,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "redirect_attacks": true
+    },
+    "tags": ["block", "coop", "support", "defensive"]
+  },
+
+  "JACK_OF_ALL_TRADES": {
+    "id": "JACK_OF_ALL_TRADES",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_random_colorless": 1
+    },
+    "tags": ["draw", "exhaust", "zero_cost", "value"]
+  },
+
+  "LIFT": {
+    "id": "LIFT",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 11,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "coop_target": true
+    },
+    "tags": ["block", "coop", "support"]
+  },
+
+  "MIND_BLAST": {
+    "id": "MIND_BLAST",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "draw_pile_size",
+      "exhaust": false,
+      "innate": true,
+      "retain": false,
+      "ethereal": false,
+      "damage_equals_draw_pile": true
+    },
+    "tags": ["damage", "scaling", "innate"]
+  },
+
+  "OMNISLICE": {
+    "id": "OMNISLICE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 8,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "splash_damage": true
+    },
+    "tags": ["damage", "aoe"]
+  },
+
+  "PANACHE": {
+    "id": "PANACHE",
+    "character": "colorless",
+    "type": "power",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "cards_played",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "trigger_every_n_cards": 5
+    },
+    "tags": ["power", "aoe", "damage", "scaling", "zero_cost"]
+  },
+
+  "PANIC_BUTTON": {
+    "id": "PANIC_BUTTON",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 30,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_lockout_turns": 2
+    },
+    "tags": ["block", "exhaust", "zero_cost", "emergency", "defensive"]
+  },
+
+  "PREP_TIME": {
+    "id": "PREP_TIME",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "vigor",
+      "vigor_gain": 4,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["power", "scaling", "damage"]
+  },
+
+  "PRODUCTION": {
+    "id": "PRODUCTION",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 2,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["energy", "exhaust", "zero_cost"]
+  },
+
+  "PROLONG": {
+    "id": "PROLONG",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "block",
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "next_turn_block_copy": true
+    },
+    "tags": ["block", "exhaust", "scaling", "defensive"]
+  },
+
+  "PROWESS": {
+    "id": "PROWESS",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "strength_gain": 1,
+      "dexterity_gain": 1,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["power", "strength", "dexterity", "scaling"]
+  },
+
+  "PURITY": {
+    "id": "PURITY",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": true,
+      "ethereal": false,
+      "exhaust_from_hand": 3
+    },
+    "tags": ["exhaust", "thinning", "retain", "zero_cost"]
+  },
+
+  "RESTLESSNESS": {
+    "id": "RESTLESSNESS",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 2,
+      "exhaust": false,
+      "innate": false,
+      "retain": true,
+      "ethereal": false,
+      "conditional_empty_hand": true
+    },
+    "tags": ["draw", "energy", "retain", "conditional", "zero_cost"]
+  },
+
+  "SEEKER_STRIKE": {
+    "id": "SEEKER_STRIKE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "tutor_from_draw": 3
+    },
+    "tags": ["damage", "draw", "tutor"]
+  },
+
+  "SHOCKWAVE": {
+    "id": "SHOCKWAVE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 3,
+      "vulnerable": 3
+    },
+    "tags": ["debuff", "aoe", "exhaust", "weak", "vulnerable"]
+  },
+
+  "SPLASH": {
+    "id": "SPLASH",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discover_attack_other_char": 3
+    },
+    "tags": ["draw", "discover", "coop", "value"]
+  },
+
+  "STRATAGEM": {
+    "id": "STRATAGEM",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": "draw",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "on_shuffle_tutor": true
+    },
+    "tags": ["power", "draw", "scaling", "tutor"]
+  },
+
+  "TAG_TEAM": {
+    "id": "TAG_TEAM",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 11,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "coop_double_attack": true
+    },
+    "tags": ["damage", "coop", "support"]
+  },
+
+  "THE_BOMB": {
+    "id": "THE_BOMB",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 40,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "delayed_turns": 3
+    },
+    "tags": ["damage", "aoe", "delayed"]
+  },
+
+  "THINKING_AHEAD": {
+    "id": "THINKING_AHEAD",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "put_card_on_draw_pile": 1
+    },
+    "tags": ["draw", "exhaust", "zero_cost", "cycle", "manipulation"]
+  },
+
+  "THRUMMING_HATCHET": {
+    "id": "THRUMMING_HATCHET",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 11,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "return_to_hand_next_turn": true
+    },
+    "tags": ["damage", "recurring", "value"]
+  },
+
+  "ULTIMATE_DEFEND": {
+    "id": "ULTIMATE_DEFEND",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 11,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "defensive"]
+  },
+
+  "ULTIMATE_STRIKE": {
+    "id": "ULTIMATE_STRIKE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage"]
+  },
+
+  "VOLLEY": {
+    "id": "VOLLEY",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 1,
+      "x_cost_hits": true
+    },
+    "tags": ["damage", "multi_hit", "random_target"]
+  },
+
+  "ALCHEMIZE": {
+    "id": "ALCHEMIZE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "gain_random_potion": true
+    },
+    "tags": ["exhaust", "value", "potion"]
+  },
+
+  "ANOINTED": {
+    "id": "ANOINTED",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_all_rare": true
+    },
+    "tags": ["draw", "exhaust", "value"]
+  },
+
+  "BEACON_OF_HOPE": {
+    "id": "BEACON_OF_HOPE",
+    "character": "colorless",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "block",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "share_block_half": true
+    },
+    "tags": ["power", "block", "coop", "support", "scaling"]
+  },
+
+  "BEAT_DOWN": {
+    "id": "BEAT_DOWN",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "play_random_attacks_from_discard": 3
+    },
+    "tags": ["damage", "value", "discard_pile"]
+  },
+
+  "BOLAS": {
+    "id": "BOLAS",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 3,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "return_to_hand_next_turn": true
+    },
+    "tags": ["damage", "recurring"]
+  },
+
+  "CALAMITY": {
+    "id": "CALAMITY",
+    "character": "colorless",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "attack_generation",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "on_attack_add_random_attack": true
+    },
+    "tags": ["power", "damage", "scaling", "value"]
+  },
+
+  "ENTROPY": {
+    "id": "ENTROPY",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "transform_card_per_turn": 1
+    },
+    "tags": ["power", "transform", "random"]
+  },
+
+  "ETERNAL_ARMOR": {
+    "id": "ETERNAL_ARMOR",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "plating",
+      "plating_gain": 7,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["power", "block", "scaling", "plating", "defensive"]
+  },
+
+  "GOLD_AXE": {
+    "id": "GOLD_AXE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "cards_played_combat",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_equals_cards_played": true
+    },
+    "tags": ["damage", "scaling"]
+  },
+
+  "HAND_OF_GREED": {
+    "id": "HAND_OF_GREED",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 20,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "gold_on_kill": 20
+    },
+    "tags": ["damage", "gold"]
+  },
+
+  "HIDDEN_GEM": {
+    "id": "HIDDEN_GEM",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "replay",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_replay_to_random": 2
+    },
+    "tags": ["scaling", "value", "zero_cost"]
+  },
+
+  "JACKPOT": {
+    "id": "JACKPOT",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 25,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_zero_cost_cards": 3
+    },
+    "tags": ["damage", "draw", "value"]
+  },
+
+  "KNOCKDOWN": {
+    "id": "KNOCKDOWN",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "enemy_takes_double_from_others": true
+    },
+    "tags": ["damage", "coop", "debuff"]
+  },
+
+  "MASTER_OF_STRATEGY": {
+    "id": "MASTER_OF_STRATEGY",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["draw", "exhaust", "zero_cost", "value"]
+  },
+
+  "MAYHEM": {
+    "id": "MAYHEM",
+    "character": "colorless",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "auto_play",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "auto_play_top_card": true
+    },
+    "tags": ["power", "scaling", "value"]
+  },
+
+  "MIMIC": {
+    "id": "MIMIC",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "copy_ally_block": true
+    },
+    "tags": ["block", "exhaust", "coop", "defensive"]
+  },
+
+  "NOSTALGIA": {
+    "id": "NOSTALGIA",
+    "character": "colorless",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "recursion",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "first_card_recurs": true
+    },
+    "tags": ["power", "scaling", "value", "recursion"]
+  },
+
+  "RALLY": {
+    "id": "RALLY",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 12,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "all_players_block": 12
+    },
+    "tags": ["block", "coop", "support", "defensive"]
+  },
+
+  "REND": {
+    "id": "REND",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 15,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "bonus_per_debuff": 5
+    },
+    "tags": ["damage", "debuff_synergy"]
+  },
+
+  "ROLLING_BOULDER": {
+    "id": "ROLLING_BOULDER",
+    "character": "colorless",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "escalating_damage",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_increases_per_turn": 5
+    },
+    "tags": ["power", "aoe", "damage", "scaling"]
+  },
+
+  "SALVO": {
+    "id": "SALVO",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 12,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "retain_hand": true
+    },
+    "tags": ["damage", "retain_hand"]
+  },
+
+  "SCRAWL": {
+    "id": "SCRAWL",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 5,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_until_full": true
+    },
+    "tags": ["draw", "exhaust", "value"]
+  },
+
+  "SECRET_TECHNIQUE": {
+    "id": "SECRET_TECHNIQUE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "tutor_skill": true
+    },
+    "tags": ["draw", "exhaust", "tutor", "zero_cost"]
+  },
+
+  "SECRET_WEAPON": {
+    "id": "SECRET_WEAPON",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "tutor_attack": true
+    },
+    "tags": ["draw", "exhaust", "tutor", "zero_cost"]
+  },
+
+  "THE_GAMBIT": {
+    "id": "THE_GAMBIT",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 50,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "die_on_unblocked_damage": true
+    },
+    "tags": ["block", "zero_cost", "high_risk", "defensive"]
+  },
+
+  "APOTHEOSIS": {
+    "id": "APOTHEOSIS",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "upgrade_all",
+      "exhaust": true,
+      "innate": true,
+      "retain": false,
+      "ethereal": false,
+      "upgrade_all_cards": true
+    },
+    "tags": ["scaling", "exhaust", "innate", "value", "ancient"]
+  },
+
+  "APPARITION": {
+    "id": "APPARITION",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": true,
+      "intangible": 1
+    },
+    "tags": ["defensive", "exhaust", "ethereal", "intangible", "ancient"]
+  },
+
+  "BRIGHTEST_FLAME": {
+    "id": "BRIGHTEST_FLAME",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 2,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "lose_max_hp": 1
+    },
+    "tags": ["draw", "energy", "zero_cost", "self_damage", "ancient"]
+  },
+
+  "MAUL": {
+    "id": "MAUL",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "hits": 2,
+      "aoe": false,
+      "scaling_type": "self_scaling",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "permanent_damage_increase": 1
+    },
+    "tags": ["damage", "multi_hit", "scaling", "ancient"]
+  },
+
+  "NEOWS_FURY": {
+    "id": "NEOWS_FURY",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_from_discard": 2
+    },
+    "tags": ["damage", "draw", "exhaust", "ancient"]
+  },
+
+  "RELAX": {
+    "id": "RELAX",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 15,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 2,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "next_turn_draw_energy": true
+    },
+    "tags": ["block", "draw", "energy", "exhaust", "ancient", "defensive"]
+  },
+
+  "WHISTLE": {
+    "id": "WHISTLE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 33,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "stun": true
+    },
+    "tags": ["damage", "exhaust", "stun", "ancient"]
+  },
+
+  "WISH": {
+    "id": "WISH",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "tutor_any": true
+    },
+    "tags": ["draw", "exhaust", "tutor", "zero_cost", "ancient"]
+  },
+
+  "BECKON": {
+    "id": "BECKON",
+    "character": "colorless",
+    "type": "status",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "end_turn_hp_loss": 6
+    },
+    "tags": ["status", "damage_self"]
+  },
+
+  "BURN": {
+    "id": "BURN",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "unplayable": true,
+      "end_turn_damage": 2
+    },
+    "tags": ["status", "unplayable", "damage_self"]
+  },
+
+  "DAZED": {
+    "id": "DAZED",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": true,
+      "unplayable": true
+    },
+    "tags": ["status", "unplayable", "ethereal"]
+  },
+
+  "DEBRIS": {
+    "id": "DEBRIS",
+    "character": "colorless",
+    "type": "status",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["status", "exhaust"]
+  },
+
+  "DISINTEGRATION": {
+    "id": "DISINTEGRATION",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "end_turn_damage": 6
+    },
+    "tags": ["status", "damage_self"]
+  },
+
+  "FRANTIC_ESCAPE": {
+    "id": "FRANTIC_ESCAPE",
+    "character": "colorless",
+    "type": "status",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "sandpit_increase": 1,
+      "cost_increase_per_play": 1
+    },
+    "tags": ["status", "sandpit"]
+  },
+
+  "INFECTION": {
+    "id": "INFECTION",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "unplayable": true,
+      "end_turn_damage": 3
+    },
+    "tags": ["status", "unplayable", "damage_self"]
+  },
+
+  "MIND_ROT": {
+    "id": "MIND_ROT",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": -1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["status", "draw_reduction"]
+  },
+
+  "SLIMED": {
+    "id": "SLIMED",
+    "character": "colorless",
+    "type": "status",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["status", "exhaust", "draw"]
+  },
+
+  "SLOTH": {
+    "id": "SLOTH",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "card_play_limit": 3
+    },
+    "tags": ["status", "play_limit"]
+  },
+
+  "SOOT": {
+    "id": "SOOT",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "unplayable": true
+    },
+    "tags": ["status", "unplayable"]
+  },
+
+  "TOXIC": {
+    "id": "TOXIC",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "end_turn_damage": 5
+    },
+    "tags": ["status", "damage_self", "exhaust"]
+  },
+
+  "VOID": {
+    "id": "VOID",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": true,
+      "unplayable": true,
+      "on_draw_energy_loss": 1
+    },
+    "tags": ["status", "unplayable", "ethereal", "energy_loss"]
+  },
+
+  "WASTE_AWAY": {
+    "id": "WASTE_AWAY",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "energy_per_turn_loss": 1
+    },
+    "tags": ["status", "energy_loss"]
+  },
+
+  "WOUND": {
+    "id": "WOUND",
+    "character": "colorless",
+    "type": "status",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "unplayable": true
+    },
+    "tags": ["status", "unplayable"]
+  },
+
+  "ASCENDERS_BANE": {
+    "id": "ASCENDERS_BANE",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "ethereal": true,
+      "eternal": true
+    },
+    "tags": ["curse", "unplayable", "ethereal", "eternal"]
+  },
+
+  "BAD_LUCK": {
+    "id": "BAD_LUCK",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "eternal": true,
+      "end_turn_hp_loss": 13
+    },
+    "tags": ["curse", "unplayable", "eternal", "damage_self"]
+  },
+
+  "CLUMSY": {
+    "id": "CLUMSY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "ethereal": true
+    },
+    "tags": ["curse", "unplayable", "ethereal"]
+  },
+
+  "CURSE_OF_THE_BELL": {
+    "id": "CURSE_OF_THE_BELL",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "eternal": true
+    },
+    "tags": ["curse", "unplayable", "eternal"]
+  },
+
+  "DEBT": {
+    "id": "DEBT",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "end_turn_gold_loss": 10
+    },
+    "tags": ["curse", "unplayable", "gold_loss"]
+  },
+
+  "DECAY": {
+    "id": "DECAY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "end_turn_damage": 2
+    },
+    "tags": ["curse", "unplayable", "damage_self"]
+  },
+
+  "DOUBT": {
+    "id": "DOUBT",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "end_turn_weak": 1
+    },
+    "tags": ["curse", "unplayable", "weak"]
+  },
+
+  "ENTHRALLED": {
+    "id": "ENTHRALLED",
+    "character": "colorless",
+    "type": "curse",
+    "cost": 0,
+    "functions": {
+      "eternal": true,
+      "must_play_first": true
+    },
+    "tags": ["curse", "eternal", "play_restriction"]
+  },
+
+  "FOLLY": {
+    "id": "FOLLY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "innate": true,
+      "eternal": true
+    },
+    "tags": ["curse", "unplayable", "innate", "eternal"]
+  },
+
+  "GREED_CURSE": {
+    "id": "GREED_CURSE",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "eternal": true
+    },
+    "tags": ["curse", "unplayable", "eternal"]
+  },
+
+  "GUILTY": {
+    "id": "GUILTY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "removed_after_combats": 5
+    },
+    "tags": ["curse", "unplayable", "temporary"]
+  },
+
+  "INJURY": {
+    "id": "INJURY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true
+    },
+    "tags": ["curse", "unplayable"]
+  },
+
+  "NORMALITY": {
+    "id": "NORMALITY",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "card_play_limit": 3
+    },
+    "tags": ["curse", "unplayable", "play_limit"]
+  },
+
+  "POOR_SLEEP": {
+    "id": "POOR_SLEEP",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "retain": true
+    },
+    "tags": ["curse", "unplayable", "retain"]
+  },
+
+  "REGRET": {
+    "id": "REGRET",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "end_turn_hp_loss_per_hand": true
+    },
+    "tags": ["curse", "unplayable", "damage_self"]
+  },
+
+  "SHAME": {
+    "id": "SHAME",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "end_turn_frail": 1
+    },
+    "tags": ["curse", "unplayable", "frail"]
+  },
+
+  "SPORE_MIND": {
+    "id": "SPORE_MIND",
+    "character": "colorless",
+    "type": "curse",
+    "cost": 1,
+    "functions": {
+      "exhaust": true
+    },
+    "tags": ["curse", "exhaust"]
+  },
+
+  "WRITHE": {
+    "id": "WRITHE",
+    "character": "colorless",
+    "type": "curse",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "innate": true
+    },
+    "tags": ["curse", "unplayable", "innate"]
+  },
+
+  "BYRDONIS_EGG": {
+    "id": "BYRDONIS_EGG",
+    "character": "colorless",
+    "type": "quest",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "rest_site_hatch": true
+    },
+    "tags": ["quest", "unplayable"]
+  },
+
+  "LANTERN_KEY": {
+    "id": "LANTERN_KEY",
+    "character": "colorless",
+    "type": "quest",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "special_event_next_act": true
+    },
+    "tags": ["quest", "unplayable"]
+  },
+
+  "SPOILS_MAP": {
+    "id": "SPOILS_MAP",
+    "character": "colorless",
+    "type": "quest",
+    "cost": -2,
+    "functions": {
+      "unplayable": true,
+      "gold_site_next_act": 600
+    },
+    "tags": ["quest", "unplayable", "gold"]
+  },
+
+  "FUEL": {
+    "id": "FUEL",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 1,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["energy", "draw", "exhaust", "zero_cost", "token"]
+  },
+
+  "GIANT_ROCK": {
+    "id": "GIANT_ROCK",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 16,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "token"]
+  },
+
+  "LUMINESCE": {
+    "id": "LUMINESCE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "energy_gain": 2,
+      "exhaust": true,
+      "innate": false,
+      "retain": true,
+      "ethereal": false
+    },
+    "tags": ["energy", "exhaust", "retain", "zero_cost", "token"]
+  },
+
+  "MINION_DIVE_BOMB": {
+    "id": "MINION_DIVE_BOMB",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 13,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "exhaust", "token", "minion"]
+  },
+
+  "MINION_SACRIFICE": {
+    "id": "MINION_SACRIFICE",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 9,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "exhaust", "zero_cost", "token", "minion"]
+  },
+
+  "MINION_STRIKE": {
+    "id": "MINION_STRIKE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 7,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "draw", "exhaust", "zero_cost", "token", "minion"]
+  },
+
+  "SHIV": {
+    "id": "SHIV",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 4,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "exhaust", "zero_cost", "token", "shiv"]
+  },
+
+  "SOUL": {
+    "id": "SOUL",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["draw", "exhaust", "zero_cost", "token", "soul"]
+  },
+
+  "SOVEREIGN_BLADE": {
+    "id": "SOVEREIGN_BLADE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": true,
+      "ethereal": false
+    },
+    "tags": ["damage", "retain", "token"]
+  },
+
+  "SWEEPING_GAZE": {
+    "id": "SWEEPING_GAZE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": true,
+      "random_target": true
+    },
+    "tags": ["damage", "exhaust", "ethereal", "zero_cost", "token", "osty"]
+  },
+
+  "BYRD_SWOOP": {
+    "id": "BYRD_SWOOP",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "event"]
+  },
+
+  "ENLIGHTENMENT": {
+    "id": "ENLIGHTENMENT",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "reduce_hand_costs_to": 1
+    },
+    "tags": ["energy", "exhaust", "zero_cost", "event"]
+  },
+
+  "EXTERMINATE": {
+    "id": "EXTERMINATE",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 3,
+      "block_flat": 0,
+      "draw": 0,
+      "hits": 4,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "aoe", "multi_hit", "event"]
+  },
+
+  "FEEDING_FRENZY": {
+    "id": "FEEDING_FRENZY",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "strength_gain": 5,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "temporary": true
+    },
+    "tags": ["strength", "scaling", "zero_cost", "event"]
+  },
+
+  "METAMORPHOSIS": {
+    "id": "METAMORPHOSIS",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_free_attacks": 3
+    },
+    "tags": ["draw", "exhaust", "value", "event"]
+  },
+
+  "PECK": {
+    "id": "PECK",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 2,
+      "block_flat": 0,
+      "draw": 0,
+      "hits": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "multi_hit", "zero_cost", "event"]
+  },
+
+  "SQUASH": {
+    "id": "SQUASH",
+    "character": "colorless",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "vulnerable": 2
+    },
+    "tags": ["damage", "debuff", "vulnerable", "event"]
+  },
+
+  "TORIC_TOUGHNESS": {
+    "id": "TORIC_TOUGHNESS",
+    "character": "colorless",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_next_turns": 2,
+      "block_per_turn": 5
+    },
+    "tags": ["block", "defensive", "event"]
   }
 }

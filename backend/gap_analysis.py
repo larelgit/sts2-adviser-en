@@ -16,13 +16,45 @@ from typing import Optional
 
 from .deck_profile import DeckProfile
 
+# ---------------------------------------------------------------------------
+# Relic → Gap adjustment mapping
+# Relics that provide stats should reduce the corresponding gap.
+# Format: relic_id_upper → {mechanic: reduction}
+# ---------------------------------------------------------------------------
+RELIC_GAP_ADJUSTMENTS: dict[str, dict[str, float]] = {
+    # Ironclad relics that provide strength → reduce scaling gap
+    "BRIMSTONE":        {"scaling": 0.15, "damage": 0.05},
+    "RED_SKULL":        {"scaling": 0.10},
+    "RUINED_HELMET":    {"scaling": 0.12},
+    # Silent relics
+    "TWISTED_FUNNEL":   {"scaling": 0.10, "aoe": 0.05},
+    "NINJA_SCROLL":     {"damage": 0.08},
+    # Defect relics
+    "DATA_DISK":        {"scaling": 0.15},
+    "INFUSED_CORE":     {"scaling": 0.08, "damage": 0.05},
+    "RUNIC_CAPACITOR":  {"scaling": 0.10},
+    # Necrobinder relics
+    "PHYLACTERY_UNBOUND": {"damage": 0.10, "aoe": 0.05},
+    "BONE_FLUTE":       {"block": 0.08},
+    # Regent relics
+    "DIVINE_DESTINY":   {"scaling": 0.10},
+    "GALACTIC_DUST":    {"block": 0.08},
+    # Generic relics that affect draw/energy
+    "POWER_CELL":       {"draw": 0.08},
+    # Healing relics reduce survival urgency → slight scaling priority boost
+    "BURNING_BLOOD":    {"block": -0.05},  # less block needed, can be greedier
+    "BLACK_BLOOD":      {"block": -0.08},
+    "DEMON_TONGUE":     {"block": -0.10},
+}
+
 
 def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, v))
 
 
 # Target ratios for each act
-# These represent "ideal" deck composition for surviving that act
+# These represent "ideal" deck composition for surviving that act.
+# Act 3 AoE was 0.30 but STS2 Act 3 bosses (multi-phase, adds) still need AoE.
 ACT_TARGETS = {
     1: {
         "damage": 0.55,    # Need decent frontload damage
@@ -36,21 +68,21 @@ ACT_TARGETS = {
         "block": 0.55,     # Block becomes more important
         "scaling": 0.45,   # Need scaling for elites/boss
         "draw": 0.40,      # More draw for consistency
-        "aoe": 0.55,       # Many multi-enemy fights
+        "aoe": 0.55,       # Many multi-enemy fights (Hive bosses)
     },
     3: {
         "damage": 0.45,    # Less raw damage needed
         "block": 0.60,     # High block requirement
         "scaling": 0.75,   # Critical for boss fights
         "draw": 0.50,      # Engine consistency
-        "aoe": 0.30,       # Less AoE, more single target
+        "aoe": 0.40,       # Still relevant: multi-phase bosses, hallway groups
     },
     4: {
         "damage": 0.40,    # Heart fight is scaling-based
         "block": 0.65,     # Very high block needed
         "scaling": 0.85,   # Maximum scaling
         "draw": 0.55,      # Full engine
-        "aoe": 0.20,       # Mostly single target
+        "aoe": 0.25,       # Mostly single target but some adds
     },
 }
 
@@ -99,10 +131,11 @@ def compute_gap_vector(
     floor: int = 1,
     has_upcoming_elite: bool = False,
     has_upcoming_boss: bool = False,
+    relic_ids: Optional[list[str]] = None,
 ) -> GapVector:
     """
     Compute gap vector based on deck profile and current situation.
-    
+
     Args:
         profile: Current deck capabilities
         act: Current act (1-4)
@@ -110,7 +143,8 @@ def compute_gap_vector(
         floor: Current floor number
         has_upcoming_elite: Is there an elite fight coming?
         has_upcoming_boss: Is boss fight imminent?
-    
+        relic_ids: List of held relic IDs (for gap adjustments)
+
     Returns:
         GapVector with deficits and priorities
     """
@@ -138,6 +172,14 @@ def compute_gap_vector(
             # Surplus: diminishing returns (negative value)
             gaps[mechanic] = -_SURPLUS_PENALTY_FACTOR * (current - target)
     
+    # Apply relic gap adjustments: relics that provide stats reduce the gap
+    if relic_ids:
+        for rid in relic_ids:
+            adjustments = RELIC_GAP_ADJUSTMENTS.get(rid.upper(), {})
+            for mechanic, reduction in adjustments.items():
+                if mechanic in gaps:
+                    gaps[mechanic] = gaps[mechanic] - reduction
+
     # Compute priorities based on situation
     priorities = {
         "damage": 1.0,

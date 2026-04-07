@@ -25,12 +25,21 @@ def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, v))
 
 
-# Normalization factors for converting raw stats to contribution
-_DAMAGE_NORM = 10.0     # 10 damage = 1.0 contribution
-_BLOCK_NORM = 8.0       # 8 block = 1.0 contribution
-_DRAW_NORM = 2.0        # 2 draw = 1.0 contribution
-_SCALING_NORM = 3.0     # 3 scaling points = 1.0 contribution
-_AOE_BONUS = 0.5        # AoE cards get flat bonus to AoE contribution
+# Act-aware normalization factors for converting raw stats to contribution.
+# Enemies scale with acts: Act 1 enemies have ~50 HP, Act 3 bosses have 300+.
+# Static normalizers created an internal contradiction with dynamic ACT_TARGETS.
+_ACT_NORMS = {
+    1: {"damage": 8.0, "block": 6.0, "draw": 2.0, "scaling": 4.0, "aoe": 0.4},
+    2: {"damage": 12.0, "block": 9.0, "draw": 2.0, "scaling": 3.0, "aoe": 0.5},
+    3: {"damage": 15.0, "block": 11.0, "draw": 2.0, "scaling": 2.5, "aoe": 0.5},
+    4: {"damage": 18.0, "block": 13.0, "draw": 2.0, "scaling": 2.0, "aoe": 0.5},
+}
+# Fallback (legacy static values)
+_DAMAGE_NORM = 10.0
+_BLOCK_NORM = 8.0
+_DRAW_NORM = 2.0
+_SCALING_NORM = 3.0
+_AOE_BONUS = 0.5
 
 # Dilution cost curve
 _BASE_DILUTION_COST = 2.0       # Base cost for adding any card
@@ -91,79 +100,146 @@ def compute_dilution_cost(deck_size: int, card_draw: int = 0) -> float:
     return max(0.0, base - draw_offset)
 
 
+def _extract_card_stats(cf: Optional[dict], card_db_entry=None) -> dict:
+    """
+    Extract raw card stats from card_functions.json entry or fallback Card object.
+    Returns dict with keys: damage, block, draw, is_aoe, scaling_value, cost, tags.
+    """
+    if cf is not None:
+        funcs = cf.get("functions", {})
+        tags = set(t.lower() for t in cf.get("tags", []))
+        cost = cf.get("cost", 1)
+
+        damage_flat = funcs.get("damage_flat", 0) or 0
+        hits = funcs.get("hits", 1) or 1
+        block_flat = funcs.get("block_flat", 0) or 0
+        draw = funcs.get("draw", 0) or 0
+        is_aoe = funcs.get("aoe", False) or "aoe" in tags
+
+        scaling_value = 0.0
+        scaling_type = funcs.get("scaling_type")
+        strength_gain = funcs.get("strength_gain", 0) or 0
+        dex_gain = funcs.get("dexterity_gain", 0) or 0
+        focus_gain = funcs.get("focus_gain", 0) or 0
+        poison = funcs.get("poison", 0) or 0
+
+        if scaling_type:
+            scaling_value += 2.0
+        if strength_gain > 0:
+            scaling_value += strength_gain * 1.5
+        if dex_gain > 0:
+            scaling_value += dex_gain * 1.2
+        if focus_gain > 0:
+            scaling_value += focus_gain * 1.5
+        if poison > 0:
+            scaling_value += poison * 0.5
+        if "scaling" in tags or "strength" in tags or "poison" in tags:
+            scaling_value += 1.0
+
+        return {
+            "damage": damage_flat * hits, "block": block_flat, "draw": draw,
+            "is_aoe": is_aoe, "scaling_value": scaling_value, "cost": cost, "tags": tags,
+        }
+
+    # Fallback: infer from legacy Card object
+    if card_db_entry is not None:
+        dmg = getattr(card_db_entry, "base_damage", 0) or 0
+        blk = getattr(card_db_entry, "base_block", 0) or 0
+        drw = getattr(card_db_entry, "base_draw", 0) or 0
+        cst = getattr(card_db_entry, "cost", 1) or 1
+        desc = (getattr(card_db_entry, "description", "") or "").lower()
+        card_tags = set(t.lower() for t in getattr(card_db_entry, "tags", []))
+
+        is_aoe = "all enem" in desc or "each enemy" in desc or "aoe" in card_tags
+        scaling_value = 0.0
+        for kw in ("strength", "dexterity", "focus", "poison", "scaling", "star", "doom"):
+            if kw in desc or kw in card_tags:
+                scaling_value += 2.0
+                break
+
+        return {
+            "damage": dmg, "block": blk, "draw": drw,
+            "is_aoe": is_aoe, "scaling_value": scaling_value, "cost": cst, "tags": card_tags,
+        }
+
+    return None
+
+
 def score_candidate(
     card_id: str,
     gaps: GapVector,
     deck_profile: DeckProfile,
     card_db: Optional[dict] = None,
+    existing_scaling_sources: int = 0,
 ) -> DeltaScore:
     """
     Score a candidate card based on how well it fills deck gaps.
-    
+
     The formula is:
         delta = Σ(card_contribution[mechanic] × gap[mechanic] × priority[mechanic])
               - dilution_cost
               - surplus_penalty
-    
+              - scaling_saturation_penalty
+
     Args:
         card_id: ID of the card to evaluate
         gaps: Current gap vector
         deck_profile: Current deck profile
         card_db: Optional legacy card database for fallback
-    
+        existing_scaling_sources: Count of scaling cards already in deck
+
     Returns:
         DeltaScore with breakdown
     """
     # Get card data
     cf = get_card_data(card_id)
-    
-    if cf is None:
-        # Fallback: return neutral score
-        log.warning(f"Card {card_id} not found in database, using neutral score")
+
+    # Resolve fallback Card object for unknown cards
+    fallback_card = None
+    if cf is None and card_db is not None:
+        norm = card_id.rstrip("+").lower()
+        fallback_card = card_db.get(norm)
+
+    stats = _extract_card_stats(cf, fallback_card)
+
+    if stats is None:
+        # Truly unknown card: return small positive score (not 0 — avoids systematic skip bias)
+        log.warning(f"Card {card_id} not found anywhere, using minimal positive score")
+        dil = compute_dilution_cost(deck_profile.deck_size)
         return DeltaScore(
             card_id=card_id,
-            total_delta=0.0,
-            dilution_cost=compute_dilution_cost(deck_profile.deck_size),
+            total_delta=max(2.0, 10.0 - dil),
+            dilution_cost=dil,
         )
-    
-    funcs = cf.get("functions", {})
-    tags = set(t.lower() for t in cf.get("tags", []))
-    cost = cf.get("cost", 1)
-    
-    # Extract raw stats
-    damage_flat = funcs.get("damage_flat", 0) or 0
-    hits = funcs.get("hits", 1) or 1
-    block_flat = funcs.get("block_flat", 0) or 0
-    draw = funcs.get("draw", 0) or 0
-    is_aoe = funcs.get("aoe", False) or "aoe" in tags
-    
-    # Scaling detection
-    scaling_value = 0.0
-    scaling_type = funcs.get("scaling_type")
-    strength_gain = funcs.get("strength_gain", 0) or 0
-    dex_gain = funcs.get("dexterity_gain", 0) or 0
-    focus_gain = funcs.get("focus_gain", 0) or 0
-    poison = funcs.get("poison", 0) or 0
-    
-    if scaling_type:
-        scaling_value += 2.0
-    if strength_gain > 0:
-        scaling_value += strength_gain * 1.5
-    if dex_gain > 0:
-        scaling_value += dex_gain * 1.2
-    if focus_gain > 0:
-        scaling_value += focus_gain * 1.5
-    if poison > 0:
-        scaling_value += poison * 0.5
-    if "scaling" in tags or "strength" in tags or "poison" in tags:
-        scaling_value += 1.0
-    
+
+    damage = stats["damage"]
+    block = stats["block"]
+    draw = stats["draw"]
+    is_aoe = stats["is_aoe"]
+    scaling_value = stats["scaling_value"]
+    tags = stats["tags"]
+
+    # Act-aware normalization: same raw stats have different value by act
+    act = gaps.act
+    norms = _ACT_NORMS.get(act, _ACT_NORMS[2])
+    dmg_norm = norms["damage"]
+    blk_norm = norms["block"]
+    drw_norm = norms["draw"]
+    scl_norm = norms["scaling"]
+    aoe_bonus = norms["aoe"]
+
     # Normalize contributions (0-1 scale roughly)
-    damage_contrib = (damage_flat * hits) / _DAMAGE_NORM
-    block_contrib = block_flat / _BLOCK_NORM
-    draw_contrib = draw / _DRAW_NORM
-    scaling_contrib = scaling_value / _SCALING_NORM
-    aoe_contrib = _AOE_BONUS if is_aoe else 0.0
+    damage_contrib = damage / dmg_norm
+    block_contrib = block / blk_norm
+    draw_contrib = draw / drw_norm
+    scaling_contrib = scaling_value / scl_norm
+    aoe_contrib = aoe_bonus if is_aoe else 0.0
+
+    # Scaling saturation: diminishing returns for redundant scaling
+    # e.g., 3rd Inflame when Demon Form exists is less valuable
+    if scaling_contrib > 0.1 and existing_scaling_sources >= 3:
+        saturation_factor = max(0.3, 1.0 - (existing_scaling_sources - 2) * 0.2)
+        scaling_contrib *= saturation_factor
     
     # Apply gaps and priorities
     damage_delta = damage_contrib * gaps.damage * gaps.damage_priority
@@ -239,35 +315,36 @@ def compute_skip_delta(
 ) -> float:
     """
     Compute delta score for Skip action.
-    
-    Skip is better when:
-    - Deck is already large (high dilution cost avoided)
-    - No critical gaps (deck is well-rounded)
-    - All offered cards add to surplus
-    
+
+    Fixed: Old formula had double-counting — (deck_size-12)*3 gave linear bonus
+    regardless of gap severity, while critical_gap_count penalized separately.
+    New formula uses a single unified calculation:
+      skip_value = dilution_saved - opportunity_cost
+
     Returns:
         Skip delta score
     """
-    # Base skip value
-    base = 0.0
-    
-    # Dilution avoidance (not adding a card is good for large decks)
-    if deck_profile.deck_size > _TARGET_DECK_SIZE:
-        overage = deck_profile.deck_size - _TARGET_DECK_SIZE
-        base += overage * 3.0  # +3 points per card over target
-    
-    # No critical needs = skip is safer
+    # Dilution saved: the actual dilution cost that picking any card would incur
+    dilution_saved = compute_dilution_cost(deck_profile.deck_size, card_draw=0)
+
+    # Opportunity cost: how much value we lose by not filling gaps
+    # Weighted by gap severity, not just count (avoids double-counting)
+    opportunity_cost = 0.0
+    for mechanic in ["damage", "block", "scaling", "draw", "aoe"]:
+        gap = gaps.get_gap(mechanic)
+        priority = gaps.get_priority(mechanic)
+        if gap > 0:
+            # Larger gaps = higher cost of skipping (nonlinear)
+            opportunity_cost += (gap ** 1.3) * priority * 6.0
+
+    # Consistency bonus: well-rounded decks benefit more from skipping
+    consistency_bonus = 0.0
     if not gaps.critical_needs:
-        base += 5.0
-    else:
-        # Critical needs = penalty for skipping
-        base -= len(gaps.critical_needs) * 8.0
-    
-    # Good draw = consistency is already good
-    if deck_profile.draw_density > 0.6:
-        base += 3.0
-    
-    return base
+        consistency_bonus = 3.0
+    if hasattr(deck_profile, "draw_density") and deck_profile.draw_density > 0.6:
+        consistency_bonus += 2.0
+
+    return dilution_saved + consistency_bonus - opportunity_cost
 
 
 def get_delta_explanation(score: DeltaScore) -> str:

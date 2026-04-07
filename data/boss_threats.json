@@ -1,0 +1,237 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "STS2 Boss threat profiles for Acts 1-2. Used by threat_model.py to adjust gap priorities when boss fight is upcoming.",
+    "last_updated": "2026-04-07"
+  },
+
+  "act_1": {
+    "overgrowth": {
+      "CEREMONIAL_BEAST": {
+        "name": "Ceremonial Beast",
+        "hp": 252,
+        "hp_a8": 262,
+        "key_mechanics": ["strength_scaling", "ringing_debuff", "stun_phase"],
+        "damage_per_turn_avg": 17,
+        "max_single_hit": 17,
+        "scaling_type": "strength",
+        "strength_per_cycle": 5,
+        "has_aoe": false,
+        "has_multi_attack": false,
+        "has_debuff": true,
+        "debuffs": ["ringing"],
+        "has_status_cards": false,
+        "phases": 2,
+        "priority_needs": {
+          "block": 0.7,
+          "scaling": 0.6,
+          "damage": 0.5,
+          "draw": 0.3,
+          "aoe": 0.0
+        },
+        "notes": "Strength ramps fast. Phase 2 adds Ringing debuff. Kill fast or outscale."
+      },
+      "THE_KIN": {
+        "name": "The Kin (Priest + Followers)",
+        "hp": 190,
+        "hp_a8": 199,
+        "key_mechanics": ["minion_boss", "frail_debuff", "weak_debuff", "multi_attack", "strength_scaling"],
+        "damage_per_turn_avg": 14,
+        "max_single_hit": 8,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["frail", "weak"],
+        "has_status_cards": false,
+        "has_minions": true,
+        "minion_hp": [58, 59],
+        "priority_needs": {
+          "aoe": 0.8,
+          "block": 0.6,
+          "damage": 0.5,
+          "scaling": 0.4,
+          "draw": 0.3
+        },
+        "notes": "Minion fight. AoE is critical to clear followers. Priest applies Frail+Weak."
+      },
+      "VANTOM": {
+        "name": "Vantom",
+        "hp": 173,
+        "hp_a8": 183,
+        "key_mechanics": ["slippery", "wound_generation", "strength_scaling", "multi_attack"],
+        "damage_per_turn_avg": 16,
+        "max_single_hit": 27,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": false,
+        "has_status_cards": true,
+        "status_cards": ["wound"],
+        "priority_needs": {
+          "block": 0.7,
+          "damage": 0.6,
+          "scaling": 0.4,
+          "draw": 0.4,
+          "aoe": 0.0
+        },
+        "notes": "Slippery 9 = evasion. Dismember hits 27 + 3 Wounds. High burst damage, need block."
+      }
+    },
+    "underdocks": {
+      "LAGAVULIN_MATRIARCH": {
+        "name": "Lagavulin Matriarch",
+        "hp": 222,
+        "hp_a8": 233,
+        "key_mechanics": ["plating", "asleep_start", "strength_debuff", "dexterity_debuff", "half_hp_phase"],
+        "damage_per_turn_avg": 15,
+        "max_single_hit": 19,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["strength_down", "dexterity_down"],
+        "has_status_cards": false,
+        "phases": 2,
+        "priority_needs": {
+          "scaling": 0.8,
+          "damage": 0.6,
+          "block": 0.5,
+          "draw": 0.3,
+          "aoe": 0.0
+        },
+        "notes": "Starts asleep with 12 Plating. Soul Siphon: -2 Str, -2 Dex, +2 Str to self. Scaling is critical to overcome debuffs."
+      },
+      "SOUL_FYSH": {
+        "name": "Soul Fysh",
+        "hp": 211,
+        "hp_a8": 221,
+        "key_mechanics": ["intangible", "beckon_status", "vulnerable_debuff"],
+        "damage_per_turn_avg": 12,
+        "max_single_hit": 16,
+        "scaling_type": null,
+        "has_aoe": false,
+        "has_multi_attack": false,
+        "has_debuff": true,
+        "debuffs": ["vulnerable"],
+        "has_status_cards": true,
+        "status_cards": ["beckon"],
+        "has_intangible": true,
+        "priority_needs": {
+          "scaling": 0.5,
+          "block": 0.7,
+          "damage": 0.4,
+          "draw": 0.5,
+          "aoe": 0.0
+        },
+        "notes": "Goes Intangible for 2 turns. Adds Beckon (6 HP loss/turn in hand). Draw/exhaust helps clear Beckons."
+      },
+      "WATERFALL_GIANT": {
+        "name": "Waterfall Giant",
+        "hp": 250,
+        "hp_a8": 260,
+        "key_mechanics": ["steam_eruption", "weak_debuff", "explode_mechanic", "self_destruct"],
+        "damage_per_turn_avg": 13,
+        "max_single_hit": 15,
+        "scaling_type": "steam_eruption",
+        "has_aoe": false,
+        "has_multi_attack": false,
+        "has_debuff": true,
+        "debuffs": ["weak"],
+        "has_status_cards": false,
+        "phases": 2,
+        "priority_needs": {
+          "damage": 0.8,
+          "block": 0.5,
+          "scaling": 0.3,
+          "draw": 0.3,
+          "aoe": 0.0
+        },
+        "notes": "Builds Steam Eruption. Explodes for massive damage after 6-turn cycle. Must kill fast — frontload damage is king."
+      }
+    }
+  },
+
+  "act_2": {
+    "hive": {
+      "KAISER_CRAB": {
+        "name": "Kaiser Crab (Crusher + Rocket)",
+        "hp_crusher": 199,
+        "hp_rocket": 189,
+        "hp_crusher_a8": 209,
+        "hp_rocket_a8": 199,
+        "key_mechanics": ["back_attack", "crab_rage", "multi_enemy", "strength_scaling", "multi_attack_debuff"],
+        "damage_per_turn_avg": 22,
+        "max_single_hit": 31,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["weak", "frail"],
+        "has_status_cards": false,
+        "has_minions": false,
+        "is_multi_enemy": true,
+        "enemy_count": 2,
+        "priority_needs": {
+          "aoe": 0.7,
+          "block": 0.7,
+          "damage": 0.6,
+          "scaling": 0.5,
+          "draw": 0.4
+        },
+        "notes": "Two enemies: Crusher (tank, AoE debuffs) and Rocket (high single target). Back Attack = hits backline. AoE helps manage both. Rocket's Laser hits 31."
+      },
+      "KNOWLEDGE_DEMON": {
+        "name": "Knowledge Demon",
+        "hp": 379,
+        "hp_a8": 399,
+        "key_mechanics": ["curse_of_knowledge", "self_heal", "strength_scaling", "multi_attack", "high_hp"],
+        "damage_per_turn_avg": 18,
+        "max_single_hit": 17,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["curse_of_knowledge"],
+        "has_status_cards": false,
+        "self_heal": 30,
+        "priority_needs": {
+          "scaling": 0.9,
+          "damage": 0.5,
+          "block": 0.6,
+          "draw": 0.5,
+          "aoe": 0.0
+        },
+        "notes": "379 HP + heals 30. Highest HP pool in Act 2. Must outscale. Curse of Knowledge debuff. Multi-attack 8x3."
+      },
+      "THE_INSATIABLE": {
+        "name": "The Insatiable",
+        "hp": 321,
+        "hp_a8": 341,
+        "key_mechanics": ["sandpit", "frantic_escape", "strength_scaling", "multi_attack", "high_single_hit"],
+        "damage_per_turn_avg": 20,
+        "max_single_hit": 28,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": false,
+        "has_status_cards": true,
+        "status_cards": ["frantic_escape"],
+        "priority_needs": {
+          "block": 0.8,
+          "scaling": 0.7,
+          "damage": 0.5,
+          "draw": 0.5,
+          "aoe": 0.0
+        },
+        "notes": "Sandpit mechanic + Frantic Escape status cards. Lunging Bite hits 28. High block needed, scaling to deal with 321 HP."
+      }
+    }
+  }
+}
