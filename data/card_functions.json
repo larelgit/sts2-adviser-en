@@ -1,0 +1,2503 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "Structured card functions and tags for CDPE V2 updated to Slay the Spire 2.",
+    "last_updated": "2026-04-06"
+  },
+  
+  "STRIKE_IRONCLAD": {
+    "id": "STRIKE_IRONCLAD",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "starter", "basic"]
+  },
+  
+  "DEFEND_IRONCLAD": {
+    "id": "DEFEND_IRONCLAD",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "starter", "basic"]
+  },
+  
+  "BASH": {
+    "id": "BASH",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 8,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "vulnerable": 2
+    },
+    "tags": ["damage", "starter", "vulnerable", "debuff"]
+  },
+  
+  "ANGER": {
+    "id": "ANGER",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_copy_to_discard": true
+    },
+    "tags": ["damage", "zero_cost", "self_replicate"]
+  },
+  
+  "ARMAMENTS": {
+    "id": "ARMAMENTS",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "upgrade_card": true
+    },
+    "tags": ["block", "upgrade", "utility"]
+  },
+  
+  "BODY_SLAM": {
+    "id": "BODY_SLAM",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "block",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_equals_block": true
+    },
+    "tags": ["damage", "scaling", "block_synergy"]
+  },
+  
+  "CLASH": {
+    "id": "CLASH",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "conditional": "only_attacks"
+    },
+    "tags": ["damage", "zero_cost", "conditional", "high_damage"]
+  },
+  
+  "HEADBUTT": {
+    "id": "HEADBUTT",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "put_on_top": true
+    },
+    "tags": ["damage", "deck_manipulation", "consistency"]
+  },
+  
+  "INFLAME": {
+    "id": "INFLAME",
+    "character": "ironclad",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "strength": 2
+    },
+    "tags": ["strength", "scaling", "power", "permanent"]
+  },
+  
+  "IRON_WAVE": {
+    "id": "IRON_WAVE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "block", "hybrid"]
+  },
+  
+  "PERFECTED_STRIKE": {
+    "id": "PERFECTED_STRIKE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strikes",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_per_strike": 2
+    },
+    "tags": ["damage", "strike_synergy", "scaling"]
+  },
+  
+  "POMMEL_STRIKE": {
+    "id": "POMMEL_STRIKE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "draw", "cycle"]
+  },
+  
+  "SHRUG_IT_OFF": {
+    "id": "SHRUG_IT_OFF",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 8,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "draw", "cycle", "consistency"]
+  },
+  
+  "SWORD_BOOMERANG": {
+    "id": "SWORD_BOOMERANG",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 3,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "strength",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 3
+    },
+    "tags": ["damage", "multi_hit", "aoe", "strength"]
+  },
+  
+  "THUNDERCLAP": {
+    "id": "THUNDERCLAP",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 4,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "vulnerable": 1
+    },
+    "tags": ["damage", "aoe", "vulnerable", "debuff"]
+  },
+  
+  "TWIN_STRIKE": {
+    "id": "TWIN_STRIKE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 2
+    },
+    "tags": ["damage", "multi_hit", "strength"]
+  },
+  
+  "BATTLE_TRANCE": {
+    "id": "BATTLE_TRANCE",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "no_draw_turn": true
+    },
+    "tags": ["draw", "zero_cost", "cycle", "conditional"]
+  },
+  
+  "BLOODLETTING": {
+    "id": "BLOODLETTING",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hp_loss": 3,
+      "energy_gain": 2
+    },
+    "tags": ["energy", "zero_cost", "self_damage", "ramp"]
+  },
+  
+  "BURNING_PACT": {
+    "id": "BURNING_PACT",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "exhaust_card": true
+    },
+    "tags": ["draw", "exhaust", "cycle", "thinning"]
+  },
+  
+  "ENTRENCH": {
+    "id": "ENTRENCH",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "block",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "double_block": true
+    },
+    "tags": ["block", "scaling", "block_synergy", "defensive"]
+  },
+  
+  "FEEL_NO_PAIN": {
+    "id": "FEEL_NO_PAIN",
+    "character": "ironclad",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 3,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "exhaust",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_on_exhaust": true
+    },
+    "tags": ["power", "block", "exhaust_synergy", "defensive"]
+  },
+  
+  "FLAME_BARRIER": {
+    "id": "FLAME_BARRIER",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 12,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "thorns": 4
+    },
+    "tags": ["block", "thorns", "defensive", "retaliate"]
+  },
+  
+  "HEMOKINESIS": {
+    "id": "HEMOKINESIS",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hp_loss": 2
+    },
+    "tags": ["damage", "high_damage", "self_damage"]
+  },
+  
+  "INFERNAL_BLADE": {
+    "id": "INFERNAL_BLADE",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_random_attack": true
+    },
+    "tags": ["exhaust", "random", "utility"]
+  },
+  
+  "RAGE": {
+    "id": "RAGE",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 3,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_on_attack": true
+    },
+    "tags": ["block", "zero_cost", "attack_synergy"]
+  },
+  
+  "RAMPAGE": {
+    "id": "RAMPAGE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "self",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_increase": 5
+    },
+    "tags": ["damage", "scaling", "long_fight"]
+  },
+  
+  "RUPTURE": {
+    "id": "RUPTURE",
+    "character": "ironclad",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "strength_on_hp_loss": 1
+    },
+    "tags": ["power", "strength", "self_damage_synergy", "scaling"]
+  },
+  
+  "UPPERCUT": {
+    "id": "UPPERCUT",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 13,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 1,
+      "vulnerable": 1
+    },
+    "tags": ["damage", "debuff", "weak", "vulnerable"]
+  },
+  
+  "WHIRLWIND": {
+    "id": "WHIRLWIND",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": -1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "energy",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "x_cost": true
+    },
+    "tags": ["damage", "aoe", "x_cost", "energy_scaling"]
+  },
+  
+  "DEMON_FORM": {
+    "id": "DEMON_FORM",
+    "character": "ironclad",
+    "type": "power",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "strength",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "strength_per_turn": 2
+    },
+    "tags": ["power", "strength", "scaling", "long_fight", "boss_killer"]
+  },
+  
+  "FEED": {
+    "id": "FEED",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 10,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "max_hp_gain": 3,
+      "conditional": "kill"
+    },
+    "tags": ["damage", "exhaust", "max_hp", "sustain"]
+  },
+  
+  "FIEND_FIRE": {
+    "id": "FIEND_FIRE",
+    "character": "ironclad",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 7,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "exhaust",
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "exhaust_hand": true,
+      "damage_per_exhaust": 7
+    },
+    "tags": ["damage", "exhaust", "high_damage", "hand_dependent"]
+  },
+  
+  "OFFERING": {
+    "id": "OFFERING",
+    "character": "ironclad",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hp_loss": 6,
+      "energy_gain": 2
+    },
+    "tags": ["draw", "energy", "exhaust", "self_damage", "ramp", "zero_cost"]
+  },
+  
+  "STRIKE_SILENT": {
+    "id": "STRIKE_SILENT",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "starter", "basic"]
+  },
+  
+  "DEFEND_SILENT": {
+    "id": "DEFEND_SILENT",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "starter", "basic"]
+  },
+  
+  "SURVIVOR": {
+    "id": "SURVIVOR",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 8,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discard": 1
+    },
+    "tags": ["block", "discard", "starter"]
+  },
+  
+  "NEUTRALIZE": {
+    "id": "NEUTRALIZE",
+    "character": "silent",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 3,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 1
+    },
+    "tags": ["damage", "debuff", "weak", "zero_cost", "starter"]
+  },
+  
+  "ACROBATICS": {
+    "id": "ACROBATICS",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 3,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discard": 1
+    },
+    "tags": ["draw", "discard", "cycle"]
+  },
+  
+  "BACKFLIP": {
+    "id": "BACKFLIP",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "draw", "cycle"]
+  },
+  
+  "BLADE_DANCE": {
+    "id": "BLADE_DANCE",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "shiv_create": 3
+    },
+    "tags": ["shiv", "multi_hit", "synergy"]
+  },
+  
+  "CLOAK_AND_DAGGER": {
+    "id": "CLOAK_AND_DAGGER",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 6,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "shiv_create": 1
+    },
+    "tags": ["block", "shiv", "hybrid"]
+  },
+  
+  "DAGGER_SPRAY": {
+    "id": "DAGGER_SPRAY",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 4,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 2
+    },
+    "tags": ["damage", "aoe", "multi_hit"]
+  },
+  
+  "DAGGER_THROW": {
+    "id": "DAGGER_THROW",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discard": 1
+    },
+    "tags": ["damage", "draw", "discard", "cycle"]
+  },
+  
+  "DEADLY_POISON": {
+    "id": "DEADLY_POISON",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "poison",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "poison": 5
+    },
+    "tags": ["poison", "scaling", "synergy"]
+  },
+  
+  "DEFLECT": {
+    "id": "DEFLECT",
+    "character": "silent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 4,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "zero_cost"]
+  },
+  
+  "DODGE_AND_ROLL": {
+    "id": "DODGE_AND_ROLL",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 4,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "next_turn_block": 4
+    },
+    "tags": ["block", "multi_turn"]
+  },
+  
+  "ESCAPE_PLAN": {
+    "id": "ESCAPE_PLAN",
+    "character": "silent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "conditional_block": 3
+    },
+    "tags": ["draw", "block", "zero_cost", "conditional"]
+  },
+  
+  "PIERCING_WAIL": {
+    "id": "PIERCING_WAIL",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "strength_down": 6
+    },
+    "tags": ["debuff", "aoe", "exhaust", "defensive"]
+  },
+  
+  "POISONED_STAB": {
+    "id": "POISONED_STAB",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "poison",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "poison": 3
+    },
+    "tags": ["damage", "poison", "hybrid"]
+  },
+  
+  "PREPARED": {
+    "id": "PREPARED",
+    "character": "silent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discard": 1
+    },
+    "tags": ["draw", "discard", "zero_cost", "cycle"]
+  },
+  
+  "SLICE": {
+    "id": "SLICE",
+    "character": "silent",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "zero_cost"]
+  },
+  
+  "SUCKER_PUNCH": {
+    "id": "SUCKER_PUNCH",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 8,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 1
+    },
+    "tags": ["damage", "debuff", "weak"]
+  },
+  
+  "BOUNCING_FLASK": {
+    "id": "BOUNCING_FLASK",
+    "character": "silent",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "poison",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "poison": 3,
+      "bounces": 3
+    },
+    "tags": ["poison", "aoe", "scaling"]
+  },
+  
+  "CALCULATED_GAMBLE": {
+    "id": "CALCULATED_GAMBLE",
+    "character": "silent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "discard_draw_equal": true
+    },
+    "tags": ["discard", "draw", "cycle", "exhaust", "zero_cost"]
+  },
+  
+  "DISTRACTION": {
+    "id": "DISTRACTION",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "add_random_skill": true
+    },
+    "tags": ["exhaust", "create", "utility"]
+  },
+  
+  "EXPERTISE": {
+    "id": "EXPERTISE",
+    "character": "silent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_to_hand_size": 6
+    },
+    "tags": ["draw", "hand_size", "discard_synergy"]
+  },
+  
+  "FINISHER": {
+    "id": "FINISHER",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "attacks_played",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "attack_synergy", "finisher"]
+  },
+  
+  "FLECHETTES": {
+    "id": "FLECHETTES",
+    "character": "silent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "skills_in_hand",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "skill_synergy", "hand_dependent"]
+  },
+  
+  "FOOTWORK": {
+    "id": "FOOTWORK",
+    "character": "silent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "dexterity",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "dexterity_gain": 2
+    },
+    "tags": ["power", "dexterity", "scaling", "block"]
+  },
+  
+  "LEG_SWEEP": {
+    "id": "LEG_SWEEP",
+    "character": "silent",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 11,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 2
+    },
+    "tags": ["block", "weak", "debuff"]
+  },
+  
+  "NOXIOUS_FUMES": {
+    "id": "NOXIOUS_FUMES",
+    "character": "silent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "poison",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "poison_per_turn": 2
+    },
+    "tags": ["power", "poison", "aoe", "scaling", "long_fight"]
+  },
+  
+  "PREDATOR": {
+    "id": "PREDATOR",
+    "character": "silent",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 15,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_next_turn": true
+    },
+    "tags": ["damage", "draw", "tempo"]
+  },
+  
+  "REFLEX": {
+    "id": "REFLEX",
+    "character": "silent",
+    "type": "skill",
+    "cost": -2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "sly": true,
+      "draw_on_discard": true
+    },
+    "tags": ["draw", "discard_synergy", "sly"]
+  },
+  
+  "ACCURACY": {
+    "id": "ACCURACY",
+    "character": "silent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "shiv",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "shiv_damage_bonus": 4
+    },
+    "tags": ["power", "shiv", "scaling"]
+  },
+  
+  "ADRENALINE": {
+    "id": "ADRENALINE",
+    "character": "silent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 2,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "energy_gain": 1
+    },
+    "tags": ["draw", "energy", "exhaust", "zero_cost", "ramp"]
+  },
+  
+  "AFTERIMAGE": {
+    "id": "AFTERIMAGE",
+    "character": "silent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "block_per_card": 1
+    },
+    "tags": ["power", "block", "passive", "scaling"]
+  },
+  
+  "BULLET_TIME": {
+    "id": "BULLET_TIME",
+    "character": "silent",
+    "type": "skill",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "zero_cost_hand": true
+    },
+    "tags": ["energy", "combo", "hand_dependent"]
+  },
+  
+  "ENVENOM": {
+    "id": "ENVENOM",
+    "character": "silent",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "poison",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "poison_on_attack": 1
+    },
+    "tags": ["power", "poison", "attack_synergy"]
+  },
+  
+  "MALAISE": {
+    "id": "MALAISE",
+    "character": "silent",
+    "type": "skill",
+    "cost": -1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "strength_down_x": true,
+      "weak_x": true,
+      "x_cost": true
+    },
+    "tags": ["debuff", "weak", "x_cost", "exhaust"]
+  },
+  
+  "NIGHTMARE": {
+    "id": "NIGHTMARE",
+    "character": "silent",
+    "type": "skill",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "copy_card_next_turn": 3
+    },
+    "tags": ["utility", "exhaust", "combo"]
+  },
+  
+  "TOOLS_OF_THE_TRADE": {
+    "id": "TOOLS_OF_THE_TRADE",
+    "character": "silent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "draw_per_turn": 1,
+      "discard_per_turn": 1
+    },
+    "tags": ["power", "draw", "discard", "cycle"]
+  },
+  
+  "WRAITH_FORM": {
+    "id": "WRAITH_FORM",
+    "character": "silent",
+    "type": "power",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "intangible": 2,
+      "dexterity_down_per_turn": 1
+    },
+    "tags": ["power", "intangible", "defensive", "downside"]
+  },
+  
+    "STRIKE_REGENT": {
+    "id": "STRIKE_REGENT",
+    "character": "regent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "starter", "basic"]
+  },
+
+  "DEFEND_REGENT": {
+    "id": "DEFEND_REGENT",
+    "character": "regent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "starter", "basic"]
+  },
+
+  "FALLING_STAR": {
+    "id": "FALLING_STAR",
+    "character": "regent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 7,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "weak": 1,
+      "vulnerable": 1
+    },
+    "tags": ["damage", "starter", "debuff", "weak", "vulnerable"]
+  },
+
+  "VENERATE": {
+    "id": "VENERATE",
+    "character": "regent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "star_gain": 2
+    },
+    "tags": ["star", "utility", "starter"]
+  },
+
+  "ASTRAL_PULSE": {
+    "id": "ASTRAL_PULSE",
+    "character": "regent",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "aoe", "common"]
+  },
+
+  "BEGONE": {
+    "id": "BEGONE",
+    "character": "regent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 4,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "transform_card": "dive_bomb"
+    },
+    "tags": ["damage", "transform", "creation"]
+  },
+
+  "CELESTIAL_MIGHT": {
+    "id": "CELESTIAL_MIGHT",
+    "character": "regent",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 3
+    },
+    "tags": ["damage", "multi_hit"]
+  },
+
+  "COSMIC_INDIFFERENCE": {
+    "id": "COSMIC_INDIFFERENCE",
+    "character": "regent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 6,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "put_on_top": true
+    },
+    "tags": ["block", "deck_manipulation"]
+  },
+
+  "GATHER_LIGHT": {
+    "id": "GATHER_LIGHT",
+    "character": "regent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 7,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "star_gain": 1
+    },
+    "tags": ["block", "star"]
+  },
+
+  "SOLAR_STRIKE": {
+    "id": "SOLAR_STRIKE",
+    "character": "regent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 8,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "star_gain": 1
+    },
+    "tags": ["damage", "star"]
+  },
+
+  "SPOILS_OF_BATTLE": {
+    "id": "SPOILS_OF_BATTLE",
+    "character": "regent",
+    "type": "skill",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "forge",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "forge_value": 10
+    },
+    "tags": ["forge", "utility", "zero_cost"]
+  },
+
+  "BLACK_HOLE": {
+    "id": "BLACK_HOLE",
+    "character": "regent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "damage_on_star_interact": 3
+    },
+    "tags": ["power", "aoe", "star_synergy"]
+  },
+
+  "FURNACE": {
+    "id": "FURNACE",
+    "character": "regent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "forge",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "forge_per_turn": 4
+    },
+    "tags": ["power", "forge", "scaling"]
+  },
+
+  "KINGLY_KICK": {
+    "id": "KINGLY_KICK",
+    "character": "regent",
+    "type": "attack",
+    "cost": 4,
+    "functions": {
+      "damage_flat": 24,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "draw_reduction",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "cost_reduction_on_draw": 1
+    },
+    "tags": ["damage", "high_damage", "cost_scaling"]
+  },
+
+  "REFLECT": {
+    "id": "REFLECT",
+    "character": "regent",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 17,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "reflect_damage": true
+    },
+    "tags": ["block", "retaliate", "defensive"]
+  },
+
+  "SHINING_STRIKE": {
+    "id": "SHINING_STRIKE",
+    "character": "regent",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 8,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "star_gain": 2,
+      "put_on_top": true
+    },
+    "tags": ["damage", "star", "deck_manipulation"]
+  },
+
+  "BIG_BANG": {
+    "id": "BIG_BANG",
+    "character": "regent",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 1,
+      "aoe": false,
+      "scaling_type": "hybrid",
+      "exhaust": true,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "energy_gain": 1,
+      "star_gain": 1,
+      "forge_value": 5
+    },
+    "tags": ["energy", "star", "forge", "draw", "exhaust"]
+  },
+
+  "ROYALTIES": {
+    "id": "ROYALTIES",
+    "character": "regent",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "gold_gain": 30
+    },
+    "tags": ["power", "meta", "gold"]
+  },
+
+  "SEVEN_STARS": {
+    "id": "SEVEN_STARS",
+    "character": "regent",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 7,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "hits": 7
+    },
+    "tags": ["damage", "aoe", "multi_hit", "high_damage"]
+  },
+
+  "THE_SMITH": {
+    "id": "THE_SMITH",
+    "character": "regent",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "forge",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "forge_value": 30
+    },
+    "tags": ["forge", "utility", "rare"]
+  },
+
+  "VOID_FORM": {
+    "id": "VOID_FORM",
+    "character": "regent",
+    "type": "power",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "free_cards_per_turn": 2,
+      "end_turn": true
+    },
+    "tags": ["power", "energy", "setup"]
+  },
+
+  "METEOR_SHOWER": {
+    "id": "METEOR_SHOWER",
+    "character": "regent",
+    "type": "attack",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 14,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": true,
+      "scaling_type": "ancient",
+      "exhaust": false,
+      "innate": true,
+      "retain": false,
+      "ethereal": false,
+      "weak": 2,
+      "vulnerable": 2
+    },
+    "tags": ["damage", "aoe", "debuff", "ancient"]
+  },
+
+  "THE_SEALED_THRONE": {
+    "id": "THE_SEALED_THRONE",
+    "character": "regent",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "star",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "star_per_card_played": 1
+    },
+    "tags": ["power", "star", "ancient"]
+  },
+
+    "STRIKE_NECROBINDER": {
+    "id": "STRIKE_NECROBINDER",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "starter", "basic"]
+  },
+
+  "DEFEND_NECROBINDER": {
+    "id": "DEFEND_NECROBINDER",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 5,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["block", "starter", "basic"]
+  },
+
+  "BODYGUARD": {
+    "id": "BODYGUARD",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 0,
+      "block_flat": 0,
+      "draw": 0,
+      "aoe": false,
+      "scaling_type": "summon",
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false,
+      "summon_gain": 5
+    },
+    "tags": ["summon", "defensive", "starter"]
+  },
+
+  "UNLEASH": {
+    "id": "UNLEASH",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "summon_damage_flat": 6,
+      "scaling_type": "summon_hp",
+      "damage_per_summon_hp": 1,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
+    },
+    "tags": ["damage", "summon_interaction", "starter"]
+  },
+
+  "AFTERLIFE": {
+    "id": "AFTERLIFE",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "summon_gain": 6,
+      "exhaust": true
+    },
+    "tags": ["summon", "exhaust"]
+  },
+
+  "BLIGHT_STRIKE": {
+    "id": "BLIGHT_STRIKE",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 8,
+      "doom_apply_equal_damage": true
+    },
+    "tags": ["damage", "doom"]
+  },
+
+  "DEFILE": {
+    "id": "DEFILE",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 13,
+      "ethereal": true
+    },
+    "tags": ["damage", "ethereal", "high_damage"]
+  },
+
+  "FLATTEN": {
+    "id": "FLATTEN",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "summon_damage_flat": 12,
+      "cost_zero_if_summon_attacked": true
+    },
+    "tags": ["damage", "summon_interaction", "conditional"]
+  },
+
+  "SCOURGE": {
+    "id": "SCOURGE",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "doom_apply": 13,
+      "draw": 1
+    },
+    "tags": ["doom", "draw", "cycle"]
+  },
+
+  "BONE_SHARDS": {
+    "id": "BONE_SHARDS",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "summon_damage_aoe": 9,
+      "block_flat": 9,
+      "kill_summon": true
+    },
+    "tags": ["damage", "aoe", "block", "summon_interaction"]
+  },
+
+  "DANSE_MACABRE": {
+    "id": "DANSE_MACABRE",
+    "character": "necrobinder",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "block_on_high_cost_card": 3,
+      "threshold_cost": 2
+    },
+    "tags": ["power", "block", "synergy"]
+  },
+
+  "DEBILITATE": {
+    "id": "DEBILITATE",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 7,
+      "double_debuff_effectiveness": 3
+    },
+    "tags": ["damage", "debuff_synergy", "utility"]
+  },
+
+  "SHROUD": {
+    "id": "SHROUD",
+    "character": "necrobinder",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "block_on_doom_apply": 2
+    },
+    "tags": ["power", "doom_synergy", "block"]
+  },
+
+  "SIC_EM": {
+    "id": "SIC_EM",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "summon_damage_flat": 5,
+      "summon_gain_on_hit": 2
+    },
+    "tags": ["damage", "summon_interaction"]
+  },
+
+  "SLEIGHT_OF_FLESH": {
+    "id": "SLEIGHT_OF_FLESH",
+    "character": "necrobinder",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "damage_on_debuff_apply": 9
+    },
+    "tags": ["power", "debuff_synergy"]
+  },
+
+  "END_OF_DAYS": {
+    "id": "END_OF_DAYS",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 3,
+    "functions": {
+      "doom_apply_aoe": 29,
+      "kill_if_doom_threshold": true
+    },
+    "tags": ["doom", "aoe", "execute"]
+  },
+
+  "NECRO_MASTERY": {
+    "id": "NECRO_MASTERY",
+    "character": "necrobinder",
+    "type": "power",
+    "cost": 2,
+    "functions": {
+      "summon_gain": 5,
+      "reflect_summon_hp_loss": true
+    },
+    "tags": ["power", "summon_interaction", "aoe_damage"]
+  },
+
+  "REAPER_FORM": {
+    "id": "REAPER_FORM",
+    "character": "necrobinder",
+    "type": "power",
+    "cost": 3,
+    "functions": {
+      "attacks_apply_doom": true
+    },
+    "tags": ["power", "doom_synergy", "scaling"]
+  },
+
+  "SACRIFICE": {
+    "id": "SACRIFICE",
+    "character": "necrobinder",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "kill_summon": true,
+      "block_scaling": "summon_max_hp",
+      "block_multiplier": 2,
+      "retain": true
+    },
+    "tags": ["block", "summon_interaction", "retain"]
+  },
+
+  "SOUL_STORM": {
+    "id": "SOUL_STORM",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "scaling_type": "exhaust_pile_souls",
+      "damage_per_soul": 2
+    },
+    "tags": ["damage", "soul_synergy", "exhaust_synergy"]
+  },
+
+  "THE_SCYTHE": {
+    "id": "THE_SCYTHE",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 13,
+      "permanent_damage_increase": 3,
+      "exhaust": true
+    },
+    "tags": ["damage", "permanent_scaling", "exhaust"]
+  },
+
+  "TIMES_UP": {
+    "id": "TIMES_UP",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_equals_doom": true,
+      "exhaust": true
+    },
+    "tags": ["damage", "doom_payoff", "exhaust"]
+  },
+
+  "PROTECTOR": {
+    "id": "PROTECTOR",
+    "character": "necrobinder",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "summon_damage_flat": 10,
+      "scaling_type": "summon_max_hp",
+      "damage_per_summon_max_hp": 1,
+      "innate": true
+    },
+    "tags": ["damage", "summon_interaction", "ancient"]
+  },
+
+    "STRIKE_DEFECT": {
+    "id": "STRIKE_DEFECT",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 6
+    },
+    "tags": ["damage", "starter", "basic"]
+  },
+
+  "DEFEND_DEFECT": {
+    "id": "DEFEND_DEFECT",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "block_flat": 5
+    },
+    "tags": ["block", "starter", "basic"]
+  },
+
+  "ZAP": {
+    "id": "ZAP",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "channel_lightning": 1
+    },
+    "tags": ["orb", "lightning", "starter"]
+  },
+
+  "DUALCAST": {
+    "id": "DUALCAST",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "evoke_rightmost": 2
+    },
+    "tags": ["orb", "evoke", "starter"]
+  },
+
+  "CLAW": {
+    "id": "CLAW",
+    "character": "defect",
+    "type": "attack",
+    "cost": 0,
+    "functions": {
+      "damage_flat": 3,
+      "damage_increase_global": 2
+    },
+    "tags": ["damage", "scaling", "zero_cost"]
+  },
+
+  "FOCUSED_STRIKE": {
+    "id": "FOCUSED_STRIKE",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 9,
+      "focus_temp": 1
+    },
+    "tags": ["damage", "focus"]
+  },
+
+  "LIGHTNING_ROD": {
+    "id": "LIGHTNING_ROD",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "block_flat": 4,
+      "delayed_channel_lightning": {
+        "amount": 1,
+        "turns": 2
+      }
+    },
+    "tags": ["block", "orb", "lightning"]
+  },
+
+  "MOMENTUM_STRIKE": {
+    "id": "MOMENTUM_STRIKE",
+    "character": "defect",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 10,
+      "reduce_cost_to_zero": true
+    },
+    "tags": ["damage", "cost_reduction"]
+  },
+
+  "UPROAR": {
+    "id": "UPROAR",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 5,
+      "hits": 2,
+      "play_random_attack_from_draw": 1
+    },
+    "tags": ["damage", "multi_hit", "utility"]
+  },
+
+  "BULK_UP": {
+    "id": "BULK_UP",
+    "character": "defect",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "lose_orb_slots": 1,
+      "strength_gain": 2,
+      "dexterity_gain": 2
+    },
+    "tags": ["power", "scaling", "hybrid"]
+  },
+
+  "GLASSWORK": {
+    "id": "GLASSWORK",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "block_flat": 5,
+      "channel_glass": 1
+    },
+    "tags": ["block", "orb", "glass"]
+  },
+
+  "ROCKET_PUNCH": {
+    "id": "ROCKET_PUNCH",
+    "character": "defect",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 13,
+      "draw": 1,
+      "reduce_cost_on_status_creation": 0
+    },
+    "tags": ["damage", "status_synergy"]
+  },
+
+  "SMOKESTACK": {
+    "id": "SMOKESTACK",
+    "character": "defect",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "damage_aoe_on_status_creation": 5
+    },
+    "tags": ["power", "status_synergy", "aoe"]
+  },
+
+  "SUNDER": {
+    "id": "SUNDER",
+    "character": "defect",
+    "type": "attack",
+    "cost": 3,
+    "functions": {
+      "damage_flat": 24,
+      "energy_gain_on_kill": 3
+    },
+    "tags": ["damage", "energy", "finisher"]
+  },
+
+  "TESLA_COIL": {
+    "id": "TESLA_COIL",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_flat": 3,
+      "trigger_all_lightning": true
+    },
+    "tags": ["damage", "lightning_synergy"]
+  },
+
+  "ADAPTIVE_STRIKE": {
+    "id": "ADAPTIVE_STRIKE",
+    "character": "defect",
+    "type": "attack",
+    "cost": 2,
+    "functions": {
+      "damage_flat": 18,
+      "add_zero_cost_copy_to_discard": true
+    },
+    "tags": ["damage", "creation", "rare"]
+  },
+
+  "GENETIC_ALGORITHM": {
+    "id": "GENETIC_ALGORITHM",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "block_flat": 1,
+      "permanent_block_increase": 3,
+      "exhaust": true
+    },
+    "tags": ["block", "scaling", "permanent"]
+  },
+
+  "HELIX_DRILL": {
+    "id": "HELIX_DRILL",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_scaling_energy_spent": 3
+    },
+    "tags": ["damage", "energy_scaling"]
+  },
+
+  "MODDED": {
+    "id": "MODDED",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "orb_slot_gain": 1,
+      "draw": 1,
+      "permanent_cost_increase": 1
+    },
+    "tags": ["orb", "draw", "utility"]
+  },
+
+  "SHATTER": {
+    "id": "SHATTER",
+    "character": "defect",
+    "type": "attack",
+    "cost": 1,
+    "functions": {
+      "damage_aoe": 11,
+      "evoke_all_orbs": true
+    },
+    "tags": ["damage", "aoe", "orb_payoff"]
+  },
+
+  "TRASH_TO_TREASURE": {
+    "id": "TRASH_TO_TREASURE",
+    "character": "defect",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "channel_random_orb_on_status_creation": 1
+    },
+    "tags": ["power", "status_synergy", "orb"]
+  },
+
+  "BIASED_COGNITION": {
+    "id": "BIASED_COGNITION",
+    "character": "defect",
+    "type": "power",
+    "cost": 1,
+    "functions": {
+      "focus_gain": 4,
+      "focus_loss_per_turn": 1
+    },
+    "tags": ["power", "focus", "ancient"]
+  },
+
+  "QUADCAST": {
+    "id": "QUADCAST",
+    "character": "defect",
+    "type": "skill",
+    "cost": 2,
+    "functions": {
+      "evoke_rightmost": 4
+    },
+    "tags": ["orb", "evoke", "ancient"]
+  },
+
+  "STACK": {
+    "id": "STACK",
+    "character": "defect",
+    "type": "skill",
+    "cost": 1,
+    "functions": {
+      "block_scaling_discard_pile": 1
+    },
+    "tags": ["block", "scaling", "event"]
+  }
+}

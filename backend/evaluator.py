@@ -56,7 +56,7 @@ from .scoring import (
     determine_role_v2,
     soft_role_confidence,
 )
-from .deck_profiler import analyze_deck
+from .deck_profiler import analyze_deck, get_card_functions
 from .threat_model import assess_threats
 
 
@@ -329,11 +329,18 @@ class CardEvaluator:
         # 3. 计算套路完成度贡献
         comp_before = 0.0
         comp_after = 0.0
+        all_comp_before = {}
+        all_comp_after = {}
+        
         if detected_archetypes:
             primary = detected_archetypes[0]
             comp_before = self._calc_completion(primary, deck_set)
             new_deck = deck_set | {card.id}
             comp_after = self._calc_completion(primary, new_deck)
+            
+            for arc in detected_archetypes:
+                all_comp_before[arc.id] = self._calc_completion(arc, deck_set)
+                all_comp_after[arc.id] = self._calc_completion(arc, new_deck)
 
         # 4. 各维度评分
         # v0.7: bloat_penalty 显式计算；rarity_score 字段改存 community_score
@@ -349,7 +356,12 @@ class CardEvaluator:
             base_score=score_base_dimension(card, run_state.phase),
             rarity_score=community_norm if community_norm is not None else 0.0,  # community_score
             archetype_score=score_archetype_dimension(card, archetype_weights),
-            completion_score=score_completion_dimension(comp_before, comp_after),
+            completion_score=score_completion_dimension(
+                comp_before,
+                comp_after,
+                all_completions_before=all_comp_before if detected_archetypes else None,
+                all_completions_after=all_comp_after if detected_archetypes else None
+            ),
             phase_score=score_phase_dimension(card, run_state.phase, role, hp_ratio=run_state.hp_ratio),
             synergy_bonus=score_synergy_bonus(
                 card, run_state, relic_synergy_tags,
@@ -569,10 +581,8 @@ class CardEvaluator:
         if breakdown.synergy_bonus > 0.0:
             reasons_for.append("Has synergy with current relics or deck")
 
-        # 阶段适配
-        if role == CardRole.TRANSITION and run_state.phase != GamePhase.EARLY:
-            reasons_against.append(f"Transition card value drops in {run_state.phase.value} phase")
-
+        # 阶段适配 (Transition removed)
+        
         # 污染
         if role == CardRole.POLLUTION:
             reasons_against.append("No synergy with current archetypes, will dilute the deck")
@@ -585,37 +595,29 @@ class CardEvaluator:
         if not matched_archetypes:
             reasons_against.append("Does not match any detected archetypes, value in current run is unclear")
 
-        # 社区数据理由
+        # 社区数据理由 (V2: sanity-check layer only, not a decision maker)
         if cv_result is not None:
             if cv_result.has_community_data and community_stats is not None:
-                wr = f"{community_stats.win_rate_pct:.1f}%"
+                wr_pct = community_stats.win_rate_pct
+                wr = f"{wr_pct:.1f}%"
                 pr = f"{community_stats.pick_rate_pct:.1f}%"
-                cs = cv_result.community_score
-
-                if cv_result.alignment == Alignment.AGREEMENT:
-                    if cs >= 0.70:
-                        reasons_for.append(
-                            f"Community Support: Win Rate {wr}, Pick Rate {pr}, aligns with algorithm"
-                        )
-                    elif cs <= 0.35:
-                        reasons_against.append(
-                            f"Community Warning: Win Rate {wr}, Pick Rate {pr}, generally skipped by players"
-                        )
-                elif cv_result.alignment == Alignment.SOFT_CONFLICT:
+                
+                # V2: Sanity check warnings for extreme cases
+                if wr_pct < 40.0 and algo_score > 60:
+                    # Low community win rate but algorithm says it's good - warn
                     reasons_against.append(
-                        f"Community vs Algorithm discrepancy ({cv_result.delta:.0%} delta), score compromised"
+                        f"⚠ Community Caution: Win Rate {wr} is low. Algorithm may be overvaluing this card."
                     )
-                elif cv_result.alignment == Alignment.CONFLICT:
-                    if algo_score / 100.0 > cv_result.community_score:
-                        reasons_against.append(
-                            f"Significant Discrepancy: Algorithm score is high, but community win rate {wr} is low. Check archetype fit."
-                        )
-                    else:
-                        reasons_for.append(
-                            f"Potentially Undervalued: Algorithm score is low, but community win rate {wr} is high."
-                        )
-            elif not cv_result.has_community_data and 40 <= algo_score <= 65:
-                reasons_against.append("Missing community statistics, score based entirely on algorithm")
+                elif wr_pct < 30.0:
+                    # Very low win rate - strong warning
+                    reasons_against.append(
+                        f"⚠ Low Win Rate Warning: {wr} historically. Consider skipping."
+                    )
+                elif wr_pct > 70.0 and algo_score < 50:
+                    # High community win rate but algorithm says it's bad - note potential
+                    reasons_for.append(
+                        f"Community says {wr} win rate, algorithm may be undervaluing this."
+                    )
 
         return reasons_for, reasons_against
 

@@ -46,7 +46,7 @@ from .models import (
     Card, Rarity, GamePhase, RunState,
     ScoreBreakdown, CardRole, Character,
 )
-from .deck_profiler import DeckProfile
+from .deck_profiler import DeckProfile, get_card_functions
 from .threat_model import ThreatProfile
 
 log = logging.getLogger(__name__)
@@ -234,6 +234,9 @@ def score_value_dimension(card: Card, phase: GamePhase) -> float:
     """
     V2: Extended card value beyond just rarity + cost.
     
+    Uses structured data from card_functions.json when available,
+    falls back to regex-based detection otherwise.
+    
     Includes:
       - Rarity baseline (0.20 ~ 0.90)
       - Cost efficiency bonus/penalty
@@ -243,12 +246,6 @@ def score_value_dimension(card: Card, phase: GamePhase) -> float:
       - Block bonus (survival)
       - Setup tax (needs other cards)
       - Dead draw risk (situational cards)
-    
-    设计原则：
-      - rare 卡在任何时候都有底线价值（0.75+）
-      - common 给 0.45 左右作为中性值
-      - 0 费牌有显著加成（灵活性价值）
-      - Utility (draw, exhaust, AoE) adds real value
     """
     rarity_base: dict[Rarity, float] = {
         Rarity.ANCIENT:  0.90,
@@ -262,54 +259,124 @@ def score_value_dimension(card: Card, phase: GamePhase) -> float:
         Rarity.STATUS:   0.05,
     }
     base = rarity_base.get(card.rarity, 0.45)
+    
+    # Try structured data first
+    cf = get_card_functions(card.id)
+    
+    if cf is not None:
+        # Use structured data
+        funcs = cf.get("functions", {})
+        ctags = set(t.lower() for t in cf.get("tags", []))
+        
+        cost = cf.get("cost", card.cost)
+        damage = funcs.get("damage_flat", 0) or 0
+        block = funcs.get("block_flat", 0) or 0
+        draw = funcs.get("draw", 0) or 0
+        is_aoe = funcs.get("aoe", False)
+        is_exhaust = funcs.get("exhaust", False)
+        is_ethereal = funcs.get("ethereal", False)
+        is_innate = funcs.get("innate", False)
+        is_retain = funcs.get("retain", False)
+        energy_gain = funcs.get("energy_gain", 0) or 0
+        strength_gain = funcs.get("strength_gain", 0) or 0
+        scaling_type = funcs.get("scaling_type")
+        
+        # Cost efficiency
+        if cost == 0:
+            cost_bonus = 0.12
+        elif cost == 1:
+            cost_bonus = 0.05
+        elif cost >= 3:
+            cost_bonus = -0.05
+        else:
+            cost_bonus = 0.0
+        
+        # Draw bonus (from structured data)
+        draw_bonus = min(0.15, draw * 0.05)
+        
+        # Exhaust bonus
+        exhaust_bonus = 0.06 if is_exhaust else 0.0
+        
+        # Block bonus
+        block_bonus = min(0.10, block * 0.006)
+        
+        # AoE bonus
+        aoe_bonus = 0.06 if is_aoe else 0.0
+        
+        # Innate bonus
+        innate_bonus = 0.04 if is_innate else 0.0
+        
+        # Retain bonus
+        retain_bonus = 0.03 if is_retain else 0.0
+        
+        # Ethereal penalty
+        ethereal_penalty = -0.04 if is_ethereal else 0.0
+        
+        # Scaling bonus (strength/dex/focus/etc)
+        scaling_bonus = 0.0
+        if scaling_type or strength_gain > 0:
+            scaling_bonus = 0.05
+        
+        # Energy efficiency bonus
+        energy_bonus = min(0.08, energy_gain * 0.04)
+        
+        # Setup tax (from tags)
+        setup_penalty = -0.06 if "conditional" in ctags or "setup" in ctags else 0.0
+        
+        total = (base + cost_bonus + draw_bonus + exhaust_bonus 
+                 + block_bonus + aoe_bonus + innate_bonus + retain_bonus
+                 + ethereal_penalty + setup_penalty + scaling_bonus + energy_bonus)
+        
+    else:
+        # Fallback to regex-based detection
+        
+        # Cost efficiency
+        cost_bonus = 0.0
+        if card.cost == 0:
+            cost_bonus = 0.12
+        elif card.cost == 1:
+            cost_bonus = 0.05
+        elif card.cost >= 3:
+            cost_bonus = -0.05
 
-    # 费用效率
-    cost_bonus = 0.0
-    if card.cost == 0:
-        cost_bonus = 0.12
-    elif card.cost == 1:
-        cost_bonus = 0.05
-    elif card.cost >= 3:
-        cost_bonus = -0.05   # 高费用略微减分
-
-    # V2: Draw/filter value (consistency)
-    draw_bonus = 0.0
-    if card.base_draw is not None and card.base_draw > 0:
-        draw_bonus = min(0.15, card.base_draw * 0.05)
-    
-    # V2: Exhaust bonus (deck thinning/quality)
-    exhaust_bonus = 0.0
-    if card.keywords.exhaust:
-        exhaust_bonus = 0.06
-    
-    # V2: Block value (survival)
-    block_bonus = 0.0
-    if card.base_block is not None and card.base_block > 0:
-        block_bonus = min(0.10, card.base_block * 0.006)
-    
-    # V2: AoE bonus (check description for "all enemies" pattern)
-    aoe_bonus = 0.0
-    desc_lower = card.description.lower()
-    if "all enem" in desc_lower or "each enemy" in desc_lower:
-        aoe_bonus = 0.06
-    
-    # V2: Innate bonus (reliable opening)
-    innate_bonus = 0.04 if card.keywords.innate else 0.0
-    
-    # V2: Retain bonus (flexibility)
-    retain_bonus = 0.03 if card.keywords.retain else 0.0
-    
-    # V2: Ethereal penalty (must use or lose)
-    ethereal_penalty = -0.04 if card.keywords.ethereal else 0.0
-    
-    # V2: High setup tax detection (rough heuristic)
-    setup_penalty = 0.0
-    if "requires" in desc_lower or "if you have" in desc_lower:
-        setup_penalty = -0.06
-    
-    total = (base + cost_bonus + draw_bonus + exhaust_bonus 
-             + block_bonus + aoe_bonus + innate_bonus + retain_bonus
-             + ethereal_penalty + setup_penalty)
+        # Draw/filter value (consistency)
+        draw_bonus = 0.0
+        if card.base_draw is not None and card.base_draw > 0:
+            draw_bonus = min(0.15, card.base_draw * 0.05)
+        
+        # Exhaust bonus (deck thinning/quality)
+        exhaust_bonus = 0.0
+        if card.keywords.exhaust:
+            exhaust_bonus = 0.06
+        
+        # Block value (survival)
+        block_bonus = 0.0
+        if card.base_block is not None and card.base_block > 0:
+            block_bonus = min(0.10, card.base_block * 0.006)
+        
+        # AoE bonus (check description for "all enemies" pattern)
+        aoe_bonus = 0.0
+        desc_lower = card.description.lower()
+        if "all enem" in desc_lower or "each enemy" in desc_lower:
+            aoe_bonus = 0.06
+        
+        # Innate bonus (reliable opening)
+        innate_bonus = 0.04 if card.keywords.innate else 0.0
+        
+        # Retain bonus (flexibility)
+        retain_bonus = 0.03 if card.keywords.retain else 0.0
+        
+        # Ethereal penalty (must use or lose)
+        ethereal_penalty = -0.04 if card.keywords.ethereal else 0.0
+        
+        # High setup tax detection (rough heuristic)
+        setup_penalty = 0.0
+        if "requires" in desc_lower or "if you have" in desc_lower:
+            setup_penalty = -0.06
+        
+        total = (base + cost_bonus + draw_bonus + exhaust_bonus 
+                 + block_bonus + aoe_bonus + innate_bonus + retain_bonus
+                 + ethereal_penalty + setup_penalty)
     
     return min(1.0, max(0.0, total))
 
@@ -327,7 +394,6 @@ def score_phase_dimension(
     """
     当前阶段对该卡的适配度。
       - CORE/ENABLER 任何阶段都高分
-      - TRANSITION 早期强，后期弱
       - POLLUTION 所有阶段 0 分
       - FILLER/UNKNOWN 中性 0.55
 
@@ -338,13 +404,7 @@ def score_phase_dimension(
     """
     if card_role == CardRole.POLLUTION:
         return 0.0
-    if card_role == CardRole.TRANSITION:
-        base = {
-            GamePhase.EARLY: 0.85,
-            GamePhase.MID:   0.45,
-            GamePhase.LATE:  0.15,
-        }[phase]
-    elif card_role in (CardRole.CORE, CardRole.ENABLER):
+    if card_role in (CardRole.CORE, CardRole.ENABLER):
         base = {
             GamePhase.EARLY: 0.75,
             GamePhase.MID:   0.82,
