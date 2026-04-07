@@ -171,6 +171,7 @@ def score_candidate(
     deck_profile: DeckProfile,
     card_db: Optional[dict] = None,
     existing_scaling_sources: int = 0,
+    existing_copies: int = 0,
 ) -> DeltaScore:
     """
     Score a candidate card based on how well it fills deck gaps.
@@ -180,6 +181,7 @@ def score_candidate(
               - dilution_cost
               - surplus_penalty
               - scaling_saturation_penalty
+              - copy_diminishing_penalty
 
     Args:
         card_id: ID of the card to evaluate
@@ -187,6 +189,7 @@ def score_candidate(
         deck_profile: Current deck profile
         card_db: Optional legacy card database for fallback
         existing_scaling_sources: Count of scaling cards already in deck
+        existing_copies: Number of copies of this exact card already in deck
 
     Returns:
         DeltaScore with breakdown
@@ -240,7 +243,18 @@ def score_candidate(
     if scaling_contrib > 0.1 and existing_scaling_sources >= 3:
         saturation_factor = max(0.3, 1.0 - (existing_scaling_sources - 2) * 0.2)
         scaling_contrib *= saturation_factor
-    
+
+    # Card copy diminishing returns: 2nd copy of exact same card is less valuable,
+    # 3rd+ even less. Independent of scaling saturation — applies to ALL card types.
+    # 1st copy: 1.0x (no penalty), 2nd: 0.65x, 3rd: 0.40x, 4th+: 0.25x
+    if existing_copies >= 1:
+        copy_factor = max(0.25, 1.0 - existing_copies * 0.35)
+        damage_contrib *= copy_factor
+        block_contrib *= copy_factor
+        draw_contrib *= copy_factor
+        scaling_contrib *= copy_factor
+        aoe_contrib *= copy_factor
+
     # Apply gaps and priorities
     damage_delta = damage_contrib * gaps.damage * gaps.damage_priority
     block_delta = block_contrib * gaps.block * gaps.block_priority

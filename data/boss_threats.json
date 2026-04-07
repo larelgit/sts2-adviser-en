@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "version": "1.0",
-    "description": "STS2 Boss threat profiles for Acts 1-2. Used by threat_model.py to adjust gap priorities when boss fight is upcoming.",
+    "version": "2.0",
+    "description": "STS2 Boss threat profiles for Acts 1-3. Used by threat_model.py for boss-aware priority adjustments. V2: exact boss targeting from save file.",
     "last_updated": "2026-04-07"
   },
 
@@ -231,6 +231,83 @@
           "aoe": 0.0
         },
         "notes": "Sandpit mechanic + Frantic Escape status cards. Lunging Bite hits 28. High block needed, scaling to deal with 321 HP."
+      }
+    }
+  },
+
+  "act_3": {
+    "glory": {
+      "DOORMAKER": {
+        "name": "Doormaker",
+        "hp": 450,
+        "hp_a8": 475,
+        "key_mechanics": ["multi_phase", "portal_summon", "strength_scaling", "high_hp"],
+        "damage_per_turn_avg": 24,
+        "max_single_hit": 35,
+        "scaling_type": "strength",
+        "strength_per_cycle": 3,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["vulnerable"],
+        "has_status_cards": false,
+        "phases": 3,
+        "priority_needs": {
+          "scaling": 0.9,
+          "block": 0.7,
+          "damage": 0.5,
+          "draw": 0.6,
+          "aoe": 0.3
+        },
+        "notes": "Multi-phase boss with portal mechanics. Very high HP pool requires scaling. Portal phases may introduce adds requiring AoE."
+      },
+      "QUEEN": {
+        "name": "Queen",
+        "hp": 400,
+        "hp_a8": 420,
+        "key_mechanics": ["minion_boss", "royal_guard", "multi_enemy", "strength_scaling", "heal"],
+        "damage_per_turn_avg": 26,
+        "max_single_hit": 30,
+        "scaling_type": "strength",
+        "strength_per_cycle": 2,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["frail", "weak"],
+        "has_status_cards": false,
+        "has_minions": true,
+        "priority_needs": {
+          "aoe": 0.8,
+          "scaling": 0.8,
+          "block": 0.7,
+          "damage": 0.5,
+          "draw": 0.5
+        },
+        "notes": "Queen + Royal Guards. AoE critical to manage guards. Queen heals and scales strength. Block needed for multi-attack pressure."
+      },
+      "TEST_SUBJECT": {
+        "name": "Test Subject",
+        "hp": 420,
+        "hp_a8": 440,
+        "key_mechanics": ["experiment_phase", "debuff_heavy", "strength_scaling", "status_cards"],
+        "damage_per_turn_avg": 22,
+        "max_single_hit": 32,
+        "scaling_type": "strength",
+        "strength_per_cycle": 3,
+        "has_aoe": false,
+        "has_multi_attack": true,
+        "has_debuff": true,
+        "debuffs": ["weak", "vulnerable"],
+        "has_status_cards": true,
+        "phases": 2,
+        "priority_needs": {
+          "scaling": 0.9,
+          "block": 0.8,
+          "draw": 0.6,
+          "damage": 0.4,
+          "aoe": 0.0
+        },
+        "notes": "Experiment phases with escalating debuffs and status cards. High scaling needed to outpace strength ramp. Draw helps cycle through statuses."
       }
     }
   }

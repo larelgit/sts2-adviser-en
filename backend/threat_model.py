@@ -1,11 +1,13 @@
 """
 backend/threat_model.py
-V2.1: threat assessment from run context + deck profile + boss threat database.
+V2.2: threat assessment from run context + deck profile + boss threat database.
 
-Changes in V2.1:
-- Loads boss_threats.json for act-specific boss awareness
-- Adjusts gap priorities when boss fight is upcoming based on actual boss mechanics
-- get_boss_threats() returns boss-specific priority overrides
+Changes in V2.2:
+- Exact boss targeting: when save file provides boss_id, use that specific boss's
+  priority_needs instead of averaging across all possible bosses in the act.
+- Zone-aware boss lookup: uses zone_id (overgrowth/underdocks/hive/glory) to
+  narrow boss pool when exact boss is unknown.
+- get_specific_boss_priorities() for targeted boss data.
 """
 
 from __future__ import annotations
@@ -47,11 +49,50 @@ def _load_boss_db() -> None:
         log.warning(f"Failed to load boss_threats.json: {e}")
 
 
-def get_boss_priority_overrides(act: int) -> dict[str, float]:
+def get_specific_boss_priorities(act: int, boss_id: str, zone_id: Optional[str] = None) -> dict[str, float]:
     """
-    Get aggregated priority needs across all bosses in an act.
-    Returns averaged priority_needs across all possible bosses.
-    This is used when we know boss is upcoming but don't know which one.
+    Get priority_needs for a SPECIFIC boss (identified from save file).
+
+    Args:
+        act: Act number (1-3)
+        boss_id: Boss ID from save file (e.g. "CEREMONIAL_BEAST", "KNOWLEDGE_DEMON")
+        zone_id: Optional zone (e.g. "overgrowth") to narrow lookup
+
+    Returns:
+        priority_needs dict for the specific boss, or empty dict if not found.
+    """
+    _load_boss_db()
+    act_key = f"act_{act}"
+    act_data = _BOSS_DB.get(act_key, {})
+    if not act_data:
+        return {}
+
+    # If zone is known, search only in that zone
+    if zone_id:
+        zone_data = act_data.get(zone_id, {})
+        if isinstance(zone_data, dict) and boss_id in zone_data:
+            boss_data = zone_data[boss_id]
+            if isinstance(boss_data, dict) and "priority_needs" in boss_data:
+                log.info(f"Exact boss match: {boss_id} in {zone_id} (act {act})")
+                return boss_data["priority_needs"]
+
+    # Fallback: search all zones in the act for this boss_id
+    for zone_name, zone_data in act_data.items():
+        if isinstance(zone_data, dict) and boss_id in zone_data:
+            boss_data = zone_data[boss_id]
+            if isinstance(boss_data, dict) and "priority_needs" in boss_data:
+                log.info(f"Exact boss match: {boss_id} in {zone_name} (act {act})")
+                return boss_data["priority_needs"]
+
+    log.debug(f"Boss {boss_id} not found in boss_threats.json for act {act}")
+    return {}
+
+
+def get_boss_priority_overrides(act: int, zone_id: Optional[str] = None) -> dict[str, float]:
+    """
+    Get aggregated priority needs across bosses in an act.
+    If zone_id is known, only average bosses in that zone.
+    Otherwise average across all possible bosses.
     """
     _load_boss_db()
     act_key = f"act_{act}"
@@ -62,7 +103,13 @@ def get_boss_priority_overrides(act: int) -> dict[str, float]:
     totals: dict[str, float] = {}
     count = 0
 
-    for zone_data in act_data.values():
+    zones_to_scan = {}
+    if zone_id and zone_id in act_data:
+        zones_to_scan = {zone_id: act_data[zone_id]}
+    else:
+        zones_to_scan = act_data
+
+    for zone_data in zones_to_scan.values():
         if isinstance(zone_data, dict):
             for boss_id, boss_data in zone_data.items():
                 if isinstance(boss_data, dict) and "priority_needs" in boss_data:
@@ -97,21 +144,23 @@ class ThreatProfile:
 def assess_threats(run_state: RunState, deck_profile: DeckProfile) -> ThreatProfile:
     """
     Build a lightweight threat profile.
-    V2.1: Now incorporates boss threat data for boss-aware priority adjustments.
+    V2.2: Uses exact boss ID from save file when available, falls back to
+    zone-averaged or act-averaged boss priorities.
     """
     hp_ratio = run_state.hp_ratio
     phase = run_state.phase
+    current_act = run_state.current_act
 
-    # Determine act from floor
-    if run_state.floor <= 16:
-        current_act = 1
-    elif run_state.floor <= 33:
-        current_act = 2
+    # V2.2: Try exact boss first, then zone average, then act average
+    boss_id = run_state.current_boss_id
+    zone_id = run_state.zone_id
+    if boss_id:
+        boss_priorities = get_specific_boss_priorities(current_act, boss_id, zone_id)
+        if not boss_priorities:
+            # Boss not in DB, fall back to zone/act average
+            boss_priorities = get_boss_priority_overrides(current_act, zone_id)
     else:
-        current_act = 3
-
-    # Load boss priorities for current act (used for boss_plan adjustments)
-    boss_priorities = get_boss_priority_overrides(current_act)
+        boss_priorities = get_boss_priority_overrides(current_act, zone_id)
 
     phase_pressure = {
         GamePhase.EARLY: 0.25,

@@ -141,13 +141,22 @@ class CardEvaluator:
         skip_score = calculate_skip_score_v2(deck_profile, threat_profile, run_state.phase)
         skip_score = round((skip_score * 0.75) + (legacy_skip * 0.25), 1)
 
+        # V2.2: Count copies of each card in deck (for diminishing returns)
+        deck_copy_counts: dict[str, int] = {}
+        for cid in run_state.deck:
+            norm = self._normalize_card_id(cid)
+            deck_copy_counts[norm] = deck_copy_counts.get(norm, 0) + 1
+
         results: list[EvaluationResult] = []
         for card_id in run_state.card_choices:
             card = self._resolve_card(card_id)
             if card is None:
                 log.warning(f"Card not found in DB: {card_id}")
                 continue
-            log.debug(f"Evaluating card: {card_id} -> {card.name}")
+            # V2.2: how many copies of this card are already in deck
+            card_norm = self._normalize_card_id(card_id)
+            existing_copies = deck_copy_counts.get(card_norm, 0)
+            log.debug(f"Evaluating card: {card_id} -> {card.name} (copies in deck: {existing_copies})")
             result = self.evaluate_card(
                 card,
                 run_state,
@@ -157,6 +166,7 @@ class CardEvaluator:
                 skip_score=skip_score,
                 deck_profile=deck_profile,
                 threat_profile=threat_profile,
+                existing_copies=existing_copies,
             )
             results.append(result)
 
@@ -176,6 +186,11 @@ class CardEvaluator:
             "elite_readiness": round(threat_profile.elite_readiness, 3),
             "boss_plan": round(threat_profile.boss_plan_completeness, 3),
         }
+        # V2.2: Include boss and map awareness in verdict
+        if run_state.current_boss_id:
+            verdict["boss_id"] = run_state.current_boss_id
+        if run_state.upcoming_nodes:
+            verdict["upcoming_nodes"] = run_state.upcoming_nodes
         
         self._save_score_log(results, run_state, detected, verdict)
         return results, verdict
@@ -287,6 +302,7 @@ class CardEvaluator:
         skip_score: float = 50.0,  # V2: Skip score for delta calculation
         deck_profile=None,
         threat_profile=None,
+        existing_copies: int = 0,  # V2.2: copies of this card already in deck
     ) -> EvaluationResult:
         """
         对单张卡进行全维度评估，返回 EvaluationResult。
@@ -408,14 +424,26 @@ class CardEvaluator:
             if "scaling" in deck_profile.critical_gaps and any(k in card_text for k in ("strength", "focus", "poison", "star", "doom")):
                 gap_bonus += 1.2
             urgency_scale = 1.0 + (threat_profile.survival_urgency * 0.15)
-            
-            # Apply gap_bonus directly to total_score before final ranking
-            total = round(min(100.0, total + gap_bonus * urgency_scale), 1)
+
+            # V2.2: Card copy diminishing returns penalty
+            # 2nd copy: -3 pts, 3rd: -6 pts, 4th+: -9 pts
+            copy_penalty = 0.0
+            if existing_copies >= 1:
+                copy_penalty = min(9.0, existing_copies * 3.0)
+
+            # Apply gap_bonus and copy penalty to total_score
+            total = round(min(100.0, total + gap_bonus * urgency_scale - copy_penalty), 1)
 
         pick_delta = calculate_pick_delta(total, skip_score)
         
         recommendation = self._make_recommendation_v2(total, role, pick_delta)
         
+        # V2.2: Card copy warning
+        if existing_copies >= 2:
+            reasons_against.append(f"Already {existing_copies} copies in deck — heavy diminishing returns")
+        elif existing_copies == 1:
+            reasons_against.append(f"Already 1 copy in deck — diminishing returns")
+
         # V2: Add skip comparison to reasons
         if pick_delta > 10:
             reasons_for.append(f"Strong pick (+{pick_delta:.1f} vs Skip)")

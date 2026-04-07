@@ -341,6 +341,23 @@ class STS2GameWatcher:
                 floor = act_idx + 1
                 log.warning(f"未找到楼层字段，退回使用 current_act_index+1={floor}（可能不准确）")
 
+            # --- V2.2: Extract enriched data from save file ---
+
+            # Boss IDs per act: parse ENCOUNTER.XXX_BOSS → XXX
+            act_boss_ids = self._extract_boss_ids(save_data)
+
+            # Zone ID: parse ACT.OVERGROWTH → overgrowth
+            zone_id = self._extract_zone_id(save_data, act_idx)
+
+            # Potions
+            potions = [p.get('id', '') for p in player.get('potions', []) if p.get('id')]
+
+            # Max energy
+            max_energy = player.get('max_energy', 3)
+
+            # Map lookahead: upcoming node types
+            upcoming_nodes = self._extract_upcoming_nodes(save_data, act_idx, visited_coords)
+
             return {
                 'character': player.get('character_id', 'unknown'),
                 'floor': floor,
@@ -352,10 +369,126 @@ class STS2GameWatcher:
                 'relics': [relic.get('id', str(relic)) for relic in player.get('relics', [])],
                 'mode': game_mode,
                 'timestamp': datetime.now().isoformat(),
+                # V2.2 enriched data
+                'act_boss_ids': act_boss_ids,
+                'zone_id': zone_id,
+                'potions': potions,
+                'max_energy': max_energy,
+                'upcoming_nodes': upcoming_nodes,
             }
         except Exception as e:
             log.warning(f"解析存档数据失败: {e}")
             return None
+
+    @staticmethod
+    def _extract_boss_ids(save_data: Dict) -> Dict[int, str]:
+        """
+        Extract boss IDs for each act from save file.
+        Save format: "boss_id": "ENCOUNTER.CEREMONIAL_BEAST_BOSS"
+        Output: {1: "CEREMONIAL_BEAST", 2: "KNOWLEDGE_DEMON", 3: "DOORMAKER"}
+        """
+        result = {}
+        acts = save_data.get('acts', [])
+        for i, act in enumerate(acts):
+            rooms = act.get('rooms', {})
+            boss_id_raw = rooms.get('boss_id', '')
+            if boss_id_raw:
+                # Strip prefix "ENCOUNTER." and suffix "_BOSS"
+                boss_id = boss_id_raw
+                if boss_id.startswith('ENCOUNTER.'):
+                    boss_id = boss_id[len('ENCOUNTER.'):]
+                if boss_id.endswith('_BOSS'):
+                    boss_id = boss_id[:-len('_BOSS')]
+                result[i + 1] = boss_id  # Act 1-indexed
+        return result
+
+    @staticmethod
+    def _extract_zone_id(save_data: Dict, act_idx: int) -> Optional[str]:
+        """
+        Extract current act zone from save file.
+        Save format: "id": "ACT.OVERGROWTH"
+        Output: "overgrowth"
+        """
+        acts = save_data.get('acts', [])
+        if act_idx < len(acts):
+            act_id = acts[act_idx].get('id', '')
+            if act_id.startswith('ACT.'):
+                return act_id[len('ACT.'):].lower()
+        return None
+
+    @staticmethod
+    def _extract_upcoming_nodes(
+        save_data: Dict, act_idx: int, visited_coords: List[Dict]
+    ) -> List[str]:
+        """
+        Map lookahead: determine upcoming node types by scanning
+        the map graph forward from the player's current position.
+        Scans up to 3 nodes ahead on all reachable paths.
+        """
+        acts = save_data.get('acts', [])
+        if act_idx >= len(acts):
+            return []
+
+        act = acts[act_idx]
+        saved_map = act.get('saved_map', {})
+        points = saved_map.get('points', [])
+        boss_node = saved_map.get('boss', {})
+
+        if not points or not visited_coords:
+            return []
+
+        # Build lookup: (col, row) → node type
+        coord_to_type = {}
+        coord_to_children = {}
+        for pt in points:
+            c = pt.get('coord', {})
+            key = (c.get('col'), c.get('row'))
+            coord_to_type[key] = pt.get('type', 'unknown')
+            coord_to_children[key] = [
+                (ch.get('col'), ch.get('row'))
+                for ch in pt.get('children', [])
+            ]
+
+        # Add boss node
+        if boss_node:
+            bc = boss_node.get('coord', {})
+            boss_key = (bc.get('col'), bc.get('row'))
+            coord_to_type[boss_key] = 'boss'
+
+        # Find current position (last visited coord in current act's coords)
+        # visited_map_coords are cumulative; filter to current act's max_row range
+        current_pos = None
+        if visited_coords:
+            last = visited_coords[-1]
+            current_pos = (last.get('col'), last.get('row'))
+
+        if current_pos is None:
+            return []
+
+        # BFS forward 3 levels from current position
+        upcoming = []
+        seen = {current_pos}
+        frontier = coord_to_children.get(current_pos, [])
+        for _depth in range(3):
+            next_frontier = []
+            for node_coord in frontier:
+                if node_coord in seen:
+                    continue
+                seen.add(node_coord)
+                node_type = coord_to_type.get(node_coord, 'unknown')
+                if node_type not in upcoming:
+                    upcoming.append(node_type)
+                # Add this node's children for next depth level
+                next_frontier.extend(coord_to_children.get(node_coord, []))
+                # Also check if any child is the boss node
+                if boss_node:
+                    bc = boss_node.get('coord', {})
+                    boss_key = (bc.get('col'), bc.get('row'))
+                    if node_coord == boss_key and 'boss' not in upcoming:
+                        upcoming.append('boss')
+            frontier = next_frontier
+
+        return upcoming
 
     def parse_log_line(self, line: str) -> Dict:
         """
