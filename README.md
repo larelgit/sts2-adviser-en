@@ -155,7 +155,7 @@ Cards are defined in `data/card_functions.json` with structured functions:
 }
 ```
 
-Currently covers **268 cards**: Ironclad (33), Silent (39), Defect (24), Necrobinder (23), Regent (23), Colorless Uncommon (38), Colorless Rare (27), Colorless Ancient (9), Status (14), Curse (18), Quest (3), Token (11), Event (9).
+Currently covers **562 cards**: Ironclad (90), Silent (91), Defect (92), Necrobinder (83), Regent (80), Colorless (126).
 
 ## Scoring Details
 
