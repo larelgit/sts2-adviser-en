@@ -264,13 +264,13 @@ class CardEvaluator:
             if completion < _DETECT_THRESHOLD:
                 continue
 
-            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌 (Soft posterior - removed hard restriction)
+            # 门槛2：必须持有至少 1 张精确定义的 CORE 牌
             has_core = any(
                 w.role.value == "core" and w.card_id.lower() in deck_set
                 for w in archetype.card_weights
             )
-            # if not has_core:
-            #     continue
+            if not has_core:
+                continue
 
             scored.append((completion, archetype))
 

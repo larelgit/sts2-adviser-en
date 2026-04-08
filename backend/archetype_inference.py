@@ -157,8 +157,10 @@ _PROFILES: list[ArchetypeInferenceProfile] = [
         rules=[
             InferenceRule(0.32, desc_pattern=r"\bshivs?\b|小刀"),
             InferenceRule(0.28, powers_applied_any=["Accuracy"]),
+            # Scales with attacks played → HIGH (Shivs are attacks, many per turn)
+            InferenceRule(0.25, desc_pattern=r"for each.{0,12}attack.{0,15}(?:played|this turn)|each attack.*played|per attack.{0,10}played"),
             # 生成卡牌 → MID（生成Shiv）
-            InferenceRule(0.20, desc_pattern=r"add .{0,15} to (?:your )?hand|加入.*手牌"),
+            InferenceRule(0.20, desc_pattern=r"add .{0,20} to (?:your )?hand|add .{0,20} into (?:your )?hand|加入.*手牌"),
             # 多段攻击 → MID
             InferenceRule(0.18, desc_pattern=r"hit.{0,6}time|(\d)\s*time|\d\s*×"),
             InferenceRule(0.10, card_type_match=CardType.ATTACK),

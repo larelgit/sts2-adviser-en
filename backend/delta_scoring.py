@@ -77,14 +77,15 @@ class DeltaScore:
             self.has_surplus = []
 
 
-def compute_dilution_cost(deck_size: int, card_draw: int = 0) -> float:
+def compute_dilution_cost(deck_size: int, card_draw: int = 0, card_cost: int = 1) -> float:
     """
     Compute dilution cost for adding a card.
-    
+
     Args:
         deck_size: Current deck size
         card_draw: How much draw the card provides (reduces dilution)
-    
+        card_cost: Energy cost of the card (0-cost cards have half dilution)
+
     Returns:
         Dilution cost (always positive)
     """
@@ -93,17 +94,22 @@ def compute_dilution_cost(deck_size: int, card_draw: int = 0) -> float:
     else:
         overage = deck_size - _TARGET_DECK_SIZE
         base = _BASE_DILUTION_COST + overage * _DILUTION_PER_CARD
-    
+
     # Draw cards partially offset dilution (they help you see other cards)
     draw_offset = card_draw * 1.5
-    
+
+    # 0-cost cards don't slow the deck — half dilution penalty
+    if card_cost == 0:
+        base *= 0.5
+
     return max(0.0, base - draw_offset)
 
 
-def _extract_card_stats(cf: Optional[dict], card_db_entry=None) -> dict:
+def _extract_card_stats(cf: Optional[dict], card_db_entry=None, deck_profile: Optional[DeckProfile] = None) -> dict:
     """
     Extract raw card stats from card_functions.json entry or fallback Card object.
-    Returns dict with keys: damage, block, draw, is_aoe, scaling_value, cost, tags.
+    Returns dict with keys: damage, block, draw, is_aoe, scaling_value, cost, tags,
+    innate, retain, exhaust, debuff_value.
     """
     if cf is not None:
         funcs = cf.get("functions", {})
@@ -116,29 +122,61 @@ def _extract_card_stats(cf: Optional[dict], card_db_entry=None) -> dict:
         draw = funcs.get("draw", 0) or 0
         is_aoe = funcs.get("aoe", False) or "aoe" in tags
 
-        scaling_value = 0.0
+        # Scaling: split offensive vs defensive and weight by deck composition
         scaling_type = funcs.get("scaling_type")
         strength_gain = funcs.get("strength_gain", 0) or 0
         dex_gain = funcs.get("dexterity_gain", 0) or 0
         focus_gain = funcs.get("focus_gain", 0) or 0
         poison = funcs.get("poison", 0) or 0
 
-        if scaling_type:
-            scaling_value += 2.0
-        if strength_gain > 0:
-            scaling_value += strength_gain * 1.5
-        if dex_gain > 0:
-            scaling_value += dex_gain * 1.2
-        if focus_gain > 0:
-            scaling_value += focus_gain * 1.5
-        if poison > 0:
-            scaling_value += poison * 0.5
-        if "scaling" in tags or "strength" in tags or "poison" in tags:
-            scaling_value += 1.0
+        offensive_scaling = strength_gain * 1.5 + focus_gain * 1.5
+        defensive_scaling = dex_gain * 1.2
+
+        if deck_profile is not None:
+            dmg_out = deck_profile.damage_output
+            blk_out = deck_profile.block_output
+            offense_weight = _clamp(dmg_out / (dmg_out + blk_out + 0.01))
+            defense_weight = 1.0 - offense_weight
+        else:
+            offense_weight = 0.5
+            defense_weight = 0.5
+
+        scaling_value = (
+            offensive_scaling * offense_weight
+            + defensive_scaling * defense_weight
+            + (2.0 if scaling_type else 0.0)
+            + poison * 0.5
+            + (1.0 if "scaling" in tags or "strength" in tags or "poison" in tags else 0.0)
+        )
+
+        # Cost efficiency multiplier
+        if cost == 0:
+            cost_bonus = 1.20
+        elif cost == 1:
+            cost_bonus = 1.05
+        elif cost >= 3:
+            cost_bonus = 0.90
+        else:
+            cost_bonus = 1.0
+
+        damage_val = damage_flat * hits * cost_bonus
+        block_val = block_flat * cost_bonus
+
+        # Debuff value (vulnerable / weak)
+        vulnerable_turns = funcs.get("vulnerable", 0) or 0
+        weak_turns = funcs.get("weak", 0) or 0
+        debuff_value = vulnerable_turns * 1.5 + weak_turns * 1.0
+
+        # Innate / retain / exhaust flags
+        is_innate = funcs.get("innate", False) or "innate" in tags
+        is_retain = funcs.get("retain", False) or "retain" in tags
+        is_exhaust = funcs.get("exhaust", False) or "exhaust" in tags
 
         return {
-            "damage": damage_flat * hits, "block": block_flat, "draw": draw,
+            "damage": damage_val, "block": block_val, "draw": draw,
             "is_aoe": is_aoe, "scaling_value": scaling_value, "cost": cost, "tags": tags,
+            "innate": is_innate, "retain": is_retain, "exhaust": is_exhaust,
+            "debuff_value": debuff_value,
         }
 
     # Fallback: infer from legacy Card object
@@ -160,6 +198,7 @@ def _extract_card_stats(cf: Optional[dict], card_db_entry=None) -> dict:
         return {
             "damage": dmg, "block": blk, "draw": drw,
             "is_aoe": is_aoe, "scaling_value": scaling_value, "cost": cst, "tags": card_tags,
+            "innate": False, "retain": False, "exhaust": False, "debuff_value": 0.0,
         }
 
     return None
@@ -203,7 +242,7 @@ def score_candidate(
         norm = card_id.rstrip("+").lower()
         fallback_card = card_db.get(norm)
 
-    stats = _extract_card_stats(cf, fallback_card)
+    stats = _extract_card_stats(cf, fallback_card, deck_profile)
 
     if stats is None:
         # Truly unknown card: return small positive score (not 0 — avoids systematic skip bias)
@@ -220,6 +259,7 @@ def score_candidate(
     draw = stats["draw"]
     is_aoe = stats["is_aoe"]
     scaling_value = stats["scaling_value"]
+    cost = stats["cost"]
     tags = stats["tags"]
 
     # Act-aware normalization: same raw stats have different value by act
@@ -281,7 +321,29 @@ def score_candidate(
     if aoe_delta > 0.05:
         positive_total += aoe_delta
         fills_gaps.append("aoe")
-    
+
+    # Exhaust thinning contribution
+    if stats["exhaust"] and gaps.thinning > 0:
+        thinning_delta = 0.3 * gaps.thinning * gaps.thinning_priority
+        positive_total += thinning_delta
+        if thinning_delta > 0.05:
+            fills_gaps.append("thinning")
+
+    # Innate bonus: scales down as deck gets larger
+    if stats["innate"]:
+        innate_bonus = max(0.0, 0.25 - (deck_profile.deck_size - 10) * 0.015)
+        positive_total += innate_bonus
+
+    # Retain bonus: hand flexibility
+    if stats["retain"]:
+        positive_total += 0.08
+
+    # Debuff value (vulnerable / weak): synergy with deck's damage output
+    debuff_value = stats["debuff_value"]
+    if debuff_value > 0:
+        debuff_contrib = (debuff_value / 4.0) * deck_profile.damage_output
+        positive_total += debuff_contrib * max(0, gaps.damage)
+
     # Calculate surplus penalty (negative gaps = surplus, adding more hurts)
     surplus_penalty = 0.0
     has_surplus = []
@@ -301,7 +363,7 @@ def score_candidate(
                 has_surplus.append(mechanic)
     
     # Dilution cost
-    dilution_cost = compute_dilution_cost(deck_profile.deck_size, draw)
+    dilution_cost = compute_dilution_cost(deck_profile.deck_size, draw, cost)
     
     # Final delta score
     # Scale up to make scores more readable (roughly 0-100 range)

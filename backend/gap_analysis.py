@@ -68,7 +68,7 @@ ACT_TARGETS = {
         "block": 0.55,     # Block becomes more important
         "scaling": 0.45,   # Need scaling for elites/boss
         "draw": 0.40,      # More draw for consistency
-        "aoe": 0.55,       # Many multi-enemy fights (Hive bosses)
+        "aoe": 0.35,       # Reduced from 0.55 — was overvaluing AoE throughout all Act 2
     },
     3: {
         "damage": 0.45,    # Less raw damage needed
@@ -103,13 +103,15 @@ class GapVector:
     scaling: float = 0.0
     draw: float = 0.0
     aoe: float = 0.0
-    
+    thinning: float = 0.0
+
     # Priority weights based on urgency
     damage_priority: float = 1.0
     block_priority: float = 1.0
     scaling_priority: float = 1.0
     draw_priority: float = 1.0
     aoe_priority: float = 1.0
+    thinning_priority: float = 1.0
     
     # Meta info
     act: int = 1
@@ -225,25 +227,33 @@ def compute_gap_vector(
     # Large deck penalty: draw becomes more important
     if profile.deck_size > 15:
         priorities["draw"] *= 1.0 + (profile.deck_size - 15) * 0.05
-    
+
+    # Exhaust thinning gap: large decks benefit from exhaust cards
+    deck_size = profile.deck_size
+    thinning_target = 0.0 if deck_size <= 12 else min(0.4, (deck_size - 12) * 0.04)
+    gaps["thinning"] = thinning_target - profile.exhaust_density
+    priorities["thinning"] = 1.0 + max(0, (deck_size - 15) * 0.05)
+
     # Identify critical needs (high gap + high priority)
     critical = []
     for mechanic in ["damage", "block", "scaling", "draw", "aoe"]:
         effective_gap = gaps[mechanic] * priorities[mechanic]
         if effective_gap > 0.3:  # Significant deficit
             critical.append(mechanic)
-    
+
     return GapVector(
         damage=gaps["damage"],
         block=gaps["block"],
         scaling=gaps["scaling"],
         draw=gaps["draw"],
         aoe=gaps["aoe"],
+        thinning=gaps["thinning"],
         damage_priority=priorities["damage"],
         block_priority=priorities["block"],
         scaling_priority=priorities["scaling"],
         draw_priority=priorities["draw"],
         aoe_priority=priorities["aoe"],
+        thinning_priority=priorities["thinning"],
         act=act,
         critical_needs=critical,
     )

@@ -35,8 +35,8 @@ STS2 Adviser uses **CDPE (Contextual Delta Pick Engine)** — a marginal value s
 2. **Gap Analysis** — Compares deck profile against act-specific targets:
    ```
    Act 1: {damage: 55%, block: 35%, scaling: 15%, draw: 20%, aoe: 10%}
-   Act 2: {damage: 50%, block: 55%, scaling: 45%, draw: 40%, aoe: 55%}
-   Act 3: {damage: 45%, block: 60%, scaling: 75%, draw: 50%, aoe: 30%}
+   Act 2: {damage: 50%, block: 55%, scaling: 45%, draw: 40%, aoe: 35%}
+   Act 3: {damage: 45%, block: 60%, scaling: 75%, draw: 50%, aoe: 40%}
    ```
    
    Gap = Target - Current (positive = need more, negative = surplus)
@@ -198,6 +198,8 @@ dilution_cost = 2.0 + (deck_size - 12) × 0.3  if deck_size > 12
 
 Draw cards partially offset dilution (draw × 1.5 reduction).
 
+0-cost cards receive **half dilution penalty** — they don't consume energy so they don't slow the deck.
+
 ### Skip Scoring (V2.1: Unified Formula)
 
 Old formula had double-counting between deck size bonus and gap penalty.
@@ -228,6 +230,18 @@ consistency_bonus = 3.0 if no critical gaps + 2.0 if draw_density > 0.6
 ---
 
 ## Version History
+
+### v2.2.0 (CDPE V2.2 - Energy, Debuffs & Consistency)
+
+**Scoring improvements for better winrate:**
+
+- **Energy efficiency bonus** — 0-cost cards get +20% contribution and half dilution penalty; 1-cost cards +5%; 3+ cost cards -10%. Free cards are almost always better than their raw stats suggest.
+- **Innate card priority** — Innate cards receive a first-hand consistency bonus (up to +0.25) that scales down as the deck grows past 10 cards.
+- **Vulnerable / Weak debuff value** — Cards applying Vulnerable (×1.5 per turn) or Weak (×1.0 per turn) now score a debuff synergy bonus proportional to the deck's damage output, making cards like Bash properly valued.
+- **Offensive vs defensive scaling split** — `strength_gain` and `focus_gain` are weighted by the deck's attack/block ratio so dexterity scaling isn't recommended to attack-heavy decks and vice versa.
+- **Exhaust thinning gap** — Decks over 12 cards now have a thinning need in `GapVector`; exhaust cards fill it. At deck size 18+ exhaust dramatically improves cycling and the system now accounts for this.
+- **Retain bonus** — Cards with Retain receive a small flat bonus (+0.08) for hand flexibility.
+- **Act 2 AoE recalibration** — AoE target reduced from 0.55 to 0.35. The previous value caused AoE to appear as a critical gap for nearly every deck in Act 2, even attack-focused builds that don't need it.
 
 ### v2.1.1 (CDPE V2.1 - Act-Aware + Boss Threats)
 

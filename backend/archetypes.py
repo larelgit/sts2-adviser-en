@@ -178,8 +178,11 @@ _BUILTIN_ARCHETYPES: list[dict] = [
             {"card_id": "HAND_TRICK",       "role": "filler",  "weight": 0.45, "note": "Shiv辅助过渡"},
             {"card_id": "POUNCE",           "role": "filler",  "weight": 0.40, "note": "轻量攻击补充"},
             # finisher
+            {"card_id": "FINISHER",         "role": "enabler", "weight": 0.75, "note": "Massive dmg after playing multiple Shivs/attacks"},
+            {"card_id": "GRAND_FINALE",     "role": "enabler", "weight": 0.70, "note": "Shiv decks cycle fast, enabling 50 AoE finisher"},
             {"card_id": "TRACKING",         "role": "enabler", "weight": 0.72, "note": "终结技"},
             {"card_id": "MEMENTO_MORI",     "role": "enabler", "weight": 0.68, "note": "计数终结"},
+            {"card_id": "NIGHTMARE",        "role": "enabler", "weight": 0.72, "note": "Copy Blade Dance/Accuracy for massive Shiv value"},
             # anti-synergy
             {"card_id": "NOXIOUS_FUMES",    "role": "pollution","weight": 0.15, "note": "毒方向分散资源"},
             {"card_id": "DEADLY_POISON",    "role": "pollution","weight": 0.15, "note": "毒方向分散资源"},
@@ -195,7 +198,6 @@ _BUILTIN_ARCHETYPES: list[dict] = [
         "target_card_count": 12,
         "card_weights": [
             # core
-            {"card_id": "ACROBATICS",       "role": "core",    "weight": 0.95, "note": "摸牌循环引擎"},
             {"card_id": "PREPARED",         "role": "core",    "weight": 0.92, "note": "0费摸1弃1"},
             {"card_id": "REFLEX",           "role": "core",    "weight": 0.90, "note": "弃牌摸2张"},
             {"card_id": "TOOLS_OF_THE_TRADE","role": "core",   "weight": 0.88, "note": "每回合免费摸1弃1"},
@@ -204,6 +206,7 @@ _BUILTIN_ARCHETYPES: list[dict] = [
             # support
             {"card_id": "ADRENALINE",       "role": "enabler", "weight": 0.72, "note": "摸牌+费用"},
             {"card_id": "BACKFLIP",         "role": "enabler", "weight": 0.68, "note": "防御+摸牌"},
+            {"card_id": "ACROBATICS",       "role": "enabler", "weight": 0.62, "note": "Generic draw with minor discard"},
             {"card_id": "PINPOINT",         "role": "enabler", "weight": 0.62, "note": "弃牌触发加成"},
             {"card_id": "POUNCE",           "role": "enabler", "weight": 0.58, "note": "轻量攻击补充"},
             {"card_id": "MEMENTO_MORI",     "role": "enabler", "weight": 0.55, "note": "弃牌终结"},
