@@ -289,8 +289,6 @@ consistency_bonus = 3.0 if no critical gaps + 2.0 if draw_density > 0.6
 
 ### v1.0 and earlier
 
-See [CHANGELOG.md](CHANGELOG.md) for full history.
-
 ---
 
 ## License
