@@ -53,25 +53,6 @@ STS2 Adviser uses **CDPE (Contextual Delta Pick Engine)** — a marginal value s
    - No gaps → Skip is safe
    - Critical gaps → Skip is costly
 
-### Example Output
-
-```
-#1 INFLAME — Score: 45.2
-   🟢 +32.5 Scaling. Fills critical deficit (target 45%, current 10%).
-   🟢 +8.0 Strength synergy with existing cards.
-   🔴 -5.3 Dilution. Deck size (18) above optimal.
-
-#2 SHRUG IT OFF — Score: 28.1
-   🟢 +18.2 Block. Improves deck coverage (need 25% more).
-   🟢 Draw value. Large deck benefits from card draw.
-
-#3 CLEAVE — Score: 12.4
-   🔴 -8.5 AoE surplus. Already 15% over target.
-
-📌 VERDICT: INFLAME
-   Score: 45.2 (+30.1 vs Skip)
-   Strong pick - fills: scaling
-```
 
 ## Quick Start
 
