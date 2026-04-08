@@ -459,7 +459,7 @@ class SelectionTrayWidget(QWidget):
         layout.setSpacing(5)
 
         self._prefix_label = QLabel("Selected:")
-        self._prefix_label.setStyleSheet("color: #3A3028; font-size: 11px;")
+        self._prefix_label.setStyleSheet("color: rgba(255,255,255,0.2); font-size: 11px;")
         layout.addWidget(self._prefix_label)
 
         # 动态卡名区域
@@ -470,7 +470,7 @@ class SelectionTrayWidget(QWidget):
         layout.addWidget(self._chips_widget, 1)
 
         self._count_label = QLabel("0/4")
-        self._count_label.setStyleSheet("color: #3A3028; font-size: 11px;")
+        self._count_label.setStyleSheet("color: rgba(255,255,255,0.15); font-size: 11px;")
         layout.addWidget(self._count_label)
 
         self._clear_btn = QPushButton("✕")
@@ -505,8 +505,8 @@ class SelectionTrayWidget(QWidget):
             lbl = QLabel(name)
             lbl.setObjectName("TrayCardLabel")
             lbl.setStyleSheet(
-                "color: #88B840; background: rgba(35,55,18,0.85); "
-                "border: 1px solid #426018; border-radius: 3px; "
+                "color: rgba(136,184,64,0.8); background: rgba(35,55,18,0.4); "
+                "border: 1px solid rgba(66,96,24,0.3); border-radius: 3px; "
                 "padding: 1px 5px; font-size: 11px;"
             )
             self._chips_layout.addWidget(lbl)
@@ -958,25 +958,26 @@ _ROLE_ZH = {
 }
 
 _REC_COLORS = {
-    "强烈推荐": "#A8D870", "Highly Recommended": "#A8D870",
-    "推荐":     "#64B5F6", "Recommended":        "#64B5F6",
-    "可选":     "#FFD54F", "Optional":           "#FFD54F",
-    "谨慎":     "#FFB74D", "Caution":            "#FFB74D",
-    "不推荐":   "#FF7043", "Not Recommended":    "#FF7043",
-    "跳过":     "#EF5350", "Skip":               "#EF5350",
+    "Must Pick":        "#A8D870",
+    "Recommended":      "#64B5F6",
+    "Decent":           "#FFD54F",
+    "Okay":             "#FFD54F",
+    "Weak":             "#FFB74D",
+    "Maybe Skip":       "#FF7043",
+    "Skip":             "#EF5350",
 }
 
 _GRADE_COLORS = {
-    "S":  "#FFD700",  # 金色
-    "A+": "#A8D870",  # 亮绿
-    "A":  "#A8D870",
-    "A-": "#64B5F6",  # 蓝色
-    "B+": "#64B5F6",
-    "B":  "#FFD54F",  # 黄色
-    "B-": "#FFB74D",  # 橙色
-    "C+": "#FFB74D",
-    "C":  "#FF7043",  # 红橙
-    "D":  "#EF5350",  # 红色
+    "S":  "#E8C840",
+    "A+": "#90C860",
+    "A":  "#90C860",
+    "A-": "#5A9AD0",
+    "B+": "#5A9AD0",
+    "B":  "#D0B040",
+    "B-": "#D09040",
+    "C+": "#D09040",
+    "C":  "#D06040",
+    "D":  "#C04040",
 }
 
 
@@ -1015,7 +1016,7 @@ class CardResultWidget(QFrame):
 
         name_label = QLabel(raw_name)
         name_label.setObjectName("cardName")
-        name_label.setStyleSheet("font-weight:bold;font-size:14px;color:#E0D8CC;")
+        name_label.setStyleSheet("font-weight:bold;font-size:14px;color:rgba(232,228,222,0.9);")
         outer.addWidget(name_label)
 
         # ── Row 2: role | score | recommendation ──────────────────────────
@@ -1025,7 +1026,7 @@ class CardResultWidget(QFrame):
         role_en = result.get("role", "unknown")
         role_label = QLabel(_ROLE_ZH.get(role_en, role_en))
         role_label.setObjectName("cardRole")
-        role_label.setStyleSheet("color:#4A4030;font-size:11px;")
+        role_label.setStyleSheet("color:rgba(255,255,255,0.25);font-size:11px;")
         meta_row.addWidget(role_label)
 
         meta_row.addStretch()
@@ -1040,7 +1041,7 @@ class CardResultWidget(QFrame):
         meta_row.addWidget(score_label)
 
         rec = result.get("recommendation", "")
-        rec_color = _REC_COLORS.get(rec, "#6A5A40")
+        rec_color = _REC_COLORS.get(rec, "rgba(180,160,120,0.6)")
         rec_label = QLabel(rec)
         rec_label.setObjectName("cardRecommendation")
         rec_label.setStyleSheet(f"color:{rec_color};font-weight:bold;font-size:12px;")
@@ -1056,14 +1057,14 @@ class CardResultWidget(QFrame):
             lbl = QLabel("  " + " · ".join(reasons_for))
             lbl.setObjectName("cardReasonFor")
             lbl.setWordWrap(True)
-            lbl.setStyleSheet("color:#587840;font-size:11px;padding-top:1px;")
+            lbl.setStyleSheet("color:rgba(100,160,80,0.6);font-size:11px;padding-top:1px;")
             outer.addWidget(lbl)
 
         if reasons_against:
             lbl = QLabel("  " + " · ".join(reasons_against))
             lbl.setObjectName("cardReasonAgainst")
             lbl.setWordWrap(True)
-            lbl.setStyleSheet("color:#805040;font-size:11px;padding-top:1px;")
+            lbl.setStyleSheet("color:rgba(200,100,70,0.5);font-size:11px;padding-top:1px;")
             outer.addWidget(lbl)
 
 
@@ -1263,7 +1264,7 @@ class CardAdviserWindow(QWidget):
         # ---- 套路提示 + 状态栏 + 缩放手柄 ----
         bottom_bar = QWidget()
         bottom_bar.setObjectName("BottomBar")
-        bottom_bar.setStyleSheet("background:rgba(22,18,14,0.85);border-top:1px solid #2E2416;")
+        bottom_bar.setStyleSheet("background:rgba(12,11,9,0.6);border-top:1px solid rgba(255,255,255,0.03);")
         bottom_layout = QVBoxLayout(bottom_bar)
         bottom_layout.setContentsMargins(8, 4, 8, 2)
         bottom_layout.setSpacing(2)
@@ -1273,7 +1274,7 @@ class CardAdviserWindow(QWidget):
         self._archetype_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._archetype_label.setWordWrap(True)
         self._archetype_label.setStyleSheet(
-            "color:#C8A96E;font-size:18px;font-weight:bold;padding:2px 0px;"
+            "color:rgba(200,180,140,0.5);font-size:12px;font-weight:bold;padding:2px 0px;"
         )
         self._archetype_label.setVisible(False)
         bottom_layout.addWidget(self._archetype_label)
@@ -1378,7 +1379,7 @@ class CardAdviserWindow(QWidget):
         ]:
             dot = QLabel(dot_label)
             dot.setObjectName(attr.lstrip("_").replace("_", "").capitalize() + "Indicator")
-            dot.setStyleSheet("color: #2A2218; font-size: 11px; font-weight: bold;")
+            dot.setStyleSheet("color: rgba(255,255,255,0.08); font-size: 11px; font-weight: bold;")
             dot.setToolTip(tip)
             setattr(self, attr, dot)
             btn_layout.addWidget(dot)
@@ -1387,8 +1388,8 @@ class CardAdviserWindow(QWidget):
         self._ocr_state_badge = QLabel("")
         self._ocr_state_badge.setObjectName("OcrStateBadge")
         self._ocr_state_badge.setStyleSheet(
-            "color: #2A2218; font-size: 10px; "
-            "border: 1px solid #1A1510; border-radius: 3px; padding: 0px 4px;"
+            "color: rgba(255,255,255,0.08); font-size: 10px; "
+            "border: 1px solid rgba(255,255,255,0.03); border-radius: 3px; padding: 0px 4px;"
         )
         btn_layout.addWidget(self._ocr_state_badge)
 
@@ -1398,9 +1399,11 @@ class CardAdviserWindow(QWidget):
         info_layout = QHBoxLayout()
         info_layout.setSpacing(8)
 
-        self._game_info_label = QLabel("<span style='color:#3A3028'>Waiting for game…</span>")
+        self._game_info_label = QLabel("<span style='color:rgba(255,255,255,0.15)'>Waiting for game…</span>")
         self._game_info_label.setObjectName("GameInfoLabel")
         self._game_info_label.setTextFormat(Qt.TextFormat.RichText)
+        self._game_info_label.setWordWrap(True)
+        self._game_info_label.setStyleSheet("font-size: 11px;")
         info_layout.addWidget(self._game_info_label)
 
         info_layout.addStretch()
@@ -1432,7 +1435,7 @@ class CardAdviserWindow(QWidget):
         panel.setObjectName("OcrPreviewPanel")
         panel.setVisible(False)
         panel.setStyleSheet(
-            "background:rgba(15,22,35,0.85);border-bottom:1px solid #1E3A5A;"
+            "background:rgba(40,80,140,0.08);border-bottom:1px solid rgba(100,160,220,0.08);"
         )
 
         layout = QVBoxLayout(panel)
@@ -1442,12 +1445,12 @@ class CardAdviserWindow(QWidget):
         # 标题行：图标 + "视觉识别" + 状态
         title_row = QHBoxLayout()
         lbl_title = QLabel("📷 Vision Recognition")
-        lbl_title.setStyleSheet("color:#64B5F6;font-size:12px;font-weight:bold;")
+        lbl_title.setStyleSheet("color:rgba(100,160,220,0.6);font-size:12px;font-weight:bold;")
         title_row.addWidget(lbl_title)
         title_row.addStretch()
 
         self._ocr_preview_status = QLabel("Recognizing...")
-        self._ocr_preview_status.setStyleSheet("color:#888;font-size:11px;")
+        self._ocr_preview_status.setStyleSheet("color:rgba(255,255,255,0.25);font-size:11px;")
         title_row.addWidget(self._ocr_preview_status)
         layout.addLayout(title_row)
 
@@ -1460,9 +1463,9 @@ class CardAdviserWindow(QWidget):
             card_lbl.setObjectName(f"OcrPreviewCard{i}")
             card_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             card_lbl.setStyleSheet(
-                "color:#555;font-size:13px;"
-                "border:1px solid #1E3A5A;border-radius:4px;"
-                "padding:4px 6px;background:#0d1520;"
+                "color:rgba(255,255,255,0.15);font-size:13px;"
+                "border:1px solid rgba(100,160,220,0.1);border-radius:4px;"
+                "padding:4px 6px;background:rgba(10,20,35,0.4);"
             )
             card_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
             self._ocr_preview_cards.append(card_lbl)
@@ -1471,7 +1474,7 @@ class CardAdviserWindow(QWidget):
 
         # 提示文字（解释性）
         self._ocr_hint_label = QLabel("Card reward screen detected, evaluating candidates...")
-        self._ocr_hint_label.setStyleSheet("color:#556672;font-size:11px;padding-top:2px;")
+        self._ocr_hint_label.setStyleSheet("color:rgba(255,255,255,0.18);font-size:11px;padding-top:2px;")
         self._ocr_hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._ocr_hint_label)
 
@@ -1485,7 +1488,7 @@ class CardAdviserWindow(QWidget):
 
         lbl = QLabel("Candidate Evaluation")
         lbl.setObjectName("HeaderLabel")
-        lbl.setStyleSheet("color:#8A7A5A;font-size:11px;")
+        lbl.setStyleSheet("color:rgba(255,255,255,0.18);font-size:9px;font-weight:bold;letter-spacing:1.5px;")
         layout.addWidget(lbl)
         layout.addStretch()
 
@@ -1507,10 +1510,10 @@ class CardAdviserWindow(QWidget):
 
     def _set_backend_connected(self, connected: bool) -> None:
         if connected:
-            self._backend_indicator.setStyleSheet("color: #4CAF50; font-size: 11px; font-weight: bold;")
+            self._backend_indicator.setStyleSheet("color: rgba(76,175,80,0.7); font-size: 11px; font-weight: bold;")
             self._backend_indicator.setToolTip("Backend: connected")
         else:
-            self._backend_indicator.setStyleSheet("color: #8A2020; font-size: 11px; font-weight: bold;")
+            self._backend_indicator.setStyleSheet("color: rgba(140,40,40,0.5); font-size: 11px; font-weight: bold;")
             self._backend_indicator.setToolTip("Backend: disconnected")
 
     def _start_game_watcher(self) -> None:
@@ -1554,6 +1557,11 @@ class CardAdviserWindow(QWidget):
             "deck": norm_deck,
             "relics": norm_relics,
             "mode": state.get("mode", "single"),
+            "act_boss_ids": state.get("act_boss_ids", {}),
+            "zone_id": state.get("zone_id"),
+            "potions": state.get("potions", []),
+            "max_energy": state.get("max_energy", 3),
+            "upcoming_nodes": state.get("upcoming_nodes", []),
         })
 
         # 更新游戏存档指示器
@@ -1561,7 +1569,7 @@ class CardAdviserWindow(QWidget):
         floor = state.get("floor", 0)
 
         if character and floor > 0:
-            self._game_indicator.setStyleSheet("color: #4CAF50; font-size: 11px; font-weight: bold;")
+            self._game_indicator.setStyleSheet("color: rgba(76,175,80,0.7); font-size: 11px; font-weight: bold;")
             self._game_indicator.setToolTip(f"Game: {character}  F{floor}")
 
             # 显示游戏信息
@@ -1574,34 +1582,71 @@ class CardAdviserWindow(QWidget):
             # HP 颜色（低血量变红）
             hp_ratio = hp / max(max_hp, 1)
             if hp_ratio > 0.6:
-                hp_color = "#4CAF50"   # 绿
+                hp_color = "rgba(76,175,80,0.8)"
             elif hp_ratio > 0.3:
-                hp_color = "#FF9800"   # 橙
+                hp_color = "rgba(255,152,0,0.8)"
             else:
-                hp_color = "#F44336"   # 红
+                hp_color = "rgba(244,67,54,0.8)"
 
-            asc_text = f" <span style='color:#9C27B0'>A{ascension}</span>" if ascension > 0 else ""
-            game_mode = state.get("mode", "single")
-            if game_mode == "coop":
-                mode_text = "  <span style='color:#26C6DA;font-size:10pt'>👥 Co-op</span>"
-            else:
-                mode_text = "  <span style='color:#81C784;font-size:10pt'>🧍 Solo</span>"
+            asc_text = f" <span style='color:rgba(180,130,220,0.7)'>A{ascension}</span>" if ascension > 0 else ""
+            max_energy = state.get("max_energy", 3)
+
+            # Row 1: character + core stats
             info_html = (
-                f"<span style='color:#64B5F6;font-weight:bold'>{character}</span>"
+                f"<span style='color:rgba(140,180,230,0.85);font-weight:bold'>{character}</span>"
                 f"{asc_text}"
-                f"  <span style='color:#aaa'>F{floor}</span>"
-                f"  <span style='color:{hp_color}'>❤ {hp}/{max_hp}</span>"
-                f"  <span style='color:#FFD54F'>💰 {gold}</span>"
-                f"  <span style='color:#90CAF9'>🃏 {deck_size}</span>"
-                f"{mode_text}"
+                f"  <span style='color:rgba(255,255,255,0.35)'>F{floor}</span>"
+                f"  <span style='color:{hp_color}'>♥ {hp}/{max_hp}</span>"
+                f"  <span style='color:rgba(255,213,79,0.75)'>⬡ {gold}</span>"
+                f"  <span style='color:rgba(144,202,249,0.6)'>⚡{max_energy}</span>"
+                f"  <span style='color:rgba(180,180,200,0.5)'>🃏 {deck_size}</span>"
             )
+
+            # Row 2: boss + potions + upcoming nodes
+            extra_parts = []
+            act_boss_ids = state.get("act_boss_ids", {})
+            zone_id = state.get("zone_id", "")
+            # Determine current act from zone
+            current_act = 1
+            if zone_id:
+                for ch in zone_id:
+                    if ch.isdigit():
+                        current_act = int(ch)
+                        break
+            boss_name = act_boss_ids.get(str(current_act), act_boss_ids.get(current_act, ""))
+            if boss_name:
+                boss_display = boss_name.replace("MONSTER.", "").replace("_", " ").title()
+                extra_parts.append(f"<span style='color:rgba(240,100,100,0.7)'>👹 {boss_display}</span>")
+
+            potions = state.get("potions", [])
+            if potions:
+                pot_names = [p.replace("POTION.", "").replace("_", " ").title() for p in potions if p]
+                if pot_names:
+                    extra_parts.append(f"<span style='color:rgba(120,200,160,0.6)'>🧪 {', '.join(pot_names)}</span>")
+
+            upcoming = state.get("upcoming_nodes", [])
+            if upcoming:
+                node_icons = {"elite": "⚔", "boss": "👹", "rest": "🔥", "shop": "🛒",
+                              "event": "❓", "monster": "💀", "treasure": "💎"}
+                node_parts = []
+                for node in upcoming[:4]:
+                    nl = node.lower()
+                    icon = node_icons.get(nl, "•")
+                    node_parts.append(f"{icon}")
+                extra_parts.append(
+                    f"<span style='color:rgba(200,180,140,0.5)'>Next: {' '.join(node_parts)}</span>"
+                )
+
+            if extra_parts:
+                info_html += "<br/>" + "  ".join(extra_parts)
+
             self._game_info_label.setText(info_html)
-            self._game_info_label.setStyleSheet("font-size: 12pt;")
+            self._game_info_label.setStyleSheet("font-size: 11px;")
         else:
-            self._game_indicator.setStyleSheet("color: #6A2020; font-size: 11px; font-weight: bold;")
+            self._game_indicator.setStyleSheet("color: rgba(120,40,40,0.6); font-size: 11px; font-weight: bold;")
             self._game_indicator.setToolTip("Game: not detected")
-            self._game_info_label.setText("<span style='color:#3A3028'>No game detected</span>")
-            self._game_info_label.setStyleSheet("font-size: 12pt;")
+            self._game_info_label.setText("<span style='color:rgba(255,255,255,0.15)'>No game detected</span>")
+            self._game_info_label.setStyleSheet("font-size: 11px;")
 
         # 更新底部状态栏
         if state.get("hand"):
@@ -1624,11 +1669,11 @@ class CardAdviserWindow(QWidget):
         """处理日志监视状态更新"""
         active = status.get("active", False)
         if active:
-            self._log_indicator.setStyleSheet("color: #4CAF50; font-size: 11px; font-weight: bold;")
+            self._log_indicator.setStyleSheet("color: rgba(76,175,80,0.7); font-size: 11px; font-weight: bold;")
             self._log_indicator.setToolTip(f"Logs: active  {status.get('path', '')}")
             log.info(f"日志正在监视: {status.get('path')}")
         else:
-            self._log_indicator.setStyleSheet("color: #6A2020; font-size: 11px; font-weight: bold;")
+            self._log_indicator.setStyleSheet("color: rgba(120,40,40,0.5); font-size: 11px; font-weight: bold;")
             self._log_indicator.setToolTip("Logs: not active")
             log.warning("日志未被监视")
 
@@ -1645,25 +1690,25 @@ class CardAdviserWindow(QWidget):
         _bdge = "font-size: 10px; border-radius: 3px; padding: 0px 4px; border: 1px solid "
         if screen_type == "card_reward":
             if all_reliable:
-                self._ocr_indicator.setStyleSheet(f"color: #4CAF50; {_dot}")
+                self._ocr_indicator.setStyleSheet(f"color: rgba(76,175,80,0.7); {_dot}")
                 self._ocr_indicator.setToolTip("Vision: locked on card reward")
                 self._ocr_state_badge.setText("Locked")
-                self._ocr_state_badge.setStyleSheet(f"color: #4CAF50; {_bdge}#2A5A28;")
+                self._ocr_state_badge.setStyleSheet(f"color: rgba(76,175,80,0.7); {_bdge}rgba(76,175,80,0.2);")
             else:
-                self._ocr_indicator.setStyleSheet(f"color: #A07020; {_dot}")
+                self._ocr_indicator.setStyleSheet(f"color: rgba(200,160,60,0.6); {_dot}")
                 self._ocr_indicator.setToolTip("Vision: recognizing (waiting for frames)")
                 self._ocr_state_badge.setText("Reading")
-                self._ocr_state_badge.setStyleSheet(f"color: #A07020; {_bdge}#5A4010;")
+                self._ocr_state_badge.setStyleSheet(f"color: rgba(200,160,60,0.6); {_bdge}rgba(200,160,60,0.15);")
         elif screen_type == "shop":
-            self._ocr_indicator.setStyleSheet(f"color: #3A6A8A; {_dot}")
+            self._ocr_indicator.setStyleSheet(f"color: rgba(80,140,180,0.6); {_dot}")
             self._ocr_indicator.setToolTip("Vision: shop detected")
             self._ocr_state_badge.setText("Shop")
-            self._ocr_state_badge.setStyleSheet(f"color: #3A6A8A; {_bdge}#1A3A5A;")
+            self._ocr_state_badge.setStyleSheet(f"color: rgba(80,140,180,0.6); {_bdge}rgba(80,140,180,0.15);")
         else:
-            self._ocr_indicator.setStyleSheet(f"color: #2A2218; {_dot}")
+            self._ocr_indicator.setStyleSheet(f"color: rgba(255,255,255,0.08); {_dot}")
             self._ocr_indicator.setToolTip("Vision: monitoring")
             self._ocr_state_badge.setText("")
-            self._ocr_state_badge.setStyleSheet(f"color: #2A2218; {_bdge}#1A1510;")
+            self._ocr_state_badge.setStyleSheet(f"color: rgba(255,255,255,0.08); {_bdge}rgba(255,255,255,0.03);")
 
         # 更新 OCR 界面提示文字
         _SCREEN_ICONS = {
@@ -1675,26 +1720,25 @@ class CardAdviserWindow(QWidget):
         screen_label = _SCREEN_ICONS.get(screen_type, "")
 
         if screen_type == "card_reward" and card_names:
-            # 显示识别到的卡名（置信度颜色区分）
             parts = []
             for name, conf in zip(card_names, confidences):
                 if not name:
-                    parts.append("<span style='color:#666'>?</span>")
+                    parts.append("<span style='color:rgba(255,255,255,0.2)'>?</span>")
                 elif conf >= 0.8:
-                    parts.append(f"<span style='color:#A8D870'>{name}</span>")
+                    parts.append(f"<span style='color:rgba(168,216,112,0.8)'>{name}</span>")
                 elif conf >= 0.55:
-                    parts.append(f"<span style='color:#FFD54F'>{name}</span>")
+                    parts.append(f"<span style='color:rgba(255,213,79,0.7)'>{name}</span>")
                 else:
-                    parts.append(f"<span style='color:#FF7043'>{name}?</span>")
+                    parts.append(f"<span style='color:rgba(255,112,67,0.7)'>{name}?</span>")
             cards_html = "  /  ".join(parts)
             self._ocr_screen_label.setText(
-                f"<span style='color:#ccc'>{screen_label}</span>  {cards_html}"
+                f"<span style='color:rgba(255,255,255,0.4)'>{screen_label}</span>  {cards_html}"
             )
             self._ocr_screen_label.setTextFormat(Qt.TextFormat.RichText)
             self._ocr_screen_label.setVisible(True)
         elif screen_label:
             self._ocr_screen_label.setText(
-                f"<span style='color:#888'>{screen_label}</span>"
+                f"<span style='color:rgba(255,255,255,0.25)'>{screen_label}</span>"
             )
             self._ocr_screen_label.setTextFormat(Qt.TextFormat.RichText)
             self._ocr_screen_label.setVisible(True)
@@ -1725,14 +1769,14 @@ class CardAdviserWindow(QWidget):
         # 状态文字
         if all_reliable:
             self._ocr_preview_status.setText("Locked ✓")
-            self._ocr_preview_status.setStyleSheet("color:#4CAF50;font-size:11px;")
-            self._ocr_hint_label.setText("Recognition stable, candidates auto-filled and evaluated")
-            self._ocr_hint_label.setStyleSheet("color:#4A7A40;font-size:11px;padding-top:2px;")
+            self._ocr_preview_status.setStyleSheet("color:rgba(76,175,80,0.7);font-size:11px;")
+            self._ocr_hint_label.setText("Recognition stable — candidates auto-filled")
+            self._ocr_hint_label.setStyleSheet("color:rgba(76,175,80,0.3);font-size:11px;padding-top:2px;")
         else:
             self._ocr_preview_status.setText("Recognizing...")
-            self._ocr_preview_status.setStyleSheet("color:#FF9800;font-size:11px;")
-            self._ocr_hint_label.setText("Waiting for stabilization across multiple frames...")
-            self._ocr_hint_label.setStyleSheet("color:#7A6030;font-size:11px;padding-top:2px;")
+            self._ocr_preview_status.setStyleSheet("color:rgba(255,152,0,0.6);font-size:11px;")
+            self._ocr_hint_label.setText("Waiting for stable recognition...")
+            self._ocr_hint_label.setStyleSheet("color:rgba(200,160,60,0.3);font-size:11px;padding-top:2px;")
 
         # 三张卡名标签
         for i, lbl in enumerate(self._ocr_preview_cards):
@@ -1741,30 +1785,30 @@ class CardAdviserWindow(QWidget):
             if not name:
                 lbl.setText(f"Card {i+1}")
                 lbl.setStyleSheet(
-                    "color: #555; font-size: 11px; "
-                    "border: 1px solid #333; border-radius: 4px; "
-                    "padding: 2px 6px; background: #1a1a1a;"
+                    "color:rgba(255,255,255,0.15);font-size:11px;"
+                    "border:1px solid rgba(255,255,255,0.05);border-radius:4px;"
+                    "padding:2px 6px;background:rgba(0,0,0,0.15);"
                 )
             elif conf >= 0.8:
                 lbl.setText(name)
                 lbl.setStyleSheet(
-                    "color: #A8D870; font-size: 11px; font-weight: bold; "
-                    "border: 1px solid #4CAF50; border-radius: 4px; "
-                    "padding: 2px 6px; background: #0d1a0d;"
+                    "color:rgba(168,216,112,0.85);font-size:11px;font-weight:bold;"
+                    "border:1px solid rgba(76,175,80,0.25);border-radius:4px;"
+                    "padding:2px 6px;background:rgba(20,50,20,0.3);"
                 )
             elif conf >= 0.55:
                 lbl.setText(name)
                 lbl.setStyleSheet(
-                    "color: #FFD54F; font-size: 11px; "
-                    "border: 1px solid #FF9800; border-radius: 4px; "
-                    "padding: 2px 6px; background: #1a1200;"
+                    "color:rgba(255,213,79,0.75);font-size:11px;"
+                    "border:1px solid rgba(255,152,0,0.2);border-radius:4px;"
+                    "padding:2px 6px;background:rgba(50,40,10,0.3);"
                 )
             else:
                 lbl.setText(f"{name}?")
                 lbl.setStyleSheet(
-                    "color: #FF7043; font-size: 11px; "
-                    "border: 1px solid #BF360C; border-radius: 4px; "
-                    "padding: 2px 6px; background: #1a0800;"
+                    "color:rgba(255,112,67,0.7);font-size:11px;"
+                    "border:1px solid rgba(200,50,10,0.2);border-radius:4px;"
+                    "padding:2px 6px;background:rgba(50,15,5,0.3);"
                 )
 
     def _on_ocr_snapshot(self) -> None:

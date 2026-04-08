@@ -1,150 +1,130 @@
 /* =========================================================
-   styles.qss  —  STS2 Adviser  Minimal Dark v2
-   Clean, compact overlay theme
+   styles.qss — STS2 Adviser · Modern Translucent Overlay
+   Glassmorphism-inspired game companion
    ========================================================= */
 
 /* ── Global ── */
 * {
-    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-family: "Segoe UI", "Inter", "Microsoft YaHei", sans-serif;
     font-size: 13px;
-    color: #D8D0C4;
+    color: #E0DDD8;
 }
 
-/* ── Main Container ── */
+/* ── Main Container (frosted glass) ── */
 #MainContainer {
-    background-color: rgba(11, 10, 9, 0.96);
-    border: 1px solid #252015;
-    border-radius: 8px;
+    background-color: rgba(15, 14, 12, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
 }
 
 /* ── Title Bar ── */
 #TitleBar {
-    background-color: rgba(16, 13, 10, 0.99);
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-bottom: 1px solid #201A10;
-    min-height: 34px;
-    max-height: 34px;
+    background-color: rgba(20, 18, 15, 0.65);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    min-height: 32px;
+    max-height: 32px;
 }
 
 #TitleLabel {
-    font-size: 13px;
-    font-weight: bold;
-    color: #B89A58;
-    letter-spacing: 1.5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(200, 180, 140, 0.70);
+    letter-spacing: 2px;
 }
 
 #CloseButton {
     background-color: transparent;
     border: none;
-    border-radius: 11px;
-    color: #3A3028;
-    font-size: 18px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 16px;
     font-weight: bold;
-    padding: 0;
-    min-width: 22px;
-    max-width: 22px;
-    min-height: 22px;
-    max-height: 22px;
+    min-width: 20px;  max-width: 20px;
+    min-height: 20px; max-height: 20px;
 }
 
 #CloseButton:hover {
-    background-color: rgba(160, 35, 35, 0.85);
-    color: #FF7070;
+    background-color: rgba(200, 50, 50, 0.70);
+    color: #fff;
 }
 
 /* ── Toolbar ── */
 #Toolbar {
-    background-color: rgba(14, 12, 9, 0.92);
-    border-bottom: 1px solid #1A1510;
-    padding: 0px;
+    background-color: rgba(18, 16, 13, 0.50);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.025);
 }
 
 /* ── Toolbar Buttons ── */
 #RefreshDetectButton, #SettingsButton {
-    background-color: transparent;
-    border: 1px solid #2A2218;
-    border-radius: 4px;
-    color: #7A6A50;
-    padding: 2px 9px;
-    font-size: 12px;
-    min-height: 24px;
-    max-height: 24px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 2px 10px;
+    font-size: 11px;
+    min-height: 24px; max-height: 24px;
 }
 
 #RefreshDetectButton:hover, #SettingsButton:hover {
-    background-color: rgba(184, 154, 88, 0.07);
-    border-color: #B89A58;
-    color: #C8A96E;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(200, 180, 140, 0.20);
+    color: rgba(200, 180, 140, 0.70);
 }
 
-#RefreshDetectButton:pressed, #SettingsButton:pressed {
-    background-color: rgba(184, 154, 88, 0.14);
-}
-
-#RefreshDetectButton:disabled, #SettingsButton:disabled {
-    color: #302820;
-    border-color: #201810;
-}
-
-/* ── OCR Button ── */
 #OcrButton {
-    background-color: transparent;
-    border: 1px solid #1A2A3A;
-    border-radius: 4px;
-    color: #3A6A8A;
-    padding: 2px 9px;
-    font-size: 12px;
-    min-height: 24px;
-    max-height: 24px;
+    background-color: rgba(100, 160, 220, 0.05);
+    border: 1px solid rgba(100, 160, 220, 0.12);
+    border-radius: 6px;
+    color: rgba(100, 160, 220, 0.50);
+    padding: 2px 10px;
+    font-size: 11px;
+    min-height: 24px; max-height: 24px;
 }
 
 #OcrButton:hover {
-    background-color: rgba(66, 145, 210, 0.07);
-    border-color: #3A80B0;
-    color: #55A0D0;
+    background-color: rgba(100, 160, 220, 0.10);
+    border-color: rgba(100, 160, 220, 0.25);
+    color: rgba(130, 190, 240, 0.80);
 }
 
 #OcrButton:disabled {
-    color: #1A2A38;
-    border-color: #141E28;
+    color: rgba(100, 160, 220, 0.15);
+    border-color: rgba(100, 160, 220, 0.05);
 }
 
-/* ── Indicators ── */
-#BackendIndicator, #GameIndicator, #LogIndicator, #OcrIndicator {
+/* ── Game Info Panel (translucent card) ── */
+#GameInfoPanel {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+#GameInfoLabel {
     font-size: 11px;
-    font-weight: bold;
-    color: #3A3028;
-}
-
-#OcrStateBadge {
-    font-size: 10px;
-    border: 1px solid #252015;
-    border-radius: 3px;
-    padding: 0px 4px;
-    color: #3A3028;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 1px 0px;
 }
 
 /* ── Separator ── */
 #Separator {
-    color: #181410;
-    background-color: #181410;
+    color: rgba(255, 255, 255, 0.02);
+    background-color: rgba(255, 255, 255, 0.02);
     border: none;
-    height: 1px;
-    max-height: 1px;
+    height: 1px; max-height: 1px;
 }
 
 /* ── List Header ── */
 #ListHeader {
     background-color: transparent;
-    border-bottom: 1px solid #141010;
-    min-height: 20px;
-    max-height: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    min-height: 22px; max-height: 22px;
 }
 
 #HeaderLabel {
     font-size: 9px;
-    color: #3A3028;
+    color: rgba(255, 255, 255, 0.18);
     font-weight: bold;
     letter-spacing: 1.5px;
 }
@@ -157,19 +137,19 @@
 
 #CardScrollArea QScrollBar:vertical {
     background: transparent;
-    width: 4px;
-    border-radius: 2px;
-    margin: 2px 0;
+    width: 3px;
+    border-radius: 1px;
+    margin: 4px 1px;
 }
 
 #CardScrollArea QScrollBar::handle:vertical {
-    background: #252015;
-    border-radius: 2px;
-    min-height: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 1px;
+    min-height: 24px;
 }
 
 #CardScrollArea QScrollBar::handle:vertical:hover {
-    background: #3A3028;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 #CardScrollArea QScrollBar::add-line:vertical,
@@ -179,40 +159,36 @@
 
 /* ── Card Result Widget ── */
 #CardResultWidget {
-    background-color: rgba(17, 14, 10, 0.90);
-    border: 1px solid #181410;
-    border-left: 2px solid #2A2216;
-    border-radius: 0px;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    min-height: 50px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.025);
+    border-left: 3px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    min-height: 48px;
 }
 
 #CardResultWidget:hover {
-    background-color: rgba(26, 22, 16, 0.92);
-    border-color: #2A2216;
-    border-left-color: #B89A58;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(200, 180, 140, 0.40);
 }
 
 #cardName {
-    color: #E0D8CC;
+    color: #E8E4DE;
     font-size: 14px;
     font-weight: bold;
 }
 
 #cardRole {
-    color: #5A5040;
+    color: rgba(255, 255, 255, 0.25);
     font-size: 11px;
 }
 
 #cardScore {
     font-size: 14px;
     font-weight: bold;
-    color: #C8A96E;
 }
 
 #cardReason {
-    color: #4A5040;
     font-size: 11px;
     padding-left: 2px;
 }
@@ -220,57 +196,53 @@
 /* ── Archetype Label ── */
 #ArchetypeLabel {
     font-size: 11px;
-    color: #8A7848;
+    color: rgba(200, 180, 140, 0.50);
     padding: 1px 0px;
 }
 
 /* ── Status Bar ── */
 #StatusBar {
-    font-size: 11px;
-    color: #3A3028;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.15);
     padding: 1px 8px;
 }
 
 /* ── Placeholder ── */
 #Placeholder {
-    color: #2E2820;
-    font-size: 13px;
-    padding: 32px;
+    color: rgba(255, 255, 255, 0.12);
+    font-size: 12px;
+    padding: 40px;
 }
 
 /* ── OCR Preview Panel ── */
 #OcrPreviewPanel {
-    background-color: rgba(8, 13, 22, 0.92);
-    border-bottom: 1px solid #0D2035;
+    background-color: rgba(40, 80, 140, 0.08);
+    border-bottom: 1px solid rgba(100, 160, 220, 0.08);
 }
 
 #OcrScreenLabel {
     font-size: 11px;
     padding: 1px 4px;
-    color: #5A5A5A;
+    color: rgba(255, 255, 255, 0.30);
 }
 
 /* ── Card Picker Scroll ── */
 #CardPickerScroll {
-    background-color: rgba(9, 8, 6, 0.85);
-    border: 1px solid #181410;
-    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.20);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
 }
 
 #CardPickerScroll QScrollBar:vertical {
     background: transparent;
-    width: 4px;
-    border-radius: 2px;
+    width: 3px;
+    border-radius: 1px;
 }
 
 #CardPickerScroll QScrollBar::handle:vertical {
-    background: #252015;
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 1px;
     min-height: 16px;
-}
-
-#CardPickerScroll QScrollBar::handle:vertical:hover {
-    background: #3A3028;
 }
 
 #CardPickerScroll QScrollBar::add-line:vertical,
@@ -279,144 +251,139 @@
 }
 
 #CardPickerSectionHeader {
-    color: #3A3028;
+    color: rgba(255, 255, 255, 0.15);
     font-size: 9px;
     font-weight: bold;
     letter-spacing: 1.2px;
-    padding: 5px 2px 2px 2px;
+    padding: 6px 2px 2px 2px;
 }
 
 /* ── Selection Tray ── */
 #SelectionTray {
-    background-color: rgba(14, 12, 9, 0.92);
-    border-top: 1px solid #1A1510;
-    border-radius: 0px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
-    min-height: 38px;
-    max-height: 38px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    min-height: 36px; max-height: 36px;
 }
 
 /* ── Evaluate Button ── */
 #EvaluateButton {
-    background-color: rgba(40, 65, 20, 0.85);
-    border: 1px solid #3A6520;
-    border-radius: 4px;
-    color: #7AB040;
+    background-color: rgba(80, 160, 60, 0.15);
+    border: 1px solid rgba(80, 160, 60, 0.25);
+    border-radius: 6px;
+    color: rgba(140, 210, 90, 0.80);
     font-weight: bold;
-    font-size: 12px;
-    padding: 2px 12px;
-    min-height: 24px;
-    max-height: 24px;
+    font-size: 11px;
+    padding: 2px 14px;
+    min-height: 24px; max-height: 24px;
 }
 
 #EvaluateButton:hover {
-    background-color: rgba(55, 90, 25, 0.92);
-    border-color: #50882A;
-    color: #9AD060;
+    background-color: rgba(80, 160, 60, 0.25);
+    border-color: rgba(80, 160, 60, 0.40);
+    color: rgba(160, 230, 100, 0.95);
 }
 
 #EvaluateButton:disabled {
     background-color: transparent;
-    border-color: #1A1A12;
-    color: #2A2A1A;
+    border-color: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.10);
 }
 
 /* ── Clear Selection Button ── */
 #ClearButton {
     background-color: transparent;
-    border: 1px solid #1E1A14;
-    border-radius: 4px;
-    color: #3A3028;
-    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 11px;
     padding: 2px 7px;
-    min-height: 24px;
-    max-height: 24px;
+    min-height: 24px; max-height: 24px;
 }
 
 #ClearButton:hover {
-    background-color: rgba(160, 45, 45, 0.10);
-    border-color: #4A1818;
-    color: #8A4040;
+    background-color: rgba(200, 60, 60, 0.10);
+    border-color: rgba(200, 60, 60, 0.20);
+    color: rgba(240, 100, 100, 0.70);
 }
 
 #ClearButton:disabled {
-    color: #1E1A14;
-    border-color: #141010;
+    color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.02);
 }
 
 /* ── Resize Grip ── */
 #ResizeGrip {
-    background-color: rgba(90, 80, 40, 0.15);
-    border-top: 1px solid rgba(160, 140, 60, 0.25);
-    border-left: 1px solid rgba(160, 140, 60, 0.25);
-    border-bottom-right-radius: 5px;
-    width: 14px;
-    height: 14px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom-right-radius: 10px;
+    width: 14px; height: 14px;
 }
 
 #ResizeGrip:hover {
-    background-color: rgba(180, 160, 70, 0.30);
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Side Drawer Panel ── */
 #SideDrawerPanel {
-    background-color: rgba(11, 10, 8, 0.98);
-    border-left: 1px solid #1A1510;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    background-color: rgba(12, 11, 9, 0.92);
+    border-left: 1px solid rgba(255, 255, 255, 0.03);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
 }
 
-/* ── Drawer Toggle Button ── */
+/* ── Drawer Toggle ── */
 #DrawerToggleBtn {
-    background-color: rgba(14, 12, 9, 0.96);
-    border: 1px solid #1A1510;
+    background-color: rgba(15, 14, 12, 0.80);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     border-left: none;
     border-radius: 0px;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-    color: #2E2820;
-    font-size: 11px;
-    min-width: 16px;
-    max-width: 16px;
-    padding: 0;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    color: rgba(255, 255, 255, 0.10);
+    font-size: 10px;
+    min-width: 14px; max-width: 14px;
 }
 
 #DrawerToggleBtn:hover {
-    background-color: rgba(22, 18, 12, 0.98);
-    color: #B89A58;
-    border-color: #3A3028;
+    background-color: rgba(25, 22, 18, 0.90);
+    color: rgba(200, 180, 140, 0.60);
 }
 
 /* ── Drawer Title ── */
 #DrawerTitle {
     font-size: 9px;
     font-weight: bold;
-    color: #3A3028;
+    color: rgba(255, 255, 255, 0.18);
     letter-spacing: 2px;
     padding: 2px 4px;
 }
 
-/* ── Card Search Box ── */
+/* ── Search Box ── */
 #CardSearchBox {
-    background-color: rgba(18, 16, 12, 0.95);
-    border: 1px solid #252015;
-    border-radius: 4px;
-    color: #C0B898;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.70);
     font-size: 12px;
     padding: 4px 8px;
-    min-height: 26px;
-    max-height: 26px;
-    selection-background-color: rgba(184, 154, 88, 0.25);
+    min-height: 26px; max-height: 26px;
+    selection-background-color: rgba(200, 180, 140, 0.20);
 }
 
 #CardSearchBox:focus {
-    border-color: #6A5830;
-    background-color: rgba(20, 18, 14, 0.98);
-    color: #D8CEB0;
+    border-color: rgba(200, 180, 140, 0.20);
+    background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* ── Game Info Label ── */
-#GameInfoLabel {
-    font-size: 12px;
+/* ── Indicators (dots in toolbar) ── */
+#BackendIndicator, #GameIndicator, #LogIndicator, #OcrIndicator {
+    font-size: 8px;
+    font-weight: bold;
+}
+
+#OcrStateBadge {
+    font-size: 9px;
+    border-radius: 3px;
+    padding: 0px 4px;
 }

@@ -212,24 +212,20 @@ class CardEvaluator:
         pick_delta = best_card.total_score - skip_score
         
         if pick_delta > 5:
-            # Clear pick
             action = "pick"
             if pick_delta > 20:
-                rec_text = f"🎯 Pick {best_card.card_name} (+{pick_delta:.0f} vs Skip)"
+                rec_text = f"🎯 Pick {best_card.card_name} — great fit for your deck"
             else:
-                rec_text = f"✓ Pick {best_card.card_name} (+{pick_delta:.0f} vs Skip)"
+                rec_text = f"✓ Pick {best_card.card_name} — solid addition"
         elif pick_delta > 0:
-            # Marginal pick
             action = "pick"
-            rec_text = f"⚖ Slight edge: {best_card.card_name} (+{pick_delta:.0f})"
+            rec_text = f"⚖ Slight edge: {best_card.card_name}"
         elif pick_delta > -5:
-            # Borderline - could go either way
             action = "skip"
-            rec_text = f"⚖ Borderline — Skip preferred ({-pick_delta:.0f})"
+            rec_text = "⚖ Borderline — skip is slightly better here"
         else:
-            # Clear skip
             action = "skip"
-            rec_text = f"⏭ Skip is better ({-pick_delta:.0f})"
+            rec_text = "⏭ Skip — none of these cards help your deck right now"
         
         return {
             "best_action": action,
@@ -440,19 +436,19 @@ class CardEvaluator:
         
         # V2.2: Card copy warning
         if existing_copies >= 2:
-            reasons_against.append(f"Already {existing_copies} copies in deck — heavy diminishing returns")
+            reasons_against.append(f"Already {existing_copies} copies in deck — adding more hurts consistency")
         elif existing_copies == 1:
-            reasons_against.append(f"Already 1 copy in deck — diminishing returns")
+            reasons_against.append("Already in your deck — extra copy is less valuable")
 
         # V2: Add skip comparison to reasons
         if pick_delta > 10:
-            reasons_for.append(f"Strong pick (+{pick_delta:.1f} vs Skip)")
+            reasons_for.append("Strong choice for your deck")
         elif pick_delta > 3:
-            reasons_for.append(f"Good pick (+{pick_delta:.1f} vs Skip)")
+            reasons_for.append("Good addition to your deck")
         elif pick_delta < -5:
-            reasons_against.append(f"Consider skipping (Skip is {-pick_delta:.1f} better)")
+            reasons_against.append("Consider skipping — your deck doesn't need this")
         elif pick_delta < 0:
-            reasons_against.append(f"Marginal pick (Skip is slightly better)")
+            reasons_against.append("Borderline — skipping might be better")
 
         return EvaluationResult(
             card_id=card.id,
@@ -587,41 +583,40 @@ class CardEvaluator:
                 for a in [self.library.get_archetype(aid) for aid in exact_ids]
                 if a is not None
             ]
-            reasons_for.append(f"Fits Archetypes: {', '.join(archetype_names)}")
+            reasons_for.append(f"Works well with your {', '.join(archetype_names)} strategy")
         if inferred_ids:
             inferred_names = [
                 a.name
                 for a in [self.library.get_archetype(aid) for aid in inferred_ids]
                 if a is not None
             ]
-            reasons_for.append(f"Inferred Synergy (Keywords): {', '.join(inferred_names)}")
+            reasons_for.append(f"May complement your {', '.join(inferred_names)} build")
 
         # 稀有度（直接读 card.rarity，不依赖 breakdown.rarity_score）
         if card.rarity in (Rarity.RARE, Rarity.ANCIENT):
-            reasons_for.append(f"High rarity ({card.rarity.value}), high baseline value")
+            reasons_for.append("Rare card — naturally powerful")
 
         # 套路完成度贡献
         if breakdown.completion_score > 0.05:
-            pct = round(breakdown.completion_score * 100, 1)
-            reasons_for.append(f"Boosts primary archetype completion +{pct}%")
+            reasons_for.append("Strengthens your deck's main game plan")
 
         # 协同
         if breakdown.synergy_bonus > 0.0:
-            reasons_for.append("Has synergy with current relics or deck")
+            reasons_for.append("Synergizes with your current relics")
 
         # 阶段适配 (Transition removed)
         
         # 污染
         if role == CardRole.POLLUTION:
-            reasons_against.append("No synergy with current archetypes, will dilute the deck")
+            reasons_against.append("Doesn't fit your current deck — may dilute it")
 
         # 仅推断匹配时，补充置信度说明
         if matched_archetypes and not exact_ids and inferred_ids:
-            reasons_against.append("Only matched via keyword inference (not a core card), actual value may vary")
+            reasons_against.append("Not a key card for your build — value may vary")
 
         # 无任何匹配
         if not matched_archetypes:
-            reasons_against.append("Does not match any detected archetypes, value in current run is unclear")
+            reasons_against.append("Doesn't match your current deck direction")
 
         # 社区数据理由 (V2: sanity-check layer only, not a decision maker)
         if cv_result is not None:
@@ -632,19 +627,16 @@ class CardEvaluator:
                 
                 # V2: Sanity check warnings for extreme cases
                 if wr_pct < 40.0 and algo_score > 60:
-                    # Low community win rate but algorithm says it's good - warn
                     reasons_against.append(
-                        f"⚠ Community Caution: Win Rate {wr} is low. Algorithm may be overvaluing this card."
+                        f"⚠ Low win rate ({wr}) — may not be as good as it looks"
                     )
                 elif wr_pct < 30.0:
-                    # Very low win rate - strong warning
                     reasons_against.append(
-                        f"⚠ Low Win Rate Warning: {wr} historically. Consider skipping."
+                        f"⚠ Very low win rate ({wr}) — consider skipping"
                     )
                 elif wr_pct > 70.0 and algo_score < 50:
-                    # High community win rate but algorithm says it's bad - note potential
                     reasons_for.append(
-                        f"Community says {wr} win rate, algorithm may be undervaluing this."
+                        f"Players report {wr} win rate — could be better than it looks"
                     )
 
         return reasons_for, reasons_against
@@ -673,25 +665,23 @@ class CardEvaluator:
         Includes the delta in the recommendation when relevant.
         """
         if role == CardRole.POLLUTION:
-            return "Skip (Pollution)"
+            return "Skip"
         if role == CardRole.SKIP:
             return "Skip"
-        
-        # V2: Consider delta vs Skip
+
         if pick_delta < -5:
-            return "Skip Recommended"
+            return "Skip"
         elif pick_delta < 0:
-            return "Consider Skip"
-        
-        # Standard recommendations with delta
+            return "Maybe Skip"
+
         if total_score >= 80:
-            return f"Highly Recommended (+{pick_delta:.0f})"
+            return "Must Pick"
         elif total_score >= 65:
-            return f"Recommended (+{pick_delta:.0f})"
+            return "Recommended"
         elif total_score >= 50:
-            return f"Optional (+{pick_delta:.0f})" if pick_delta > 0 else "Optional"
+            return "Decent" if pick_delta > 0 else "Okay"
         elif total_score >= 30:
-            return "Caution"
+            return "Weak"
         else:
             return "Skip"
 
@@ -705,20 +695,20 @@ class CardEvaluator:
         deck_size = len(run_state.deck)
         
         if deck_size >= 15:
-            reasons_for.append(f"Deck has {deck_size} cards, avoiding dilution")
+            reasons_for.append(f"Deck has {deck_size} cards — keeping it lean")
         if deck_size >= 20:
-            reasons_for.append("Large deck - skip helps maintain consistency")
-        
+            reasons_for.append("Large deck — skipping helps keep draws consistent")
+
         if run_state.phase == GamePhase.LATE:
-            reasons_for.append("Late game - be selective with picks")
+            reasons_for.append("Late game — be picky with new cards")
         elif run_state.phase == GamePhase.EARLY:
-            reasons_against.append("Early game - usually want to build deck")
-        
+            reasons_against.append("Early game — usually better to add cards")
+
         if deck_size < 10:
-            reasons_against.append(f"Small deck ({deck_size} cards) - need more options")
-        
+            reasons_against.append(f"Small deck ({deck_size} cards) — could use more options")
+
         if run_state.hp_ratio < 0.3:
-            reasons_against.append("Low HP - may need survival cards")
+            reasons_against.append("Low HP — you might need a survival card")
         
         return EvaluationResult(
             card_id="__SKIP__",
