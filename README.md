@@ -136,22 +136,28 @@ Cards are defined in `data/card_functions.json` with structured functions:
 
 ```json
 {
-  "INFLAME": {
-    "id": "INFLAME",
+  "STRIKE_IRONCLAD": {
+    "id": "STRIKE_IRONCLAD",
     "character": "ironclad",
-    "type": "power",
+    "type": "attack",
     "cost": 1,
+    "rarity": "basic",
     "functions": {
-      "damage_flat": 0,
+      "damage_flat": 6,
       "block_flat": 0,
       "draw": 0,
       "aoe": false,
-      "scaling_type": "strength",
-      "strength_gain": 2,
-      "exhaust": false
+      "scaling_type": null,
+      "exhaust": false,
+      "innate": false,
+      "retain": false,
+      "ethereal": false
     },
-    "tags": ["power", "strength", "scaling"]
-  }
+    "tags": [
+      "damage",
+      "starter",
+      "basic"
+  ]
 }
 ```
 
